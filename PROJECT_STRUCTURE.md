@@ -67,7 +67,11 @@ Frontend/
 │   │   ├── 02-folder-guidelines.md
 │   │   ├── 03-coding-conventions.md
 │   │   ├── 04-component-guidelines.md
-│   │   └── 05-api-services.md
+│   │   ├── 05-api-services.md
+│   │   ├── 06-animations-routing.md
+│   │   ├── agent_guide.md
+│   │   ├── APIEndpoint.md
+│   │   └── React_Request.md
 │   │
 │   ├── hooks/
 │   │   ├── useAuth.ts
@@ -153,6 +157,7 @@ Frontend/
 │
 ├── .env
 ├── .env.example
+├── agent_guide.md
 ├── components.json
 ├── eslint.config.js
 ├── index.html

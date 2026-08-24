@@ -94,8 +94,11 @@ npm run preview
 
 Detailed architectural and coding documentation is available in the [`src/docs/`](file:///d:/Project/ETEC_Project/Frontend/src/docs) folder and [`PROJECT_STRUCTURE.md`](file:///d:/Project/ETEC_Project/Frontend/PROJECT_STRUCTURE.md):
 
+- [🤖 AI Agent & Developer Guide](file:///d:/Project/ETEC_Project/Frontend/agent_guide.md)
 - [01 - Project Structure](file:///d:/Project/ETEC_Project/Frontend/src/docs/01-project-structure.md)
 - [02 - Folder Guidelines](file:///d:/Project/ETEC_Project/Frontend/src/docs/02-folder-guidelines.md)
 - [03 - Coding Conventions](file:///d:/Project/ETEC_Project/Frontend/src/docs/03-coding-conventions.md)
 - [04 - Component Guidelines](file:///d:/Project/ETEC_Project/Frontend/src/docs/04-component-guidelines.md)
 - [05 - API Services](file:///d:/Project/ETEC_Project/Frontend/src/docs/05-api-services.md)
+- [06 - Animations & Routing](file:///d:/Project/ETEC_Project/Frontend/src/docs/06-animations-routing.md)
+- [API Endpoints Specification](file:///d:/Project/ETEC_Project/Frontend/src/docs/APIEndpoint.md)
