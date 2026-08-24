@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, LogIn, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/Input/Input';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button/Button';
 import { useAuthStore } from '@/store/authStore';
 
 export const LoginForm: React.FC = () => {
@@ -78,7 +78,7 @@ export const LoginForm: React.FC = () => {
           />
           <span>Remember me</span>
         </label>
-        <a href="#forgot" className="text-gray-400 hover:text-[#E50914] transition-colors">
+        <a href="forgot" className="text-gray-400 hover:text-[#E50914] transition-colors">
           Forgot password?
         </a>
       </div>

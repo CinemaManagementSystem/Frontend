@@ -62,7 +62,7 @@ export const DashboardPage: React.FC = () => {
       value: `${activeMoviesCount} / ${movies.length}`,
       change: 'Catalog',
       icon: Film,
-      color: 'text-amber-400',
+      color: 'text-amber-400',    
       bg: 'bg-amber-500/10 border-amber-500/20',
     },
     {

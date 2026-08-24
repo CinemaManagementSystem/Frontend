@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Mail, Lock, UserPlus } from 'lucide-react';
 import { Input } from '@/components/ui/Input/Input';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button/Button';
 import { useAuthStore } from '@/store/authStore';
 
 export const RegisterForm: React.FC = () => {

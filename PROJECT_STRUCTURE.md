@@ -56,9 +56,7 @@ Frontend/
 │   │       │   └── index.ts
 │   │       ├── Spinner/
 │   │       │   ├── Spinner.tsx
-│   │       │   └── index.ts
-│   │       ├── button.tsx
-│   │       └── card.tsx
+│   │           └── index.ts
 │   │
 │   ├── context/
 │   │   ├── AuthContext.tsx

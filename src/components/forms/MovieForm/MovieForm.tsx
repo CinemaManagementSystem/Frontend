@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Movie } from '@/types/movie';
 import { Input } from '@/components/ui/Input/Input';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button/Button';
 
 export interface MovieFormProps {
   initialMovie?: Movie | null;
