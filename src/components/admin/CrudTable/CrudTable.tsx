@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button/Button';
 import { Input } from '@/components/ui/Input/Input';
 import { Spinner } from '@/components/ui/Spinner/Spinner';
 
-export type CrudFieldType = 'text' | 'textarea' | 'number' | 'date' | 'checkbox' | 'select';
+export type CrudFieldType = 'text' | 'textarea' | 'number' | 'date' | 'datetime' | 'checkbox' | 'select';
 
 export interface CrudField {
   name: string;
@@ -334,7 +334,9 @@ export function CrudTable<T>({
                       ? 'number'
                       : field.type === 'date'
                         ? 'date'
-                        : 'text'
+                        : field.type === 'datetime'
+                          ? 'datetime-local'
+                          : 'text'
                   }
                   placeholder={field.placeholder}
                   required={field.required}

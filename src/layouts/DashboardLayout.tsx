@@ -26,6 +26,8 @@ export const DashboardLayout: React.FC = () => {
         return 'Screens';
       case '/admin/seats':
         return 'Seats';
+      case '/admin/shows':
+        return 'Show Schedules';
       case '/admin/bookings':
         return 'Bookings & Orders';
       case '/admin/users':

@@ -12,6 +12,7 @@ import {
   Building2,
   MonitorPlay,
   Armchair,
+  CalendarClock,
   ArrowLeft,
   LogOut,
 } from 'lucide-react';
@@ -30,6 +31,7 @@ export const Sidebar: React.FC = () => {
     { name: 'Theaters', path: '/admin/theaters', icon: Building2 },
     { name: 'Screens', path: '/admin/screens', icon: MonitorPlay },
     { name: 'Seats', path: '/admin/seats', icon: Armchair },
+    { name: 'Shows', path: '/admin/shows', icon: CalendarClock },
     { name: 'Bookings', path: '/admin/bookings', icon: Ticket },
     { name: 'Users', path: '/admin/users', icon: Users },
   ];
