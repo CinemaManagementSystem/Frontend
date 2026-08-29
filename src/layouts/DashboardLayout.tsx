@@ -34,6 +34,8 @@ export const DashboardLayout: React.FC = () => {
         return 'Booking Seats';
       case '/admin/product-categories':
         return 'Product Categories';
+      case '/admin/products':
+        return 'Products';
       case '/admin/users':
         return 'User Management';
       default:

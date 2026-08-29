@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button/Button';
 import { Input } from '@/components/ui/Input/Input';
 import { Spinner } from '@/components/ui/Spinner/Spinner';
 
-export type CrudFieldType = 'text' | 'textarea' | 'number' | 'date' | 'datetime' | 'checkbox' | 'select';
+export type CrudFieldType = 'text' | 'textarea' | 'number' | 'date' | 'datetime' | 'checkbox' | 'select' | 'file';
 
 export interface CrudField {
   name: string;
@@ -23,7 +23,7 @@ export interface CrudColumn<T> {
   render?: (row: T, context?: Record<string, unknown>) => React.ReactNode;
 }
 
-export type CrudValue = string | number | boolean;
+export type CrudValue = string | number | boolean | File | null;
 
 export interface CrudTableProps<T> {
   title: string;
@@ -78,7 +78,8 @@ export function CrudTable<T>({
   const buildDefaultValues = (): Record<string, CrudValue> => {
     const values: Record<string, CrudValue> = {};
     fields.forEach((field) => {
-      values[field.name] = field.type === 'checkbox' ? false : '';
+      values[field.name] =
+        field.type === 'checkbox' ? false : field.type === 'file' ? null : '';
     });
     return values;
   };
@@ -95,11 +96,13 @@ export function CrudTable<T>({
     fields.forEach((field) => {
       const raw = (row as Record<string, unknown>)[field.name];
       values[field.name] =
-        raw != null
-          ? (raw as CrudValue)
-          : field.type === 'checkbox'
-            ? false
-            : '';
+        field.type === 'file'
+          ? null
+          : raw != null
+            ? (raw as CrudValue)
+            : field.type === 'checkbox'
+              ? false
+              : '';
     });
     setEditingId(getId(row));
     setFormError('');
@@ -321,6 +324,23 @@ export function CrudTable<T>({
                       placeholder={field.placeholder}
                       rows={3}
                       className="w-full bg-[#1e1e22]/80 text-white text-sm rounded-lg border border-white/10 px-3.5 py-2.5 outline-none focus:border-[#E50914] focus:ring-2 focus:ring-[#E50914]/20 resize-none"
+                    />
+                  </div>
+                );
+              }
+              if (field.type === 'file') {
+                return (
+                  <div key={field.name} className="space-y-1.5">
+                    <label className="block text-xs font-medium text-gray-300">
+                      {field.label}
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) =>
+                        setFieldValue(field.name, e.target.files?.[0] ?? null)
+                      }
+                      className="w-full text-sm text-gray-300 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-white/10 file:text-white file:text-xs file:font-semibold hover:file:bg-white/20 cursor-pointer"
                     />
                   </div>
                 );
