@@ -18,6 +18,8 @@ export const DashboardLayout: React.FC = () => {
         return 'Movie Categories';
       case '/admin/movies':
         return 'Movie Catalog Manager';
+      case '/admin/locations':
+        return 'Cinema Locations';
       case '/admin/bookings':
         return 'Bookings & Orders';
       case '/admin/users':
