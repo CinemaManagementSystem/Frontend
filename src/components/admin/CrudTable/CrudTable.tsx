@@ -20,7 +20,7 @@ export interface CrudField {
 export interface CrudColumn<T> {
   key: string;
   header: string;
-  render?: (row: T) => React.ReactNode;
+  render?: (row: T, context?: Record<string, unknown>) => React.ReactNode;
 }
 
 export type CrudValue = string | number | boolean;
@@ -34,6 +34,7 @@ export interface CrudTableProps<T> {
   fields: CrudField[];
   searchKeys?: string[];
   createLabel?: string;
+  columnContext?: Record<string, unknown>;
   getId: (row: T) => number;
   getDisplayName?: (row: T) => string;
   onSave: (values: Record<string, CrudValue>, id: number | null) => Promise<void>;
@@ -49,6 +50,7 @@ export function CrudTable<T>({
   fields,
   searchKeys = [],
   createLabel = 'Add New',
+  columnContext,
   getId,
   getDisplayName,
   onSave,
@@ -220,7 +222,7 @@ export function CrudTable<T>({
                         {columns.map((col) => (
                           <td key={col.key} className="px-4 py-3 text-sm text-gray-200">
                             {col.render
-                              ? col.render(row)
+                              ? col.render(row, columnContext)
                               : String((row as Record<string, unknown>)[col.key] ?? '')}
                           </td>
                         ))}

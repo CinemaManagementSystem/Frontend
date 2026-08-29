@@ -9,6 +9,7 @@ import {
   Users,
   Tags,
   MapPin,
+  Building2,
   ArrowLeft,
   LogOut,
 } from 'lucide-react';
@@ -24,6 +25,7 @@ export const Sidebar: React.FC = () => {
     { name: 'Categories', path: '/admin/movie-categories', icon: Tags },
     { name: 'Movies', path: '/admin/movies', icon: Clapperboard },
     { name: 'Locations', path: '/admin/locations', icon: MapPin },
+    { name: 'Theaters', path: '/admin/theaters', icon: Building2 },
     { name: 'Bookings', path: '/admin/bookings', icon: Ticket },
     { name: 'Users', path: '/admin/users', icon: Users },
   ];
