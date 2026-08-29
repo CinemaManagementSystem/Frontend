@@ -38,6 +38,8 @@ export const DashboardLayout: React.FC = () => {
         return 'Products';
       case '/admin/orders':
         return 'Orders';
+      case '/admin/order-items':
+        return 'Order Items';
       case '/admin/users':
         return 'User Management';
       default:

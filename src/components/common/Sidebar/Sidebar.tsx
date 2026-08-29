@@ -17,6 +17,7 @@ import {
   Package,
   Popcorn,
   ShoppingCart,
+  UtensilsCrossed,
   ArrowLeft,
   LogOut,
 } from 'lucide-react';
@@ -41,6 +42,7 @@ export const Sidebar: React.FC = () => {
     { name: 'Product Categories', path: '/admin/product-categories', icon: Package },
     { name: 'Products', path: '/admin/products', icon: Popcorn },
     { name: 'Orders', path: '/admin/orders', icon: ShoppingCart },
+    { name: 'Order Items', path: '/admin/order-items', icon: UtensilsCrossed },
     { name: 'Users', path: '/admin/users', icon: Users },
   ];
 
