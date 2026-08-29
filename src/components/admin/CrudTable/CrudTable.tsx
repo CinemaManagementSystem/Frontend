@@ -25,6 +25,13 @@ export interface CrudColumn<T> {
 
 export type CrudValue = string | number | boolean | File | null;
 
+export interface CrudRowAction<T> {
+  title: string;
+  icon?: React.ReactNode;
+  onClick: (row: T) => Promise<void> | void;
+  disabled?: (row: T) => boolean;
+}
+
 export interface CrudTableProps<T> {
   title: string;
   subtitle: string;
@@ -35,6 +42,7 @@ export interface CrudTableProps<T> {
   searchKeys?: string[];
   createLabel?: string;
   columnContext?: Record<string, unknown>;
+  extraActions?: CrudRowAction<T>[];
   getId: (row: T) => number;
   getDisplayName?: (row: T) => string;
   onSave: (values: Record<string, CrudValue>, id: number | null) => Promise<void>;
@@ -51,6 +59,7 @@ export function CrudTable<T>({
   searchKeys = [],
   createLabel = 'Add New',
   columnContext,
+  extraActions = [],
   getId,
   getDisplayName,
   onSave,
@@ -63,6 +72,7 @@ export function CrudTable<T>({
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [busyAction, setBusyAction] = useState<string | null>(null);
 
   const filteredItems = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -139,6 +149,19 @@ export function CrudTable<T>({
       window.alert(err instanceof Error ? err.message : 'Failed to delete item.');
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const runAction = async (title: string, row: T) => {
+    const action = extraActions.find((a) => a.title === title);
+    if (!action) return;
+    setBusyAction(`${title}:${getId(row)}`);
+    try {
+      await action.onClick(row);
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : `Failed to ${title.toLowerCase()}.`);
+    } finally {
+      setBusyAction(null);
     }
   };
 
@@ -231,6 +254,22 @@ export function CrudTable<T>({
                         ))}
                         <td className="px-4 py-3 text-right whitespace-nowrap">
                           <div className="inline-flex items-center gap-1.5">
+                            {extraActions.map((action) => {
+                              const key = `${action.title}:${id}`;
+                              const busy = busyAction === key;
+                              const isDisabled = busy || (action.disabled ? action.disabled(row) : false);
+                              return (
+                                <button
+                                  key={action.title}
+                                  onClick={() => void runAction(action.title, row)}
+                                  disabled={isDisabled}
+                                  title={action.title}
+                                  className="p-1.5 rounded-lg text-gray-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors disabled:opacity-40 disabled:hover:text-gray-400 disabled:hover:bg-transparent"
+                                >
+                                  {action.icon}
+                                </button>
+                              );
+                            })}
                             <button
                               onClick={() => openEdit(row)}
                               title="Edit"
