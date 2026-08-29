@@ -28,6 +28,7 @@ import { MoviesPage } from '@/pages/admin/Movies/MoviesPage';
 import { LocationsPage } from '@/pages/admin/Locations/LocationsPage';
 import { TheatersPage } from '@/pages/admin/Theaters/TheatersPage';
 import { ScreensPage } from '@/pages/admin/Screens/ScreensPage';
+import { SeatsPage } from '@/pages/admin/Seats/SeatsPage';
 import { BookingsPage } from '@/pages/admin/Bookings/BookingsPage';
 import { UsersPage } from '@/pages/admin/Users/UsersPage';
 
@@ -68,6 +69,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="locations" element={<LocationsPage />} />
         <Route path="theaters" element={<TheatersPage />} />
         <Route path="screens" element={<ScreensPage />} />
+        <Route path="seats" element={<SeatsPage />} />
         <Route path="bookings" element={<BookingsPage />} />
         <Route path="users" element={<UsersPage />} />
       </Route>
