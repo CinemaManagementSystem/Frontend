@@ -1,176 +1,111 @@
-import React, { useState } from 'react';
-import { Search, DollarSign } from 'lucide-react';
-import { motion } from 'motion/react';
-import { useMovieStore } from '@/store/movieStore';
+import React, { useEffect } from 'react';
+import { CrudTable, CrudColumn, CrudField, CrudValue } from '@/components/admin/CrudTable/CrudTable';
 import { Badge } from '@/components/ui/Badge/Badge';
-import { formatCurrency, formatDate } from '@/utils/formatDate';
+import { useBookingAdminStore } from '@/store/bookingAdminStore';
+import { useShowStore } from '@/store/showStore';
+import { useMovieAdminStore } from '@/store/movieAdminStore';
+import { ApiBooking, ApiBookingInput } from '@/types/bookingApi';
+import { formatCurrency, formatDateTime } from '@/utils/formatDate';
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.03 }
-  }
-};
+const STATUS_OPTIONS = [
+  { value: 'PENDING', label: 'PENDING' },
+  { value: 'CONFIRMED', label: 'CONFIRMED' },
+  { value: 'CANCELLED', label: 'CANCELLED' },
+];
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 6 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.22, ease: 'easeOut' as const } }
-};
+const columns: CrudColumn<ApiBooking>[] = [
+  { key: 'bookingCode', header: 'Booking Ref', render: (row) => (
+      <span className="font-mono font-bold text-white">{row.bookingCode}</span>
+    ) },
+  { key: 'customerId', header: 'Customer Id', render: (row) => `#${row.customerId}` },
+  {
+    key: 'showId',
+    header: 'Show',
+    render: (row, context) => {
+      const looks = context?.lookups as Record<number, string> | undefined;
+      return looks?.[row.showId] ?? `#${row.showId}`;
+    },
+  },
+  {
+    key: 'bookedAt',
+    header: 'Booked At',
+    render: (row) => formatDateTime(row.bookedAt),
+  },
+  { key: 'totalAmount', header: 'Total', render: (row) => formatCurrency(row.totalAmount) },
+  {
+    key: 'status',
+    header: 'Status',
+    render: (row) => (
+      <Badge variant={row.status === 'CONFIRMED' ? 'success' : row.status === 'CANCELLED' ? 'destructive' : 'warning'} size="sm">
+        {row.status}
+      </Badge>
+    ),
+  },
+];
+
+function normalizeDateTime(value: string): string {
+  const v = String(value ?? '');
+  return v.length === 16 ? `${v}:00` : v;
+}
+
+function toInput(values: Record<string, CrudValue>): ApiBookingInput {
+  return {
+    bookingCode: String(values.bookingCode ?? ''),
+    customerId: Number(values.customerId ?? 0),
+    showId: Number(values.showId ?? 0),
+    bookedAt: normalizeDateTime(String(values.bookedAt ?? '')),
+    totalAmount: Number(values.totalAmount ?? 0),
+    status: String(values.status ?? 'PENDING'),
+  };
+}
 
 export const BookingsPage: React.FC = () => {
-  const { bookings, cancelBooking } = useMovieStore();
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('ALL');
+  const { bookings, loading, fetchAll, create, update, remove } = useBookingAdminStore();
+  const { shows, fetchAll: fetchShows } = useShowStore();
+  const { movies, fetchAll: fetchMovies } = useMovieAdminStore();
 
-  const filteredBookings = bookings.filter((b) => {
-    const matchesSearch =
-      b.id.toLowerCase().includes(search.toLowerCase()) ||
-      b.userName.toLowerCase().includes(search.toLowerCase()) ||
-      b.movieTitle.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus =
-      statusFilter === 'ALL' || b.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  useEffect(() => {
+    void fetchAll();
+    void fetchShows();
+    void fetchMovies();
+  }, [fetchAll, fetchShows, fetchMovies]);
 
-  const totalSales = bookings.reduce(
-    (sum, b) => (b.status === 'CONFIRMED' ? sum + b.totalAmount : sum),
-    0
-  );
+  const showLookups: Record<number, string> = {};
+  for (const s of shows) {
+    const movieTitle = movies.find((m) => m.id === s.movieId)?.title ?? `movie#${s.movieId}`;
+    showLookups[s.id] = `#${s.id} · ${movieTitle}`;
+  }
+
+  const fields: CrudField[] = [
+    { name: 'bookingCode', label: 'Booking Code', placeholder: 'e.g. BK-XXXXXX', required: true },
+    { name: 'customerId', label: 'Customer ID', type: 'number', placeholder: 'User id of the customer', required: true },
+    { name: 'showId', label: 'Show', type: 'select', options: shows.map((s) => ({ value: String(s.id), label: showLookups[s.id] })), required: true },
+    { name: 'bookedAt', label: 'Booked At', type: 'datetime', required: true },
+    { name: 'totalAmount', label: 'Total Amount (USD)', type: 'number', placeholder: 'e.g. 12.00', required: true },
+    { name: 'status', label: 'Status', type: 'select', options: STATUS_OPTIONS, required: true },
+  ];
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-white tracking-wide">
-            Bookings & Order Records
-          </h2>
-          <p className="text-xs text-gray-400 mt-0.5">
-            Monitor real-time ticket sales, seat reservations, and cancellation logs
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="px-3.5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-2 text-xs font-bold text-emerald-400">
-            <DollarSign className="w-4 h-4" />
-            <span>Active Sales: {formatCurrency(totalSales)}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Filter and Search */}
-      <div className="p-4 rounded-2xl bg-[#141417] border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search by ID, customer name, movie..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-[#1c1c20] border border-white/10 rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder:text-gray-500 focus:outline-none focus:border-[#E50914]"
-          />
-        </div>
-
-        <div className="flex items-center gap-2">
-          {['ALL', 'CONFIRMED', 'CANCELLED'].map((status) => (
-            <button
-              key={status}
-              onClick={() => setStatusFilter(status)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                statusFilter === status
-                  ? 'bg-[#E50914] text-white'
-                  : 'bg-white/5 text-gray-400 hover:text-white'
-              }`}
-            >
-              {status}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Bookings Table */}
-      <div className="rounded-2xl bg-[#141417] border border-white/10 overflow-hidden shadow-xl">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-white/10 bg-[#18181c] text-gray-400 uppercase text-[10px] tracking-wider">
-                <th className="py-3.5 px-4 font-semibold">Booking Ref</th>
-                <th className="py-3.5 px-4 font-semibold">Customer</th>
-                <th className="py-3.5 px-4 font-semibold">Movie & Hall</th>
-                <th className="py-3.5 px-4 font-semibold">Date & Time</th>
-                <th className="py-3.5 px-4 font-semibold">Seats</th>
-                <th className="py-3.5 px-4 font-semibold">Total Amount</th>
-                <th className="py-3.5 px-4 font-semibold">Status</th>
-                <th className="py-3.5 px-4 font-semibold text-right">Actions</th>
-              </tr>
-            </thead>
-            <motion.tbody 
-              key={statusFilter + search}
-              variants={containerVariants}
-              initial="hidden"
-              animate="show"
-              className="divide-y divide-white/5 text-gray-300"
-            >
-              {filteredBookings.map((b) => (
-                <motion.tr 
-                  key={b.id} 
-                  variants={itemVariants}
-                  className="hover:bg-white/5 transition-colors"
-                >
-                  <td className="py-3 px-4 font-mono font-bold text-white">
-                    {b.id}
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="font-semibold text-white">{b.userName}</div>
-                    <div className="text-[10px] text-gray-500">{b.userEmail}</div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="font-bold text-white">{b.movieTitle}</div>
-                    <div className="text-[10px] text-gray-400">{b.cinemaName} • {b.hallName}</div>
-                  </td>
-                  <td className="py-3 px-4 text-gray-400">
-                    <div>{formatDate(b.showDate)}</div>
-                    <div className="text-[10px] text-gray-500">{b.showTime}</div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <span className="px-2 py-0.5 rounded bg-white/10 text-white font-mono text-[11px] font-bold">
-                      {b.seats.join(', ')}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 font-bold text-emerald-400">
-                    {formatCurrency(b.totalAmount)}
-                  </td>
-                  <td className="py-3 px-4">
-                    <Badge
-                      variant={
-                        b.status === 'CONFIRMED'
-                          ? 'success'
-                          : b.status === 'CANCELLED'
-                          ? 'destructive'
-                          : 'warning'
-                      }
-                      size="sm"
-                    >
-                      {b.status}
-                    </Badge>
-                  </td>
-                  <td className="py-3 px-4 text-right">
-                    {b.status === 'CONFIRMED' && (
-                      <button
-                        onClick={() => cancelBooking(b.id)}
-                        className="text-xs text-rose-400 hover:text-rose-300 transition-colors"
-                      >
-                        Cancel
-                      </button>
-                    )}
-                  </td>
-                </motion.tr>
-              ))}
-            </motion.tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+    <CrudTable
+      title="Bookings & Order Records"
+      subtitle="Monitor ticket sales, reservations and cancellation status"
+      items={bookings}
+      loading={loading}
+      columns={columns}
+      fields={fields}
+      searchKeys={['bookingCode', 'status']}
+      columnContext={{ lookups: showLookups }}
+      createLabel="Add Booking"
+      getId={(row) => row.id}
+      getDisplayName={(row) => row.bookingCode}
+      onSave={async (values, id) => {
+        if (id == null) {
+          await create(toInput(values));
+        } else {
+          await update(id, toInput(values));
+        }
+      }}
+      onDelete={remove}
+    />
   );
 };
