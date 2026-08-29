@@ -235,4 +235,5 @@ export const Navbar: React.FC = () => {
       </AnimatePresence>
     </header>
   );
+  
 };

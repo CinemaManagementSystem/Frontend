@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button/Button';
 import { Input } from '@/components/ui/Input/Input';
 import { Spinner } from '@/components/ui/Spinner/Spinner';
 
-export type CrudFieldType = 'text' | 'textarea' | 'number' | 'checkbox' | 'select';
+export type CrudFieldType = 'text' | 'textarea' | 'number' | 'date' | 'checkbox' | 'select';
 
 export interface CrudField {
   name: string;
@@ -327,7 +327,13 @@ export function CrudTable<T>({
                 <Input
                   key={field.name}
                   label={field.label}
-                  type={field.type === 'number' ? 'number' : 'text'}
+                  type={
+                    field.type === 'number'
+                      ? 'number'
+                      : field.type === 'date'
+                        ? 'date'
+                        : 'text'
+                  }
                   placeholder={field.placeholder}
                   required={field.required}
                   value={String(value ?? '')}
