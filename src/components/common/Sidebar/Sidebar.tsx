@@ -95,11 +95,11 @@ export const Sidebar: React.FC = () => {
             <div className="flex items-center gap-2.5 overflow-hidden">
               <img
                 src={user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80'}
-                alt={user.name}
+                alt={user.username}
                 className="w-8 h-8 rounded-lg object-cover border border-[#E50914]"
               />
               <div className="truncate">
-                <p className="text-xs font-bold text-white truncate">{user.name}</p>
+                <p className="text-xs font-bold text-white truncate">{user.username}</p>
                 <p className="text-[10px] text-gray-400 truncate">{user.email}</p>
               </div>
             </div>

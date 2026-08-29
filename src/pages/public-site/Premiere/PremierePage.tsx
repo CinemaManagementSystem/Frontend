@@ -475,7 +475,7 @@ export const PremierePage: React.FC = () => {
                   <button
                     key={pm.id}
                     type="button"
-                    onClick={() => setPaymentMethod(pm.id as any)}
+                    onClick={() => setPaymentMethod(pm.id as typeof paymentMethod)}
                     className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border text-xs font-medium transition-all ${
                       active
                         ? 'border-yellow-500 bg-yellow-500/10 text-white'

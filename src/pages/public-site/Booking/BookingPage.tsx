@@ -78,8 +78,8 @@ export const BookingPage: React.FC = () => {
     if (selectedSeats.length === 0) return;
 
     const booking = addBooking({
-      userId: user?.id || 'u-guest',
-      userName: user?.name || 'Guest User',
+      userId: user ? String(user.id) : 'u-guest',
+      userName: user?.username || 'Guest User',
       userEmail: user?.email || 'guest@example.com',
       movieId: movie?.id || 'm-1',
       movieTitle: movie?.title || 'Unknown Movie',

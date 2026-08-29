@@ -62,7 +62,7 @@ export const DashboardLayout: React.FC = () => {
                 <ShieldCheck className="w-4 h-4" />
               </div>
               <span className="text-xs font-semibold text-gray-300 hidden md:inline-block">
-                {user?.name || 'Administrator'}
+                {user?.username || 'Administrator'}
               </span>
             </div>
           </div>

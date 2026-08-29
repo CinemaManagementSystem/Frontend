@@ -5,30 +5,37 @@ import { Input } from '@/components/ui/Input/Input';
 import { Button } from '@/components/ui/Button/Button';
 import { useAuthStore } from '@/store/authStore';
 
+function getErrorMessage(error: unknown): string {
+  if (typeof error === 'object' && error !== null && 'response' in error) {
+    const response = (error as { response?: { data?: { message?: string } } }).response;
+    if (response?.data?.message) return response.data.message;
+  }
+  if (error instanceof Error && error.message) return error.message;
+  return 'Unable to create account. Please try again.';
+}
+
 export const RegisterForm: React.FC = () => {
   const navigate = useNavigate();
-  const { register } = useAuthStore();
-  const [name, setName] = useState('');
+  const { register, isAuthLoading } = useAuthStore();
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !email || !password) {
+    if (!username || !email || !password) {
       setError('Please fill in all fields');
       return;
     }
 
-    setLoading(true);
     setError('');
-
-    setTimeout(() => {
-      register(name, email);
-      setLoading(false);
-      navigate('/');
-    }, 600);
+    try {
+      await register(username.trim(), email.trim(), password);
+      navigate('/login');
+    } catch (err) {
+      setError(getErrorMessage(err));
+    }
   };
 
   return (
@@ -40,12 +47,13 @@ export const RegisterForm: React.FC = () => {
       )}
 
       <Input
-        label="Full Name"
+        label="Username"
         type="text"
-        placeholder="Jane Doe"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
+        placeholder="jane_doe"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
         icon={<User className="w-4 h-4" />}
+        autoComplete="username"
         required
       />
 
@@ -56,16 +64,18 @@ export const RegisterForm: React.FC = () => {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         icon={<Mail className="w-4 h-4" />}
+        autoComplete="email"
         required
       />
 
       <Input
         label="Password"
         type="password"
-        placeholder="Create a strong password"
+        placeholder="At least 6 characters"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         icon={<Lock className="w-4 h-4" />}
+        autoComplete="new-password"
         required
       />
 
@@ -91,11 +101,11 @@ export const RegisterForm: React.FC = () => {
 
       <Button
         type="submit"
-        disabled={loading}
+        disabled={isAuthLoading}
         className="w-full bg-[#E50914] hover:bg-[#ff1f2d] text-white py-2.5 text-xs font-bold uppercase tracking-wider rounded-lg shadow-lg shadow-[#E50914]/30 flex items-center justify-center gap-2 mt-2"
       >
         <UserPlus className="w-4 h-4" />
-        {loading ? 'Creating Account...' : 'Create Account'}
+        {isAuthLoading ? 'Creating Account...' : 'Create Account'}
       </Button>
     </form>
   );
