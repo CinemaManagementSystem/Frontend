@@ -14,6 +14,8 @@ export const DashboardLayout: React.FC = () => {
     switch (location.pathname) {
       case '/admin/dashboard':
         return 'Overview & Analytics';
+      case '/admin/movie-categories':
+        return 'Movie Categories';
       case '/admin/movies':
         return 'Movie Catalog Manager';
       case '/admin/bookings':

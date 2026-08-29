@@ -7,6 +7,7 @@ import {
   Clapperboard,
   Ticket,
   Users,
+  Tags,
   ArrowLeft,
   LogOut,
 } from 'lucide-react';
@@ -19,6 +20,7 @@ export const Sidebar: React.FC = () => {
 
   const menuItems = [
     { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
+    { name: 'Categories', path: '/admin/movie-categories', icon: Tags },
     { name: 'Movies', path: '/admin/movies', icon: Clapperboard },
     { name: 'Bookings', path: '/admin/bookings', icon: Ticket },
     { name: 'Users', path: '/admin/users', icon: Users },
