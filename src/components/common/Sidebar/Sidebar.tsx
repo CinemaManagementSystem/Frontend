@@ -19,6 +19,7 @@ import {
   ShoppingCart,
   UtensilsCrossed,
   CreditCard,
+  ReceiptText,
   ArrowLeft,
   LogOut,
 } from 'lucide-react';
@@ -45,6 +46,7 @@ export const Sidebar: React.FC = () => {
     { name: 'Orders', path: '/admin/orders', icon: ShoppingCart },
     { name: 'Order Items', path: '/admin/order-items', icon: UtensilsCrossed },
     { name: 'Payments', path: '/admin/payments', icon: CreditCard },
+    { name: 'Payment Transactions', path: '/admin/payment-transactions', icon: ReceiptText },
     { name: 'Users', path: '/admin/users', icon: Users },
   ];
 

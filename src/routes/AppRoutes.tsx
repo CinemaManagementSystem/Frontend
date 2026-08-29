@@ -37,6 +37,7 @@ import { ProductsPage } from '@/pages/admin/Products/ProductsPage';
 import { OrdersPage } from '@/pages/admin/Orders/OrdersPage';
 import { OrderItemsPage } from '@/pages/admin/OrderItems/OrderItemsPage';
 import { PaymentsPage } from '@/pages/admin/Payments/PaymentsPage';
+import { PaymentTransactionsPage } from '@/pages/admin/PaymentTransactions/PaymentTransactionsPage';
 import { UsersPage } from '@/pages/admin/Users/UsersPage';
 
 export const AppRoutes: React.FC = () => {
@@ -85,6 +86,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="orders" element={<OrdersPage />} />
         <Route path="order-items" element={<OrderItemsPage />} />
         <Route path="payments" element={<PaymentsPage />} />
+        <Route path="payment-transactions" element={<PaymentTransactionsPage />} />
         <Route path="users" element={<UsersPage />} />
       </Route>
 

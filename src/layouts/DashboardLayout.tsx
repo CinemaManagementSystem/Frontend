@@ -42,6 +42,8 @@ export const DashboardLayout: React.FC = () => {
         return 'Order Items';
       case '/admin/payments':
         return 'Payments';
+      case '/admin/payment-transactions':
+        return 'Payment Transactions';
       case '/admin/users':
         return 'User Management';
       default:
