@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Film, Search, Ticket, User, Menu, X, Shield, LogOut } from 'lucide-react';
+import { Film, Search, Ticket, Menu, X, Shield, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuthStore } from '@/store/authStore';
 
 export const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isAuthenticated, logout, switchRole } = useAuthStore();
+  const { user, isAuthenticated, logout } = useAuthStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
@@ -89,11 +89,11 @@ export const Navbar: React.FC = () => {
               >
                 <img
                   src={user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80'}
-                  alt={user.name}
+                  alt={user.username}
                   className="w-7 h-7 rounded-full object-cover border border-[#E50914]"
                 />
                 <span className="text-xs font-medium text-white max-w-[100px] truncate">
-                  {user.name}
+                  {user.username}
                 </span>
               </button>
 
@@ -108,7 +108,7 @@ export const Navbar: React.FC = () => {
                     className="absolute right-0 mt-2 w-56 bg-[#18181b] border border-white/10 rounded-xl shadow-2xl p-2 z-50 origin-top-right"
                   >
                     <div className="px-3 py-2 border-b border-white/10 mb-1">
-                      <p className="text-xs font-semibold text-white">{user.name}</p>
+                      <p className="text-xs font-semibold text-white">{user.username}</p>
                       <p className="text-[11px] text-gray-400 truncate">{user.email}</p>
                       <span className="inline-block mt-1 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-[#E50914]/20 text-[#E50914]">
                         {user.role} Role
@@ -134,18 +134,6 @@ export const Navbar: React.FC = () => {
                       <Ticket className="w-4 h-4 text-amber-400" />
                       My Bookings
                     </Link>
-
-                    {/* Switch role quick toggle for demo */}
-                    <button
-                      onClick={() => {
-                        switchRole(user.role === 'ADMIN' ? 'USER' : 'ADMIN');
-                        setUserDropdownOpen(false);
-                      }}
-                      className="w-full text-left flex items-center gap-2 px-3 py-2 text-xs text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                    >
-                      <User className="w-4 h-4 text-cyan-400" />
-                      Switch to {user.role === 'ADMIN' ? 'User' : 'Admin'} Mode
-                    </button>
 
                     <div className="border-t border-white/10 my-1 pt-1">
                       <button
@@ -230,7 +218,7 @@ export const Navbar: React.FC = () => {
                   }}
                   className="w-full text-left px-3 py-2 text-sm font-medium text-rose-400"
                 >
-                  Sign Out ({user?.name})
+                  Sign Out ({user?.username})
                 </button>
               ) : (
                 <Link

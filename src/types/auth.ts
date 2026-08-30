@@ -1,17 +1,29 @@
-export type UserRole = 'USER' | 'ADMIN';
+export type UserRole = 'ADMIN' | 'STAFF' | 'USER';
 
 export interface User {
-  id: string;
-  name: string;
+  id: number;
+  username: string;
   email: string;
-  avatar?: string;
   role: UserRole;
+  avatar?: string;
   phone?: string;
-  createdAt: string;
+}
+
+export interface AuthResponse {
+  accessToken: string;
+  tokenType: string;
+  expiresIn: number;
+  user: User;
+}
+
+export interface RegisterResponse {
+  message: string;
+  user: User;
 }
 
 export interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
+  isAuthLoading: boolean;
   token: string | null;
 }

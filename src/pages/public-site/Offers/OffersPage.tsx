@@ -35,6 +35,7 @@ interface OfferDetail {
 }
 
 export const OffersPage: React.FC = () => {
+  const shouldReduceMotion = useReducedMotion();
   // Offers database
   const offersList: OfferDetail[] = [
     {
@@ -537,7 +538,6 @@ export const OffersPage: React.FC = () => {
         >
           {offersList.map((item) => {
             const active = activeOffer.id === item.id;
-            const shouldReduceMotion = useReducedMotion();
             return (
               <motion.div
                 key={item.id}

@@ -19,6 +19,7 @@ const itemVariants = {
 
 export const MoviesPage: React.FC = () => {
   const navigate = useNavigate();
+  const shouldReduceMotion = useReducedMotion();
   const { movies, searchQuery, setSearchQuery } = useMovieStore();
 
   // Filters State
@@ -288,7 +289,6 @@ export const MoviesPage: React.FC = () => {
           >
             {filteredMovies.map((movie) => {
               const inWatchlist = watchlist.includes(movie.id);
-              const shouldReduceMotion = useReducedMotion();
               return (
                 <motion.div
                   key={movie.id}

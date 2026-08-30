@@ -23,8 +23,21 @@ import { RegisterPage } from '@/pages/auth/Register/RegisterPage';
 
 // Admin Pages
 import { DashboardPage } from '@/pages/admin/DashboardPage';
+import { CategoriesPage } from '@/pages/admin/Categories/CategoriesPage';
 import { MoviesPage } from '@/pages/admin/Movies/MoviesPage';
+import { LocationsPage } from '@/pages/admin/Locations/LocationsPage';
+import { TheatersPage } from '@/pages/admin/Theaters/TheatersPage';
+import { ScreensPage } from '@/pages/admin/Screens/ScreensPage';
+import { SeatsPage } from '@/pages/admin/Seats/SeatsPage';
+import { ShowsPage } from '@/pages/admin/Shows/ShowsPage';
 import { BookingsPage } from '@/pages/admin/Bookings/BookingsPage';
+import { BookingSeatsPage } from '@/pages/admin/BookingSeats/BookingSeatsPage';
+import { ProductCategoriesPage } from '@/pages/admin/ProductCategories/ProductCategoriesPage';
+import { ProductsPage } from '@/pages/admin/Products/ProductsPage';
+import { OrdersPage } from '@/pages/admin/Orders/OrdersPage';
+import { OrderItemsPage } from '@/pages/admin/OrderItems/OrderItemsPage';
+import { PaymentsPage } from '@/pages/admin/Payments/PaymentsPage';
+import { PaymentTransactionsPage } from '@/pages/admin/PaymentTransactions/PaymentTransactionsPage';
 import { UsersPage } from '@/pages/admin/Users/UsersPage';
 
 export const AppRoutes: React.FC = () => {
@@ -59,8 +72,21 @@ export const AppRoutes: React.FC = () => {
       <Route path="/admin" element={<DashboardLayout />}>
         <Route index element={<Navigate to="/admin/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="movie-categories" element={<CategoriesPage />} />
         <Route path="movies" element={<MoviesPage />} />
+        <Route path="locations" element={<LocationsPage />} />
+        <Route path="theaters" element={<TheatersPage />} />
+        <Route path="screens" element={<ScreensPage />} />
+        <Route path="seats" element={<SeatsPage />} />
+        <Route path="shows" element={<ShowsPage />} />
         <Route path="bookings" element={<BookingsPage />} />
+        <Route path="booking-seats" element={<BookingSeatsPage />} />
+        <Route path="product-categories" element={<ProductCategoriesPage />} />
+        <Route path="products" element={<ProductsPage />} />
+        <Route path="orders" element={<OrdersPage />} />
+        <Route path="order-items" element={<OrderItemsPage />} />
+        <Route path="payments" element={<PaymentsPage />} />
+        <Route path="payment-transactions" element={<PaymentTransactionsPage />} />
         <Route path="users" element={<UsersPage />} />
       </Route>
 

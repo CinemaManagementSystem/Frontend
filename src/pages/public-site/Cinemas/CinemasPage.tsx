@@ -474,7 +474,7 @@ export const CinemasPage: React.FC = () => {
                               let statusColor = 'bg-emerald-500';
                               let hoverBorderColor = 'hover:border-emerald-500';
                               let occupancyLabel = 'Available';
-                              let isSoldOut = occupiedCount >= totalSeats;
+                              const isSoldOut = occupiedCount >= totalSeats;
 
                               if (isSoldOut) {
                                 statusColor = 'bg-rose-500';

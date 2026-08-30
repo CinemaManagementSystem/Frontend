@@ -14,10 +14,36 @@ export const DashboardLayout: React.FC = () => {
     switch (location.pathname) {
       case '/admin/dashboard':
         return 'Overview & Analytics';
+      case '/admin/movie-categories':
+        return 'Movie Categories';
       case '/admin/movies':
         return 'Movie Catalog Manager';
+      case '/admin/locations':
+        return 'Cinema Locations';
+      case '/admin/theaters':
+        return 'Theaters';
+      case '/admin/screens':
+        return 'Screens';
+      case '/admin/seats':
+        return 'Seats';
+      case '/admin/shows':
+        return 'Show Schedules';
       case '/admin/bookings':
         return 'Bookings & Orders';
+      case '/admin/booking-seats':
+        return 'Booking Seats';
+      case '/admin/product-categories':
+        return 'Product Categories';
+      case '/admin/products':
+        return 'Products';
+      case '/admin/orders':
+        return 'Orders';
+      case '/admin/order-items':
+        return 'Order Items';
+      case '/admin/payments':
+        return 'Payments';
+      case '/admin/payment-transactions':
+        return 'Payment Transactions';
       case '/admin/users':
         return 'User Management';
       default:
@@ -62,7 +88,7 @@ export const DashboardLayout: React.FC = () => {
                 <ShieldCheck className="w-4 h-4" />
               </div>
               <span className="text-xs font-semibold text-gray-300 hidden md:inline-block">
-                {user?.name || 'Administrator'}
+                {user?.username || 'Administrator'}
               </span>
             </div>
           </div>

@@ -7,6 +7,19 @@ import {
   Clapperboard,
   Ticket,
   Users,
+  Tags,
+  MapPin,
+  Building2,
+  MonitorPlay,
+  Armchair,
+  CalendarClock,
+  Sofa,
+  Package,
+  Popcorn,
+  ShoppingCart,
+  UtensilsCrossed,
+  CreditCard,
+  ReceiptText,
   ArrowLeft,
   LogOut,
 } from 'lucide-react';
@@ -19,8 +32,21 @@ export const Sidebar: React.FC = () => {
 
   const menuItems = [
     { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
+    { name: 'Categories', path: '/admin/movie-categories', icon: Tags },
     { name: 'Movies', path: '/admin/movies', icon: Clapperboard },
+    { name: 'Locations', path: '/admin/locations', icon: MapPin },
+    { name: 'Theaters', path: '/admin/theaters', icon: Building2 },
+    { name: 'Screens', path: '/admin/screens', icon: MonitorPlay },
+    { name: 'Seats', path: '/admin/seats', icon: Armchair },
+    { name: 'Shows', path: '/admin/shows', icon: CalendarClock },
     { name: 'Bookings', path: '/admin/bookings', icon: Ticket },
+    { name: 'Booking Seats', path: '/admin/booking-seats', icon: Sofa },
+    { name: 'Product Categories', path: '/admin/product-categories', icon: Package },
+    { name: 'Products', path: '/admin/products', icon: Popcorn },
+    { name: 'Orders', path: '/admin/orders', icon: ShoppingCart },
+    { name: 'Order Items', path: '/admin/order-items', icon: UtensilsCrossed },
+    { name: 'Payments', path: '/admin/payments', icon: CreditCard },
+    { name: 'Payment Transactions', path: '/admin/payment-transactions', icon: ReceiptText },
     { name: 'Users', path: '/admin/users', icon: Users },
   ];
 
@@ -95,11 +121,11 @@ export const Sidebar: React.FC = () => {
             <div className="flex items-center gap-2.5 overflow-hidden">
               <img
                 src={user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80'}
-                alt={user.name}
+                alt={user.username}
                 className="w-8 h-8 rounded-lg object-cover border border-[#E50914]"
               />
               <div className="truncate">
-                <p className="text-xs font-bold text-white truncate">{user.name}</p>
+                <p className="text-xs font-bold text-white truncate">{user.username}</p>
                 <p className="text-[10px] text-gray-400 truncate">{user.email}</p>
               </div>
             </div>
