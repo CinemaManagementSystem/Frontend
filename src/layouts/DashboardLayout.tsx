@@ -83,6 +83,7 @@ export const DashboardLayout: React.FC = () => {
             </button>
 
             {/* Admin Badge */}
+   
             <div className="flex items-center gap-2 pl-3 border-l border-white/10">
               <div className="w-7 h-7 rounded-lg bg-[#E50914]/20 border border-[#E50914]/40 flex items-center justify-center text-[#E50914]">
                 <ShieldCheck className="w-4 h-4" />

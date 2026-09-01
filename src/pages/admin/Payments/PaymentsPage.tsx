@@ -31,7 +31,7 @@ const columns: CrudColumn<Payment>[] = [
     header: 'Status',
     render: (row) => (
       <Badge
-        variant={row.status === 'SUCCESS' ? 'success' : row.status === 'FAILED' ? 'destructive' : 'warning'}
+        variant={row.status === 'PAID' ? 'success' : row.status === 'FAILED' ? 'destructive' : 'warning'}
         size="sm"
       >
         {row.status}
