@@ -102,11 +102,11 @@ export const BookingPage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Header Info */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
         <div>
           <Link
             to={movie ? `/movies/${movie.id}` : '/'}
-            className="inline-flex items-center gap-2 text-xs text-gray-400 hover:text-white mb-2 transition-colors"
+            className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-white mb-2 transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             Back to Movie
@@ -114,7 +114,7 @@ export const BookingPage: React.FC = () => {
           <h1 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight">
             {movie?.title}
           </h1>
-          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400 mt-1">
+          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-1">
             <span className="text-[#E50914] font-bold">{showtime?.cinemaName}</span>
             <span>•</span>
             <span>{showtime?.hallName}</span>
@@ -132,16 +132,16 @@ export const BookingPage: React.FC = () => {
         {/* Legend */}
         <div className="flex flex-wrap items-center gap-4 text-xs">
           <div className="flex items-center gap-1.5">
-            <div className="w-4 h-4 rounded bg-[#27272a] border border-white/20" />
-            <span className="text-gray-400">Available</span>
+            <div className="w-4 h-4 rounded bg-[#27272a] border border-border" />
+            <span className="text-muted-foreground">Available</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-4 h-4 rounded bg-[#E50914] shadow-md shadow-[#E50914]/50" />
             <span className="text-white font-semibold">Selected</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-4 h-4 rounded bg-zinc-800 border border-white/5 opacity-40" />
-            <span className="text-gray-500">Occupied</span>
+            <div className="w-4 h-4 rounded bg-zinc-800 border border-border opacity-40" />
+            <span className="text-muted-foreground">Occupied</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-4 h-4 rounded bg-amber-500/20 border border-amber-500" />
@@ -152,11 +152,11 @@ export const BookingPage: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {/* Seat Layout Box */}
-        <div className="lg:col-span-2 p-6 sm:p-10 rounded-3xl bg-[#141417] border border-white/10 space-y-10 shadow-2xl">
+        <div className="lg:col-span-2 p-6 sm:p-10 rounded-3xl bg-[#141417] border border-border space-y-10 shadow-2xl">
           {/* Cinema Screen Curve */}
           <div className="space-y-2 text-center max-w-lg mx-auto">
             <div className="screen-curve w-full" />
-            <p className="text-[10px] font-bold tracking-widest text-gray-500 uppercase">
+            <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
               THEATER SCREEN
             </p>
           </div>
@@ -170,7 +170,7 @@ export const BookingPage: React.FC = () => {
               return (
                 <div key={row} className="flex items-center justify-center gap-2 sm:gap-3 min-w-[500px]">
                   {/* Row Letter */}
-                  <span className="w-6 text-xs font-bold text-gray-500 text-center">
+                  <span className="w-6 text-xs font-bold text-muted-foreground text-center">
                     {row}
                   </span>
 
@@ -182,7 +182,7 @@ export const BookingPage: React.FC = () => {
                       const isOccupied = isSeatOccupied(seatId);
                       const isSelected = selectedSeats.includes(seatId);
 
-                      let seatClass = 'bg-[#27272a] text-gray-300 hover:bg-white/20 border border-white/10';
+                      let seatClass = 'bg-[#27272a] text-muted-foreground hover:bg-white/20 border border-border';
 
                       if (isOccupied) {
                         seatClass = 'bg-zinc-900 text-transparent border-transparent opacity-30 cursor-not-allowed';
@@ -211,7 +211,7 @@ export const BookingPage: React.FC = () => {
                   </div>
 
                   {/* Row Letter right */}
-                  <span className="w-6 text-xs font-bold text-gray-500 text-center">
+                  <span className="w-6 text-xs font-bold text-muted-foreground text-center">
                     {row}
                   </span>
                 </div>
@@ -220,9 +220,9 @@ export const BookingPage: React.FC = () => {
           </div>
 
           {/* Seat Category Pricing Helper */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-6 border-t border-white/10 text-center">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-6 border-t border-border text-center">
             <div className="p-3 rounded-xl bg-white/5">
-              <span className="text-[11px] text-gray-400 block font-medium">Standard (Rows A-E)</span>
+              <span className="text-[11px] text-muted-foreground block font-medium">Standard (Rows A-E)</span>
               <span className="text-sm font-bold text-white">
                 {formatCurrency(showtime?.price || 15)}
               </span>
@@ -243,15 +243,15 @@ export const BookingPage: React.FC = () => {
         </div>
 
         {/* Order Summary & Payment */}
-        <div className="p-6 rounded-3xl bg-[#161619] border border-white/10 space-y-6 shadow-2xl sticky top-24">
-          <h3 className="text-base font-bold text-white uppercase tracking-wider pb-3 border-b border-white/10 flex items-center gap-2">
+        <div className="p-6 rounded-3xl bg-[#161619] border border-border space-y-6 shadow-2xl sticky top-24">
+          <h3 className="text-base font-bold text-white uppercase tracking-wider pb-3 border-b border-border flex items-center gap-2">
             <Ticket className="w-4 h-4 text-[#E50914]" />
             Booking Summary
           </h3>
 
           {/* Selected Seats List */}
           <div className="space-y-2">
-            <span className="text-xs text-gray-400 font-medium">Selected Seats</span>
+            <span className="text-xs text-muted-foreground font-medium">Selected Seats</span>
             {selectedSeats.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {selectedSeats.map((seatId) => (
@@ -264,13 +264,13 @@ export const BookingPage: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-gray-500 italic">No seats selected yet.</p>
+              <p className="text-xs text-muted-foreground italic">No seats selected yet.</p>
             )}
           </div>
 
           {/* Payment Method Selector */}
-          <div className="space-y-3 pt-3 border-t border-white/10">
-            <span className="text-xs text-gray-400 font-medium block">
+          <div className="space-y-3 pt-3 border-t border-border">
+            <span className="text-xs text-muted-foreground font-medium block">
               Payment Method
             </span>
             <div className="grid grid-cols-3 gap-2">
@@ -289,7 +289,7 @@ export const BookingPage: React.FC = () => {
                     className={`flex flex-col items-center gap-1.5 p-2.5 rounded-xl border text-xs font-medium transition-all ${
                       active
                         ? 'border-[#E50914] bg-[#E50914]/10 text-white'
-                        : 'border-white/10 bg-white/5 text-gray-400 hover:text-white'
+                        : 'border-border bg-white/5 text-muted-foreground hover:text-white'
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -301,16 +301,16 @@ export const BookingPage: React.FC = () => {
           </div>
 
           {/* Price Breakdown */}
-          <div className="space-y-2 pt-4 border-t border-white/10 text-xs">
-            <div className="flex items-center justify-between text-gray-400">
+          <div className="space-y-2 pt-4 border-t border-border text-xs">
+            <div className="flex items-center justify-between text-muted-foreground">
               <span>Tickets ({selectedSeats.length})</span>
               <span className="text-white font-semibold">{formatCurrency(subtotal)}</span>
             </div>
-            <div className="flex items-center justify-between text-gray-400">
+            <div className="flex items-center justify-between text-muted-foreground">
               <span>Online Convenience Fee</span>
               <span className="text-white font-semibold">{formatCurrency(serviceFee)}</span>
             </div>
-            <div className="flex items-center justify-between pt-3 border-t border-white/10 text-sm">
+            <div className="flex items-center justify-between pt-3 border-t border-border text-sm">
               <span className="font-bold text-white">Total Amount</span>
               <span className="text-xl font-black text-[#E50914]">
                 {formatCurrency(grandTotal)}
@@ -346,25 +346,25 @@ export const BookingPage: React.FC = () => {
 
           <div>
             <h4 className="text-lg font-bold text-white">{movie?.title}</h4>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Booking Ref: <span className="text-[#E50914] font-bold">{confirmedBookingId}</span>
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-xs text-left space-y-2">
-            <div className="flex justify-between text-gray-300">
+          <div className="p-4 rounded-xl bg-white/5 border border-border text-xs text-left space-y-2">
+            <div className="flex justify-between text-muted-foreground">
               <span>Cinema & Hall:</span>
               <span className="font-semibold text-white">{showtime?.cinemaName} - {showtime?.hallName}</span>
             </div>
-            <div className="flex justify-between text-gray-300">
+            <div className="flex justify-between text-muted-foreground">
               <span>Date & Time:</span>
               <span className="font-semibold text-white">{formatDate(showtime?.date || '')} @ {showtime?.time}</span>
             </div>
-            <div className="flex justify-between text-gray-300">
+            <div className="flex justify-between text-muted-foreground">
               <span>Seats:</span>
               <span className="font-bold text-[#E50914]">{selectedSeats.join(', ')}</span>
             </div>
-            <div className="flex justify-between text-gray-300 border-t border-white/10 pt-2 font-bold">
+            <div className="flex justify-between text-muted-foreground border-t border-border pt-2 font-bold">
               <span>Total Paid:</span>
               <span className="text-emerald-400">{formatCurrency(grandTotal)}</span>
             </div>

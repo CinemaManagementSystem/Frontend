@@ -171,7 +171,7 @@ export function CrudTable<T>({
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h3 className="text-lg font-bold text-white tracking-wide">{title}</h3>
-          <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
         </div>
         <Button variant="primary" size="sm" onClick={openCreate}>
           <Plus className="w-4 h-4 mr-1.5" />
@@ -180,21 +180,21 @@ export function CrudTable<T>({
       </div>
 
       {/* Search Bar */}
-      <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#141417] border border-white/10">
+      <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#141417] border border-border">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search records..."
-            className="w-full bg-transparent text-sm text-white pl-9 pr-4 py-1.5 outline-none placeholder:text-gray-500"
+            className="w-full bg-transparent text-sm text-white pl-9 pr-4 py-1.5 outline-none placeholder:text-muted-foreground"
           />
         </div>
       </div>
 
       {/* Table */}
-      <div className="rounded-2xl bg-[#141417] border border-white/10 shadow-xl overflow-hidden">
+      <div className="rounded-2xl bg-[#141417] border border-border shadow-xl overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Spinner size="lg" />
@@ -203,19 +203,19 @@ export function CrudTable<T>({
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-white/10 bg-white/[0.02]">
-                  <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400 w-12">
+                <tr className="border-b border-border bg-white/[0.02]">
+                  <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground w-12">
                     #
                   </th>
                   {columns.map((col) => (
                     <th
                       key={col.key}
-                      className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400"
+                      className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground"
                     >
                       {col.header}
                     </th>
                   ))}
-                  <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400 text-right">
+                  <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground text-right">
                     Actions
                   </th>
                 </tr>
@@ -228,7 +228,7 @@ export function CrudTable<T>({
                 {filteredItems.length === 0 ? (
                   <tr>
                     <td colSpan={columns.length + 2} className="px-4 py-14 text-center">
-                      <p className="text-sm text-gray-500">No records found.</p>
+                      <p className="text-sm text-muted-foreground">No records found.</p>
                     </td>
                   </tr>
                 ) : (
@@ -242,9 +242,9 @@ export function CrudTable<T>({
                           hidden: { opacity: 0, y: 6 },
                           show: { opacity: 1, y: 0, transition: { duration: 0.2 } },
                         }}
-                        className="border-b border-white/5 hover:bg-white/[0.03] transition-colors"
+                        className="border-b border-border hover:bg-white/[0.03] transition-colors"
                       >
-                        <td className="px-4 py-3 text-xs text-gray-500">{index + 1}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">{index + 1}</td>
                         {columns.map((col) => (
                           <td key={col.key} className="px-4 py-3 text-sm text-gray-200">
                             {col.render
@@ -264,7 +264,7 @@ export function CrudTable<T>({
                                   onClick={() => void runAction(action.title, row)}
                                   disabled={isDisabled}
                                   title={action.title}
-                                  className="p-1.5 rounded-lg text-gray-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors disabled:opacity-40 disabled:hover:text-gray-400 disabled:hover:bg-transparent"
+                                  className="p-1.5 rounded-lg text-muted-foreground hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors disabled:opacity-40 disabled:hover:text-muted-foreground disabled:hover:bg-transparent"
                                 >
                                   {action.icon}
                                 </button>
@@ -273,7 +273,7 @@ export function CrudTable<T>({
                             <button
                               onClick={() => openEdit(row)}
                               title="Edit"
-                              className="p-1.5 rounded-lg text-gray-400 hover:text-amber-400 hover:bg-white/10 transition-colors"
+                              className="p-1.5 rounded-lg text-muted-foreground hover:text-amber-400 hover:bg-white/10 transition-colors"
                             >
                               <Edit2 className="w-4 h-4" />
                             </button>
@@ -281,7 +281,7 @@ export function CrudTable<T>({
                               onClick={() => handleDelete(row)}
                               disabled={deleting}
                               title="Delete"
-                              className="p-1.5 rounded-lg text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors disabled:opacity-50"
+                              className="p-1.5 rounded-lg text-muted-foreground hover:text-rose-400 hover:bg-rose-500/10 transition-colors disabled:opacity-50"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -323,7 +323,7 @@ export function CrudTable<T>({
                       type="checkbox"
                       checked={Boolean(value)}
                       onChange={(e) => setFieldValue(field.name, e.target.checked)}
-                      className="w-4 h-4 rounded bg-[#1e1e22] border-white/20 text-[#E50914] focus:ring-0"
+                      className="w-4 h-4 rounded bg-[#1e1e22] border-border text-[#E50914] focus:ring-0"
                     />
                     <span>{field.label}</span>
                   </label>
@@ -332,13 +332,13 @@ export function CrudTable<T>({
               if (field.type === 'select' && field.options) {
                 return (
                   <div key={field.name} className="space-y-1.5">
-                    <label className="block text-xs font-medium text-gray-300">
+                    <label className="block text-xs font-medium text-muted-foreground">
                       {field.label}
                     </label>
                     <select
                       value={String(value ?? '')}
                       onChange={(e) => setFieldValue(field.name, e.target.value)}
-                      className="w-full bg-[#1e1e22]/80 text-white text-sm rounded-lg border border-white/10 px-3.5 py-2.5 outline-none focus:border-[#E50914] focus:ring-2 focus:ring-[#E50914]/20"
+                      className="w-full bg-[#1e1e22]/80 text-white text-sm rounded-lg border border-border px-3.5 py-2.5 outline-none focus:border-[#E50914] focus:ring-2 focus:ring-[#E50914]/20"
                     >
                       <option value="">Select...</option>
                       {field.options.map((opt) => (
@@ -353,7 +353,7 @@ export function CrudTable<T>({
               if (field.type === 'textarea') {
                 return (
                   <div key={field.name} className="space-y-1.5">
-                    <label className="block text-xs font-medium text-gray-300">
+                    <label className="block text-xs font-medium text-muted-foreground">
                       {field.label}
                     </label>
                     <textarea
@@ -362,7 +362,7 @@ export function CrudTable<T>({
                       required={field.required}
                       placeholder={field.placeholder}
                       rows={3}
-                      className="w-full bg-[#1e1e22]/80 text-white text-sm rounded-lg border border-white/10 px-3.5 py-2.5 outline-none focus:border-[#E50914] focus:ring-2 focus:ring-[#E50914]/20 resize-none"
+                      className="w-full bg-[#1e1e22]/80 text-white text-sm rounded-lg border border-border px-3.5 py-2.5 outline-none focus:border-[#E50914] focus:ring-2 focus:ring-[#E50914]/20 resize-none"
                     />
                   </div>
                 );
@@ -370,7 +370,7 @@ export function CrudTable<T>({
               if (field.type === 'file') {
                 return (
                   <div key={field.name} className="space-y-1.5">
-                    <label className="block text-xs font-medium text-gray-300">
+                    <label className="block text-xs font-medium text-muted-foreground">
                       {field.label}
                     </label>
                     <input
@@ -379,7 +379,7 @@ export function CrudTable<T>({
                       onChange={(e) =>
                         setFieldValue(field.name, e.target.files?.[0] ?? null)
                       }
-                      className="w-full text-sm text-gray-300 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-white/10 file:text-white file:text-xs file:font-semibold hover:file:bg-white/20 cursor-pointer"
+                      className="w-full text-sm text-muted-foreground file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-white/10 file:text-white file:text-xs file:font-semibold hover:file:bg-white/20 cursor-pointer"
                     />
                   </div>
                 );

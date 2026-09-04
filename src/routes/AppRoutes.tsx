@@ -16,6 +16,7 @@ import { CinemasPage } from '@/pages/public-site/Cinemas';
 import { OffersPage } from '@/pages/public-site/Offers';
 import { PremierePage } from '@/pages/public-site/Premiere';
 import { NotFoundPage } from '@/pages/public-site/NotFound';
+import { SettingsPage } from '@/pages/public-site/Settings';
 
 // Auth Pages
 import { LoginPage } from '@/pages/auth/Login/LoginPage';
@@ -52,6 +53,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/cinemas" element={<CinemasPage />} />
         <Route path="/offers" element={<OffersPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
         <Route path="/premiere" element={<PremierePage />} />
         <Route path="/membership" element={<PremierePage />} />
         <Route path="/premiere-circle" element={<PremierePage />} />

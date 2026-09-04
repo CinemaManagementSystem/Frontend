@@ -19,8 +19,8 @@ export const Button: React.FC<ButtonProps> = ({
   const variants: Record<string, string> = {
     primary: 'bg-[#E50914] hover:bg-[#ff1f2d] text-white',
     outline:
-      'bg-transparent border border-white/20 text-gray-300 hover:border-white/40 hover:text-white',
-    ghost: 'bg-transparent text-gray-300 hover:bg-white/10 hover:text-white',
+      'bg-transparent border border-border text-muted-foreground hover:border-border hover:text-white',
+    ghost: 'bg-transparent text-muted-foreground hover:bg-white/10 hover:text-white',
   };
 
   const sizes: Record<string, string> = {

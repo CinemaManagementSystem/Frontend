@@ -9,14 +9,14 @@ export const LoginPage: React.FC = () => {
         <h2 className="text-2xl font-black text-white uppercase tracking-tight">
           Welcome Back
         </h2>
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-muted-foreground">
           Sign in to access your tickets, cinema rewards, and bookings
         </p>
       </div>
 
       <LoginForm />
 
-      <p className="text-center text-xs text-gray-400">
+      <p className="text-center text-xs text-muted-foreground">
         Don't have an account?{' '}
         <Link to="/register" className="text-[#E50914] font-bold hover:underline">
           Sign Up Now

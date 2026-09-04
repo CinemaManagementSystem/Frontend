@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Film, Search, Ticket, Menu, X, Shield, LogOut } from 'lucide-react';
+import { Film, Search, Ticket, Menu, X, Shield, LogOut, Sun, Moon, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuthStore } from '@/store/authStore';
+import { useTheme } from '@/context/ThemeContext';
 
 export const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuthStore();
+  const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
@@ -18,6 +20,7 @@ export const Navbar: React.FC = () => {
     { name: 'Comming Soon', path: '/coming-soon' },
     { name: 'Offers', path: '/offers'},
     { name: 'My Tickets', path: '/history' },
+    { name: 'Settings', path: '/settings' },
   ];
 
   const isActive = (path: string) => {
@@ -48,8 +51,8 @@ export const Navbar: React.FC = () => {
                 to={link.path}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   active
-                    ? 'text-white bg-white/10 shadow-inner'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    ? 'text-foreground bg-accent/10 shadow-inner'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/5'
                 }`}
               >
                 {link.name}
@@ -71,10 +74,19 @@ export const Navbar: React.FC = () => {
 
         {/* Right Actions */}
         <div className="hidden md:flex items-center gap-3">
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors"
+          >
+            {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
+
           {/* Search Trigger */}
           <button
             onClick={() => navigate('/movies')}
-            className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors"
             title="Search Movies"
           >
             <Search className="w-5 h-5" />
@@ -85,14 +97,14 @@ export const Navbar: React.FC = () => {
             <div className="relative">
               <button
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                className="flex items-center gap-2.5 p-1.5 pr-3 rounded-full bg-white/5 border border-white/10 hover:border-white/20 transition-colors"
+                className="flex items-center gap-2.5 p-1.5 pr-3 rounded-full bg-accent/10 border border-border hover:border-accent/40 transition-colors"
               >
                 <img
                   src={user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80'}
                   alt={user.username}
                   className="w-7 h-7 rounded-full object-cover border border-[#E50914]"
                 />
-                <span className="text-xs font-medium text-white max-w-[100px] truncate">
+                <span className="text-xs font-medium text-foreground max-w-[100px] truncate">
                   {user.username}
                 </span>
               </button>
@@ -105,11 +117,11 @@ export const Navbar: React.FC = () => {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.96 }}
                     transition={{ duration: 0.15, ease: 'easeOut' }}
-                    className="absolute right-0 mt-2 w-56 bg-[#18181b] border border-white/10 rounded-xl shadow-2xl p-2 z-50 origin-top-right"
+                    className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-xl shadow-2xl p-2 z-50 origin-top-right"
                   >
-                    <div className="px-3 py-2 border-b border-white/10 mb-1">
-                      <p className="text-xs font-semibold text-white">{user.username}</p>
-                      <p className="text-[11px] text-gray-400 truncate">{user.email}</p>
+                    <div className="px-3 py-2 border-b border-border mb-1">
+                      <p className="text-xs font-semibold text-foreground">{user.username}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
                       <span className="inline-block mt-1 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-[#E50914]/20 text-[#E50914]">
                         {user.role} Role
                       </span>
@@ -119,7 +131,7 @@ export const Navbar: React.FC = () => {
                       <Link
                         to="/admin/dashboard"
                         onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2 px-3 py-2 text-xs text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                        className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/10 rounded-lg transition-colors"
                       >
                         <Shield className="w-4 h-4 text-[#E50914]" />
                         Admin Dashboard
@@ -129,13 +141,22 @@ export const Navbar: React.FC = () => {
                     <Link
                       to="/history"
                       onClick={() => setUserDropdownOpen(false)}
-                      className="flex items-center gap-2 px-3 py-2 text-xs text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                      className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/10 rounded-lg transition-colors"
                     >
                       <Ticket className="w-4 h-4 text-amber-400" />
                       My Bookings
                     </Link>
 
-                    <div className="border-t border-white/10 my-1 pt-1">
+                    <Link
+                      to="/settings"
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/10 rounded-lg transition-colors"
+                    >
+                      <Settings className="w-4 h-4 text-muted-foreground" />
+                      Settings
+                    </Link>
+
+                    <div className="border-t border-border my-1 pt-1">
                       <button
                         onClick={() => {
                           logout();
@@ -171,9 +192,17 @@ export const Navbar: React.FC = () => {
 
         {/* Mobile Menu Toggle */}
         <div className="flex md:hidden items-center gap-2">
+          {/* Theme Toggle (mobile) */}
+          <button
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/10"
+          >
+            {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10"
+            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/10"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -188,14 +217,14 @@ export const Navbar: React.FC = () => {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.22, ease: 'easeInOut' }}
-            className="md:hidden glass-nav border-t border-white/10 px-4 py-4 space-y-2 overflow-hidden"
+            className="md:hidden glass-nav border-t border-border px-4 py-4 space-y-2 overflow-hidden"
           >
             {navLinks.map((link) => (
               <Link
                 key={link.name}
                 to={link.path}
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10"
+                className="block px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/10"
               >
                 {link.name}
               </Link>
@@ -209,7 +238,7 @@ export const Navbar: React.FC = () => {
                 Admin Panel
               </Link>
             )}
-            <div className="border-t border-white/10 pt-3 flex flex-col gap-2">
+            <div className="border-t border-border pt-3 flex flex-col gap-2">
               {isAuthenticated ? (
                 <button
                   onClick={() => {

@@ -4,7 +4,7 @@ import { Film, ArrowLeft } from 'lucide-react';
 
 export const AuthLayout: React.FC = () => {
   return (
-    <div className="min-h-screen relative flex flex-col justify-between bg-[#0b0b0d] text-white selection:bg-[#E50914] selection:text-white overflow-hidden">
+    <div className="min-h-screen relative flex flex-col justify-between bg-background text-foreground selection:bg-[#E50914] selection:text-white overflow-hidden">
       {/* Background Graphic Ambient Glow */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,var(--tw-gradient-stops))] from-[#E50914]/20 via-transparent to-transparent opacity-60 pointer-events-none" />
       <div
@@ -27,7 +27,7 @@ export const AuthLayout: React.FC = () => {
 
         <Link
           to="/"
-          className="flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-white transition-colors"
+          className="flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Home</span>
@@ -36,13 +36,13 @@ export const AuthLayout: React.FC = () => {
 
       {/* Main Form Center Box */}
       <main className="relative z-10 flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-[#161619]/90 border border-white/10 rounded-2xl shadow-2xl p-6 sm:p-8 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200">
+        <div className="w-full max-w-md bg-card/90 border border-border rounded-2xl shadow-2xl p-6 sm:p-8 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200">
           <Outlet />
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 py-4 text-center text-xs text-gray-500 border-t border-white/5">
+      <footer className="relative z-10 py-4 text-center text-xs text-muted-foreground border-t border-border">
         © {new Date().getFullYear()} Cinematique. All rights reserved.
       </footer>
     </div>

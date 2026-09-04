@@ -91,7 +91,7 @@ export const DashboardPage: React.FC = () => {
   return (
     <div className="space-y-8">
       {/* Top Banner Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-[#18181c] via-[#151518] to-[#201113] border border-white/10 shadow-xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-[#18181c] via-[#151518] to-[#201113] border border-border shadow-xl">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-[#E50914]" />
@@ -102,7 +102,7 @@ export const DashboardPage: React.FC = () => {
           <h2 className="text-xl font-bold text-white tracking-wide">
             Welcome to Cinematique Admin Console
           </h2>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-muted-foreground">
             Real-time box office statistics, movie schedules, and booking logs
           </p>
         </div>
@@ -132,10 +132,10 @@ export const DashboardPage: React.FC = () => {
               key={stat.title}
               variants={itemVariants}
               whileHover={{ y: -3 }}
-              className="p-5 rounded-2xl bg-[#141417] border border-white/10 space-y-3 shadow-lg"
+              className="p-5 rounded-2xl bg-[#141417] border border-border space-y-3 shadow-lg"
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-gray-400">{stat.title}</span>
+                <span className="text-xs font-medium text-muted-foreground">{stat.title}</span>
                 <div className={`w-8 h-8 rounded-lg ${stat.bg} border flex items-center justify-center`}>
                   <Icon className={`w-4 h-4 ${stat.color}`} />
                 </div>
@@ -157,13 +157,13 @@ export const DashboardPage: React.FC = () => {
       {/* Chart & Live Status Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Weekly Revenue & Bookings Bar Chart */}
-        <div className="lg:col-span-2 p-6 rounded-2xl bg-[#141417] border border-white/10 space-y-6 shadow-lg">
+        <div className="lg:col-span-2 p-6 rounded-2xl bg-[#141417] border border-border space-y-6 shadow-lg">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-bold text-white uppercase tracking-wider">
                 Weekly Box Office Performance
               </h3>
-              <p className="text-xs text-gray-400 mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 Ticket sales breakdown for the last 7 days
               </p>
             </div>
@@ -174,7 +174,7 @@ export const DashboardPage: React.FC = () => {
 
           {/* SVG/CSS Interactive Bar Chart */}
           <div className="pt-4">
-            <div className="flex items-end justify-between gap-2 h-52 pt-6 border-b border-white/10">
+            <div className="flex items-end justify-between gap-2 h-52 pt-6 border-b border-border">
               {salesChartData.map((data) => {
                 const heightPercent = (data.revenue / maxRevenue) * 100;
                 return (
@@ -191,7 +191,7 @@ export const DashboardPage: React.FC = () => {
                       className="w-full max-w-[36px] bg-gradient-to-t from-[#E50914]/60 to-[#E50914] rounded-t-lg group-hover:brightness-125 transition-all shadow-md shadow-[#E50914]/20"
                     />
                     {/* Day label */}
-                    <span className="text-[11px] font-medium text-gray-400 group-hover:text-white transition-colors">
+                    <span className="text-[11px] font-medium text-muted-foreground group-hover:text-white transition-colors">
                       {data.day}
                     </span>
                   </div>
@@ -202,12 +202,12 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         {/* Popular / Active Cinema Halls */}
-        <div className="p-6 rounded-2xl bg-[#141417] border border-white/10 space-y-4 shadow-lg flex flex-col justify-between">
+        <div className="p-6 rounded-2xl bg-[#141417] border border-border space-y-4 shadow-lg flex flex-col justify-between">
           <div>
             <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-1">
               Screen Occupancy
             </h3>
-            <p className="text-xs text-gray-400 mb-4">
+            <p className="text-xs text-muted-foreground mb-4">
               Real-time theater capacity & fill rate
             </p>
 
@@ -218,12 +218,12 @@ export const DashboardPage: React.FC = () => {
                 { name: 'VIP Lounge 3', movie: 'Avatar 2', fill: 95, format: '3D' },
                 { name: '4DX Theater 4', movie: 'Dune 2', fill: 62, format: '4DX' },
               ].map((hall) => (
-                <div key={hall.name} className="space-y-1.5 p-3 rounded-xl bg-white/5 border border-white/5">
+                <div key={hall.name} className="space-y-1.5 p-3 rounded-xl bg-white/5 border border-border">
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-bold text-white">{hall.name}</span>
                     <span className="text-emerald-400 font-bold">{hall.fill}% Full</span>
                   </div>
-                  <div className="flex items-center justify-between text-[11px] text-gray-400">
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground">
                     <span>{hall.movie}</span>
                     <Badge variant="primary" size="sm">{hall.format}</Badge>
                   </div>
@@ -249,13 +249,13 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {/* Recent Bookings Live Table */}
-      <div className="p-6 rounded-2xl bg-[#141417] border border-white/10 space-y-4 shadow-lg">
+      <div className="p-6 rounded-2xl bg-[#141417] border border-border space-y-4 shadow-lg">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-bold text-white uppercase tracking-wider">
               Recent Transactions & Bookings
             </h3>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5">
               Live updates of customer ticket reservations
             </p>
           </div>
@@ -270,7 +270,7 @@ export const DashboardPage: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-white/10 text-gray-400 uppercase text-[10px] tracking-wider">
+              <tr className="border-b border-border text-muted-foreground uppercase text-[10px] tracking-wider">
                 <th className="pb-3 font-semibold">Ref ID</th>
                 <th className="pb-3 font-semibold">Customer</th>
                 <th className="pb-3 font-semibold">Movie</th>
@@ -279,7 +279,7 @@ export const DashboardPage: React.FC = () => {
                 <th className="pb-3 font-semibold">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5 text-gray-300">
+            <tbody className="divide-y divide-white/5 text-muted-foreground">
               {bookings.slice(0, 5).map((booking) => (
                 <tr key={booking.id} className="hover:bg-white/5 transition-colors">
                   <td className="py-3 font-mono font-bold text-white">
@@ -287,7 +287,7 @@ export const DashboardPage: React.FC = () => {
                   </td>
                   <td className="py-3">
                     <div className="font-semibold text-white">{booking.userName}</div>
-                    <div className="text-[10px] text-gray-500">{booking.userEmail}</div>
+                    <div className="text-[10px] text-muted-foreground">{booking.userEmail}</div>
                   </td>
                   <td className="py-3 font-medium text-white">
                     {booking.movieTitle}

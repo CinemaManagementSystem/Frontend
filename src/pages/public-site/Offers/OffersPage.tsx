@@ -234,7 +234,7 @@ export const OffersPage: React.FC = () => {
   return (
     <div className="pb-24 bg-[#0f0f10] min-h-screen text-white selection:bg-[#E50914]">
       {/* 1. Main Hero Offer Section */}
-      <section className="relative w-full overflow-hidden bg-gradient-to-b from-zinc-900 to-[#0f0f10] border-b border-white/5 py-12">
+      <section className="relative w-full overflow-hidden bg-gradient-to-b from-zinc-900 to-[#0f0f10] border-b border-border py-12">
         {/* Background Image of concessions */}
         <div className="absolute inset-0 z-0">
           <img
@@ -294,7 +294,7 @@ export const OffersPage: React.FC = () => {
                 className={`py-3 px-6 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 ${
                   isSaved
                     ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400'
-                    : 'border-white/10 hover:bg-white/5 text-gray-300 hover:text-white'
+                    : 'border-border hover:bg-white/5 text-muted-foreground hover:text-white'
                 }`}
               >
                 <span>{isSaved ? 'Saved for Later' : 'Save for Later'}</span>
@@ -303,7 +303,7 @@ export const OffersPage: React.FC = () => {
           </motion.div>
 
           {/* Large Concession Showcase Image */}
-          <div className="w-full lg:w-[480px] shrink-0 aspect-[16/10] sm:aspect-[16/9] lg:aspect-auto lg:h-72 rounded-3xl overflow-hidden border border-white/10 shadow-2xl relative">
+          <div className="w-full lg:w-[480px] shrink-0 aspect-[16/10] sm:aspect-[16/9] lg:aspect-auto lg:h-72 rounded-3xl overflow-hidden border border-border shadow-2xl relative">
             <img
               src={activeOffer.image}
               alt={activeOffer.title}
@@ -328,7 +328,7 @@ export const OffersPage: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {activeOffer.steps.map((step, idx) => (
-                <div key={idx} className="relative bg-[#141417] border border-white/10 rounded-2xl p-5 overflow-hidden group hover:border-white/20 transition-all">
+                <div key={idx} className="relative bg-[#141417] border border-border rounded-2xl p-5 overflow-hidden group hover:border-border transition-all">
                   {/* Faded step number */}
                   <span className="absolute -bottom-6 -right-2 text-7xl font-black text-white/5 font-mono select-none group-hover:text-white/10 transition-colors">
                     {String(idx + 1).padStart(2, '0')}
@@ -337,7 +337,7 @@ export const OffersPage: React.FC = () => {
                   <h4 className="text-sm font-bold text-white uppercase tracking-wider">
                     {step.title}
                   </h4>
-                  <p className="text-[11px] text-gray-400 mt-2 leading-relaxed">
+                  <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
                     {step.description}
                   </p>
                 </div>
@@ -352,7 +352,7 @@ export const OffersPage: React.FC = () => {
               Terms & Conditions
             </h3>
 
-            <div className="border border-white/10 rounded-2xl overflow-hidden divide-y divide-white/5 bg-[#141417]">
+            <div className="border border-border rounded-2xl overflow-hidden divide-y divide-white/5 bg-[#141417]">
               {/* Validity & Expiration */}
               <div>
                 <button
@@ -360,7 +360,7 @@ export const OffersPage: React.FC = () => {
                   className="w-full flex items-center justify-between p-5 text-left text-xs uppercase font-bold text-white hover:bg-white/5 transition-colors focus:outline-none"
                 >
                   <span>Validity & Expiration</span>
-                  {expandedSection === 'VALIDITY' ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                  {expandedSection === 'VALIDITY' ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
                 </button>
                 <AnimatePresence initial={false}>
                   {expandedSection === 'VALIDITY' && (
@@ -369,7 +369,7 @@ export const OffersPage: React.FC = () => {
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="p-5 pt-0 text-[11px] text-gray-400 leading-relaxed border-t border-white/5 bg-zinc-950/10 overflow-hidden"
+                      className="p-5 pt-0 text-[11px] text-muted-foreground leading-relaxed border-t border-border bg-zinc-950/10 overflow-hidden"
                     >
                       {activeOffer.terms.validity}
                     </motion.div>
@@ -384,7 +384,7 @@ export const OffersPage: React.FC = () => {
                   className="w-full flex items-center justify-between p-5 text-left text-xs uppercase font-bold text-white hover:bg-white/5 transition-colors focus:outline-none"
                 >
                   <span>Eligibility</span>
-                  {expandedSection === 'ELIGIBILITY' ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                  {expandedSection === 'ELIGIBILITY' ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
                 </button>
                 <AnimatePresence initial={false}>
                   {expandedSection === 'ELIGIBILITY' && (
@@ -393,7 +393,7 @@ export const OffersPage: React.FC = () => {
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="p-5 pt-0 text-[11px] text-gray-400 leading-relaxed border-t border-white/5 bg-zinc-950/10 overflow-hidden"
+                      className="p-5 pt-0 text-[11px] text-muted-foreground leading-relaxed border-t border-border bg-zinc-950/10 overflow-hidden"
                     >
                       {activeOffer.terms.eligibility}
                     </motion.div>
@@ -408,7 +408,7 @@ export const OffersPage: React.FC = () => {
                   className="w-full flex items-center justify-between p-5 text-left text-xs uppercase font-bold text-white hover:bg-white/5 transition-colors focus:outline-none"
                 >
                   <span>Usage Limits</span>
-                  {expandedSection === 'LIMITS' ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                  {expandedSection === 'LIMITS' ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
                 </button>
                 <AnimatePresence initial={false}>
                   {expandedSection === 'LIMITS' && (
@@ -417,7 +417,7 @@ export const OffersPage: React.FC = () => {
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="p-5 pt-0 text-[11px] text-gray-400 leading-relaxed border-t border-white/5 bg-zinc-950/10 overflow-hidden"
+                      className="p-5 pt-0 text-[11px] text-muted-foreground leading-relaxed border-t border-border bg-zinc-950/10 overflow-hidden"
                     >
                       {activeOffer.terms.limits}
                     </motion.div>
@@ -436,18 +436,18 @@ export const OffersPage: React.FC = () => {
             initial={{ scale: 0.98, opacity: 0.9 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-            className="bg-[#141417] border border-white/10 rounded-3xl p-6 text-center space-y-6 shadow-2xl relative overflow-hidden"
+            className="bg-[#141417] border border-border rounded-3xl p-6 text-center space-y-6 shadow-2xl relative overflow-hidden"
           >
             {/* Faux ticket jagged edges decor */}
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-8 bg-[#0f0f10] rounded-r-full border-r border-white/10" />
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-8 bg-[#0f0f10] rounded-l-full border-l border-white/10" />
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-8 bg-[#0f0f10] rounded-r-full border-r border-border" />
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-8 bg-[#0f0f10] rounded-l-full border-l border-border" />
 
-            <div className="flex items-center justify-between border-b border-white/5 pb-4">
+            <div className="flex items-center justify-between border-b border-border pb-4">
               <div className="text-left">
                 <span className="text-sm font-bold text-white block uppercase tracking-wider">
                   Your Digital Pass
                 </span>
-                <span className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-0.5 block">
+                <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest mt-0.5 block">
                   Expires {activeOffer.expDate}
                 </span>
               </div>
@@ -479,23 +479,23 @@ export const OffersPage: React.FC = () => {
             </div>
 
             {/* Code */}
-            <div className="space-y-1 pt-2 border-t border-white/5">
+            <div className="space-y-1 pt-2 border-t border-border">
               <span className="text-sm font-black tracking-widest text-white font-mono block">
                 {isClaimed ? activeOffer.code : '••••-••••-••••'}
               </span>
-              <span className="text-[9px] text-gray-400 uppercase tracking-widest font-semibold block">
+              <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-semibold block">
                 Scan at the concessions counter
               </span>
             </div>
           </motion.div>
 
           {/* Need Help? Card */}
-          <div className="bg-[#141417] border border-white/10 rounded-3xl p-6 space-y-3 shadow-2xl">
+          <div className="bg-[#141417] border border-border rounded-3xl p-6 space-y-3 shadow-2xl">
             <h4 className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-1.5">
               <HelpCircle className="w-4 h-4 text-[#E50914]" />
               Need Help?
             </h4>
-            <p className="text-[11px] text-gray-400 leading-relaxed">
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
               Having trouble claiming your offer? Our support team is available 24/7.
             </p>
             <div>
@@ -512,13 +512,13 @@ export const OffersPage: React.FC = () => {
       </section>
 
       {/* 3. Bottom Carousel (You might also like) */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 border-t border-white/5 pt-12">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 border-t border-border pt-12">
         <div className="flex items-end justify-between mb-8">
           <div className="space-y-1">
             <h3 className="text-xl font-black uppercase tracking-tight text-white">
               You might also like
             </h3>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-muted-foreground">
               More exclusive rewards for your cinematic journey.
             </p>
           </div>
@@ -548,7 +548,7 @@ export const OffersPage: React.FC = () => {
                 className={`group flex flex-col rounded-2xl overflow-hidden bg-[#141417] border transition-all duration-300 cursor-pointer h-full ${
                   active
                     ? 'border-[#E50914]/80 shadow-lg shadow-[#E50914]/10 scale-102'
-                    : 'border-white/10 hover:border-white/20 hover:scale-102'
+                    : 'border-border hover:border-border hover:scale-102'
                 }`}
               >
                 {/* Card thumbnail image */}
@@ -575,7 +575,7 @@ export const OffersPage: React.FC = () => {
                     className={`mt-6 w-full py-2.5 rounded-xl border text-[10px] font-black uppercase tracking-widest text-center transition-all ${
                       active
                         ? 'bg-[#E50914]/10 border-[#E50914] text-[#E50914]'
-                        : 'border-white/10 hover:border-white/20 text-gray-300 hover:text-white'
+                        : 'border-border hover:border-border text-muted-foreground hover:text-white'
                     }`}
                   >
                     Details

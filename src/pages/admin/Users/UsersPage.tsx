@@ -28,7 +28,7 @@ const columns: CrudColumn<User>[] = [
   { key: 'username', header: 'Username', render: (row) => (
       <span className="font-bold text-white">{row.username}</span>
     ) },
-  { key: 'email', header: 'Email', render: (row) => <span className="text-gray-300">{row.email}</span> },
+  { key: 'email', header: 'Email', render: (row) => <span className="text-muted-foreground">{row.email}</span> },
   {
     key: 'role',
     header: 'Role',

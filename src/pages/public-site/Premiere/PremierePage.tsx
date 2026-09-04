@@ -64,7 +64,7 @@ export const PremierePage: React.FC = () => {
   return (
     <div className="pb-24 bg-[#0f0f10] min-h-screen text-white selection:bg-yellow-500 selection:text-black">
       {/* 1. Hero Section */}
-      <section className="relative w-full overflow-hidden min-h-[580px] flex items-center justify-center py-20 border-b border-white/5 bg-gradient-to-b from-zinc-950 via-[#121214] to-[#0f0f10]">
+      <section className="relative w-full overflow-hidden min-h-[580px] flex items-center justify-center py-20 border-b border-border bg-gradient-to-b from-zinc-950 via-[#121214] to-[#0f0f10]">
         {/* Background Image of auditorium */}
         <div className="absolute inset-0 z-0">
           <img
@@ -94,7 +94,7 @@ export const PremierePage: React.FC = () => {
           </h1>
 
           {/* Subtitle */}
-          <p className="text-sm sm:text-base text-gray-300 max-w-2xl mx-auto leading-relaxed font-normal">
+          <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed font-normal">
             Experience cinema as it was intended to be: private lounges, luxury recliner seats, and the ultimate theater experience curated for movie aficionados.
           </p>
 
@@ -108,7 +108,7 @@ export const PremierePage: React.FC = () => {
             </button>
             <button
               onClick={() => scrollToSection('benefits')}
-              className="py-3.5 px-8 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
+              className="py-3.5 px-8 rounded-xl bg-white/5 hover:bg-white/10 border border-border text-muted-foreground hover:text-white text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
             >
               Learn More
             </button>
@@ -136,7 +136,7 @@ export const PremierePage: React.FC = () => {
           <motion.div 
             variants={itemVariants}
             whileHover={{ y: -4 }}
-            className="p-6 rounded-3xl bg-[#141417] border border-white/10 space-y-4 hover:border-white/20 transition-all"
+            className="p-6 rounded-3xl bg-[#141417] border border-border space-y-4 hover:border-border transition-all"
           >
             <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500">
               <Ticket className="w-6 h-6" />
@@ -144,7 +144,7 @@ export const PremierePage: React.FC = () => {
             <h3 className="text-base font-bold text-white uppercase tracking-tight">
               1 Free Ticket Monthly
             </h3>
-            <p className="text-xs text-gray-400 leading-relaxed">
+            <p className="text-xs text-muted-foreground leading-relaxed">
               One free standard or IMAX ticket per month, rolls over for up to 6 months.
             </p>
           </motion.div>
@@ -153,7 +153,7 @@ export const PremierePage: React.FC = () => {
           <motion.div 
             variants={itemVariants}
             whileHover={{ y: -4 }}
-            className="p-6 rounded-3xl bg-[#141417] border border-white/10 space-y-4 hover:border-white/20 transition-all"
+            className="p-6 rounded-3xl bg-[#141417] border border-border space-y-4 hover:border-border transition-all"
           >
             <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
               <Utensils className="w-6 h-6" />
@@ -161,7 +161,7 @@ export const PremierePage: React.FC = () => {
             <h3 className="text-base font-bold text-white uppercase tracking-tight">
               20% Off Concessions
             </h3>
-            <p className="text-xs text-gray-400 leading-relaxed">
+            <p className="text-xs text-muted-foreground leading-relaxed">
               Save on our fresh gourmet snacks and drinks with exclusive member pricing on every visit.
             </p>
           </motion.div>
@@ -170,7 +170,7 @@ export const PremierePage: React.FC = () => {
           <motion.div 
             variants={itemVariants}
             whileHover={{ y: -4 }}
-            className="p-6 rounded-3xl bg-[#141417] border border-white/10 space-y-4 hover:border-white/20 transition-all"
+            className="p-6 rounded-3xl bg-[#141417] border border-border space-y-4 hover:border-border transition-all"
           >
             <div className="w-12 h-12 rounded-2xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-400">
               <Crown className="w-6 h-6" />
@@ -178,7 +178,7 @@ export const PremierePage: React.FC = () => {
             <h3 className="text-base font-bold text-white uppercase tracking-tight">
               VIP Lounge Access
             </h3>
-            <p className="text-xs text-gray-400 leading-relaxed">
+            <p className="text-xs text-muted-foreground leading-relaxed">
               Relax in our private luxury lounge with complimentary beverages at flagship locations.
             </p>
           </motion.div>
@@ -187,7 +187,7 @@ export const PremierePage: React.FC = () => {
           <motion.div 
             variants={itemVariants}
             whileHover={{ y: -4 }}
-            className="p-6 rounded-3xl bg-[#141417] border border-white/10 space-y-4 hover:border-white/20 transition-all"
+            className="p-6 rounded-3xl bg-[#141417] border border-border space-y-4 hover:border-border transition-all"
           >
             <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
               <Calendar className="w-6 h-6" />
@@ -195,7 +195,7 @@ export const PremierePage: React.FC = () => {
             <h3 className="text-base font-bold text-white uppercase tracking-tight">
               Advanced Booking
             </h3>
-            <p className="text-xs text-gray-400 leading-relaxed">
+            <p className="text-xs text-muted-foreground leading-relaxed">
               Get exclusive early access to buy tickets 48 hours before general public release.
             </p>
           </motion.div>
@@ -208,7 +208,7 @@ export const PremierePage: React.FC = () => {
           <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white">
             Choose Your Premiere Experience
           </h2>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-muted-foreground">
             No hidden fees. Cancel anytime.
           </p>
         </div>
@@ -224,20 +224,20 @@ export const PremierePage: React.FC = () => {
           <motion.div 
             variants={itemVariants}
             whileHover={{ y: -4 }}
-            className="p-8 rounded-3xl bg-[#141417] border border-white/10 flex flex-col justify-between space-y-8 hover:border-white/20 transition-all"
+            className="p-8 rounded-3xl bg-[#141417] border border-border flex flex-col justify-between space-y-8 hover:border-border transition-all"
           >
             <div className="space-y-6">
               <div>
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest block">
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest block">
                   Monthly Plan
                 </span>
                 <div className="flex items-baseline gap-1 mt-2">
                   <span className="text-4xl font-black text-white">$19.99</span>
-                  <span className="text-xs text-gray-400">/ mo</span>
+                  <span className="text-xs text-muted-foreground">/ mo</span>
                 </div>
               </div>
 
-              <div className="space-y-3 pt-4 border-t border-white/5 text-xs text-gray-300">
+              <div className="space-y-3 pt-4 border-t border-border text-xs text-muted-foreground">
                 <div className="flex items-center gap-2.5">
                   <Check className="w-4 h-4 text-emerald-400 shrink-0" />
                   <span>1 Free Ticket Monthly</span>
@@ -250,7 +250,7 @@ export const PremierePage: React.FC = () => {
                   <Check className="w-4 h-4 text-emerald-400 shrink-0" />
                   <span>Standard Lounge Access</span>
                 </div>
-                <div className="flex items-center gap-2.5 text-gray-500 opacity-60">
+                <div className="flex items-center gap-2.5 text-muted-foreground opacity-60">
                   <X className="w-4 h-4 shrink-0" />
                   <span>No VIP Recliner Upgrades</span>
                 </div>
@@ -259,7 +259,7 @@ export const PremierePage: React.FC = () => {
 
             <button
               onClick={() => handleJoinClick('MONTHLY')}
-              className="w-full py-3.5 rounded-xl border border-white/10 hover:border-white/20 hover:bg-white/5 text-white text-xs font-bold uppercase tracking-wider transition-all"
+              className="w-full py-3.5 rounded-xl border border-border hover:border-border hover:bg-white/5 text-white text-xs font-bold uppercase tracking-wider transition-all"
             >
               Start Monthly
             </button>
@@ -283,14 +283,14 @@ export const PremierePage: React.FC = () => {
                 </span>
                 <div className="flex items-baseline gap-1 mt-2">
                   <span className="text-4xl font-black text-white">$199.99</span>
-                  <span className="text-xs text-gray-400">/ yr</span>
+                  <span className="text-xs text-muted-foreground">/ yr</span>
                 </div>
                 <span className="text-xs font-bold text-emerald-400 mt-1 block">
                   Save $40 per year!
                 </span>
               </div>
 
-              <div className="space-y-3 pt-4 border-t border-white/5 text-xs text-gray-200">
+              <div className="space-y-3 pt-4 border-t border-border text-xs text-gray-200">
                 <div className="flex items-center gap-2.5">
                   <Check className="w-4 h-4 text-emerald-400 shrink-0" />
                   <span className="font-semibold">12 Tickets + 2 Bonus Tickets (14 Total)</span>
@@ -332,42 +332,42 @@ export const PremierePage: React.FC = () => {
           </h2>
         </div>
 
-        <div className="border border-white/10 rounded-3xl overflow-hidden bg-[#141417] shadow-2xl">
+        <div className="border border-border rounded-3xl overflow-hidden bg-[#141417] shadow-2xl">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="border-b border-white/10 bg-zinc-950/60">
-                  <th className="p-4 sm:p-5 font-bold text-gray-400 uppercase tracking-wider">Features</th>
-                  <th className="p-4 sm:p-5 font-bold text-gray-400 uppercase tracking-wider text-center">Guest</th>
+                <tr className="border-b border-border bg-zinc-950/60">
+                  <th className="p-4 sm:p-5 font-bold text-muted-foreground uppercase tracking-wider">Features</th>
+                  <th className="p-4 sm:p-5 font-bold text-muted-foreground uppercase tracking-wider text-center">Guest</th>
                   <th className="p-4 sm:p-5 font-bold text-yellow-400 uppercase tracking-wider text-center">Premiere</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 <tr className="hover:bg-white/5 transition-colors">
                   <td className="p-4 sm:p-5 font-semibold text-white">Monthly Ticket Credit</td>
-                  <td className="p-4 sm:p-5 text-gray-400 text-center">0</td>
+                  <td className="p-4 sm:p-5 text-muted-foreground text-center">0</td>
                   <td className="p-4 sm:p-5 font-bold text-yellow-400 text-center">1 Free Ticket</td>
                 </tr>
                 <tr className="hover:bg-white/5 transition-colors">
                   <td className="p-4 sm:p-5 font-semibold text-white">Concessions Discount</td>
-                  <td className="p-4 sm:p-5 text-gray-400 text-center">0%</td>
+                  <td className="p-4 sm:p-5 text-muted-foreground text-center">0%</td>
                   <td className="p-4 sm:p-5 font-bold text-yellow-400 text-center">20% - 25%</td>
                 </tr>
                 <tr className="hover:bg-white/5 transition-colors">
                   <td className="p-4 sm:p-5 font-semibold text-white">Advanced Booking Head Start</td>
-                  <td className="p-4 sm:p-5 text-gray-400 text-center">—</td>
+                  <td className="p-4 sm:p-5 text-muted-foreground text-center">—</td>
                   <td className="p-4 sm:p-5 font-bold text-yellow-400 text-center">48-Hour Head Start</td>
                 </tr>
                 <tr className="hover:bg-white/5 transition-colors">
                   <td className="p-4 sm:p-5 font-semibold text-white">VIP Lounge Access</td>
-                  <td className="p-4 sm:p-5 text-gray-400 text-center">—</td>
+                  <td className="p-4 sm:p-5 text-muted-foreground text-center">—</td>
                   <td className="p-4 sm:p-5 text-center">
                     <Check className="w-5 h-5 text-yellow-400 mx-auto" />
                   </td>
                 </tr>
                 <tr className="hover:bg-white/5 transition-colors">
                   <td className="p-4 sm:p-5 font-semibold text-white">Online Ticket Service Fees</td>
-                  <td className="p-4 sm:p-5 text-gray-400 text-center">$1.50 per ticket</td>
+                  <td className="p-4 sm:p-5 text-muted-foreground text-center">$1.50 per ticket</td>
                   <td className="p-4 sm:p-5 font-black text-emerald-400 text-center">WAIVED</td>
                 </tr>
               </tbody>
@@ -384,7 +384,7 @@ export const PremierePage: React.FC = () => {
           </h2>
         </div>
 
-        <div className="border border-white/10 rounded-2xl overflow-hidden divide-y divide-white/5 bg-[#141417]">
+        <div className="border border-border rounded-2xl overflow-hidden divide-y divide-white/5 bg-[#141417]">
           {faqs.map((faq, idx) => (
             <div key={idx}>
               <button
@@ -392,7 +392,7 @@ export const PremierePage: React.FC = () => {
                 className="w-full flex items-center justify-between p-5 text-left text-xs uppercase font-bold text-white hover:bg-white/5 transition-colors focus:outline-none"
               >
                 <span>{faq.q}</span>
-                {openFaq === idx ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                {openFaq === idx ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
               </button>
               <AnimatePresence initial={false}>
                 {openFaq === idx && (
@@ -401,7 +401,7 @@ export const PremierePage: React.FC = () => {
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.2 }}
-                    className="p-5 pt-0 text-[11px] text-gray-400 leading-relaxed border-t border-white/5 bg-zinc-950/10 overflow-hidden"
+                    className="p-5 pt-0 text-[11px] text-muted-foreground leading-relaxed border-t border-border bg-zinc-950/10 overflow-hidden"
                   >
                     {faq.a}
                   </motion.div>
@@ -418,7 +418,7 @@ export const PremierePage: React.FC = () => {
           <h2 className="text-2xl sm:text-4xl font-black uppercase tracking-tight text-white">
             Ready to Experience More?
           </h2>
-          <p className="text-xs sm:text-sm text-gray-300 max-w-xl mx-auto">
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-xl mx-auto">
             Join 150,000+ members who have upgraded their movie-going experience.
           </p>
 
@@ -429,7 +429,7 @@ export const PremierePage: React.FC = () => {
             >
               Start Your Premiere Membership
             </button>
-            <span className="block text-[10px] text-gray-500 mt-3 font-medium">
+            <span className="block text-[10px] text-muted-foreground mt-3 font-medium">
               30-day money-back guarantee. No questions asked.
             </span>
           </div>
@@ -449,7 +449,7 @@ export const PremierePage: React.FC = () => {
               <span className="font-bold text-yellow-400 block uppercase">
                 {selectedPlan === 'ANNUAL' ? 'Annual Pass ($199.99/yr)' : 'Monthly Plan ($19.99/mo)'}
               </span>
-              <span className="text-[11px] text-gray-400">
+              <span className="text-[11px] text-muted-foreground">
                 {selectedPlan === 'ANNUAL' ? 'Includes 14 free ticket credits & VIP lounge access' : 'Includes 1 ticket credit/mo & 15% concessions'}
               </span>
             </div>
@@ -460,7 +460,7 @@ export const PremierePage: React.FC = () => {
 
           {/* Payment Method Selector */}
           <div className="space-y-2">
-            <span className="text-xs text-gray-400 font-medium block">
+            <span className="text-xs text-muted-foreground font-medium block">
               Payment Method
             </span>
             <div className="grid grid-cols-3 gap-2">
@@ -479,7 +479,7 @@ export const PremierePage: React.FC = () => {
                     className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border text-xs font-medium transition-all ${
                       active
                         ? 'border-yellow-500 bg-yellow-500/10 text-white'
-                        : 'border-white/10 bg-white/5 text-gray-400 hover:text-white'
+                        : 'border-border bg-white/5 text-muted-foreground hover:text-white'
                     }`}
                   >
                     <Icon className="w-4 h-4 text-yellow-400" />
@@ -513,7 +513,7 @@ export const PremierePage: React.FC = () => {
 
           <div>
             <h4 className="text-lg font-black text-white uppercase">You're Officially a Member!</h4>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Your ticket credits and VIP lounge passes have been added to your digital wallet.
             </p>
           </div>

@@ -117,16 +117,16 @@ export const MoviesPage: React.FC = () => {
           </div>
 
           {/* Premium Filter Toolbar matching mockup */}
-          <div className="bg-zinc-900/40 border border-white/5 backdrop-blur-md rounded-2xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between shadow-2xl relative z-30">
+          <div className="bg-zinc-900/40 border border-border backdrop-blur-md rounded-2xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between shadow-2xl relative z-30">
             {/* Find a movie search input */}
             <div className="relative w-full md:flex-1 max-w-md">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
               <input
                 type="text"
                 placeholder="Find a movie..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-zinc-950/80 border border-white/10 text-white text-xs rounded-xl pl-10 pr-4 py-2.5 outline-none focus:border-[#E50914] transition-all placeholder:text-gray-500"
+                className="w-full bg-zinc-950/80 border border-border text-white text-xs rounded-xl pl-10 pr-4 py-2.5 outline-none focus:border-[#E50914] transition-all placeholder:text-muted-foreground"
               />
             </div>
 
@@ -140,12 +140,12 @@ export const MoviesPage: React.FC = () => {
                     setLangOpen(false);
                     setSortOpen(false);
                   }}
-                  className="flex items-center gap-2 bg-zinc-950/80 border border-white/10 text-gray-300 text-xs rounded-xl px-4 py-2.5 hover:border-white/20 transition-all focus:outline-none"
+                  className="flex items-center gap-2 bg-zinc-950/80 border border-border text-muted-foreground text-xs rounded-xl px-4 py-2.5 hover:border-border transition-all focus:outline-none"
                 >
                   <span className="font-semibold">
                     {selectedGenre === 'ALL' ? 'All Genres' : selectedGenre}
                   </span>
-                  <ChevronDown className="w-4 h-4 text-gray-500" />
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
                 </button>
                 <AnimatePresence>
                   {genreOpen && (
@@ -156,7 +156,7 @@ export const MoviesPage: React.FC = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -6, scale: 0.98 }}
                         transition={{ duration: 0.12 }}
-                        className="absolute right-0 mt-2 w-48 rounded-xl bg-zinc-950 border border-white/10 p-1 shadow-2xl z-20 max-h-60 overflow-y-auto origin-top-right"
+                        className="absolute right-0 mt-2 w-48 rounded-xl bg-zinc-950 border border-border p-1 shadow-2xl z-20 max-h-60 overflow-y-auto origin-top-right"
                       >
                         {genres.map((g) => (
                           <button
@@ -166,7 +166,7 @@ export const MoviesPage: React.FC = () => {
                               setGenreOpen(false);
                             }}
                             className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold hover:bg-white/5 ${
-                              selectedGenre === g ? 'text-[#E50914] bg-[#E50914]/5' : 'text-gray-300'
+                              selectedGenre === g ? 'text-[#E50914] bg-[#E50914]/5' : 'text-muted-foreground'
                             }`}
                           >
                             {g === 'ALL' ? 'All Genres' : g}
@@ -186,12 +186,12 @@ export const MoviesPage: React.FC = () => {
                     setGenreOpen(false);
                     setSortOpen(false);
                   }}
-                  className="flex items-center gap-2 bg-zinc-950/80 border border-white/10 text-gray-300 text-xs rounded-xl px-4 py-2.5 hover:border-white/20 transition-all focus:outline-none"
+                  className="flex items-center gap-2 bg-zinc-950/80 border border-border text-muted-foreground text-xs rounded-xl px-4 py-2.5 hover:border-border transition-all focus:outline-none"
                 >
                   <span className="font-semibold">
                     {selectedLanguage === 'ALL' ? 'Language' : selectedLanguage}
                   </span>
-                  <ChevronDown className="w-4 h-4 text-gray-500" />
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
                 </button>
                 <AnimatePresence>
                   {langOpen && (
@@ -202,7 +202,7 @@ export const MoviesPage: React.FC = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -6, scale: 0.98 }}
                         transition={{ duration: 0.12 }}
-                        className="absolute right-0 mt-2 w-40 rounded-xl bg-zinc-950 border border-white/10 p-1 shadow-2xl z-20 origin-top-right"
+                        className="absolute right-0 mt-2 w-40 rounded-xl bg-zinc-950 border border-border p-1 shadow-2xl z-20 origin-top-right"
                       >
                         {languages.map((l) => (
                           <button
@@ -212,7 +212,7 @@ export const MoviesPage: React.FC = () => {
                               setLangOpen(false);
                             }}
                             className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold hover:bg-white/5 ${
-                              selectedLanguage === l ? 'text-[#E50914] bg-[#E50914]/5' : 'text-gray-300'
+                              selectedLanguage === l ? 'text-[#E50914] bg-[#E50914]/5' : 'text-muted-foreground'
                             }`}
                           >
                             {l === 'ALL' ? 'Language' : l}
@@ -232,11 +232,11 @@ export const MoviesPage: React.FC = () => {
                     setGenreOpen(false);
                     setLangOpen(false);
                   }}
-                  className="flex items-center gap-2 bg-zinc-950/80 border border-white/10 text-gray-300 text-xs rounded-xl px-4 py-2.5 hover:border-white/20 transition-all focus:outline-none"
+                  className="flex items-center gap-2 bg-zinc-950/80 border border-border text-muted-foreground text-xs rounded-xl px-4 py-2.5 hover:border-border transition-all focus:outline-none"
                 >
-                  <SlidersHorizontal className="w-3.5 h-3.5 text-gray-400" />
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-muted-foreground" />
                   <span className="font-semibold">{getSortLabel(sortBy)}</span>
-                  <ChevronDown className="w-4 h-4 text-gray-500" />
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
                 </button>
                 <AnimatePresence>
                   {sortOpen && (
@@ -247,7 +247,7 @@ export const MoviesPage: React.FC = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -6, scale: 0.98 }}
                         transition={{ duration: 0.12 }}
-                        className="absolute right-0 mt-2 w-44 rounded-xl bg-zinc-950 border border-white/10 p-1 shadow-2xl z-20 origin-top-right"
+                        className="absolute right-0 mt-2 w-44 rounded-xl bg-zinc-950 border border-border p-1 shadow-2xl z-20 origin-top-right"
                       >
                         {[
                           { id: 'POPULARITY', label: 'Popularity' },
@@ -261,7 +261,7 @@ export const MoviesPage: React.FC = () => {
                               setSortOpen(false);
                             }}
                             className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold hover:bg-white/5 ${
-                              sortBy === item.id ? 'text-[#E50914] bg-[#E50914]/5' : 'text-gray-300'
+                              sortBy === item.id ? 'text-[#E50914] bg-[#E50914]/5' : 'text-muted-foreground'
                             }`}
                           >
                             {item.label}
@@ -296,7 +296,7 @@ export const MoviesPage: React.FC = () => {
                   whileHover={shouldReduceMotion ? {} : { y: -4 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => navigate(`/movies/${movie.id}`)}
-                  className="group relative flex flex-col rounded-2xl overflow-hidden bg-[#141417] border border-white/10 hover:border-[#E50914]/40 hover:shadow-xl hover:shadow-[#E50914]/5 transition-all duration-300 cursor-pointer h-full"
+                  className="group relative flex flex-col rounded-2xl overflow-hidden bg-[#141417] border border-border hover:border-[#E50914]/40 hover:shadow-xl hover:shadow-[#E50914]/5 transition-all duration-300 cursor-pointer h-full"
                 >
                   {/* Poster Image Area */}
                   <div className="relative aspect-[2/3] w-full overflow-hidden bg-zinc-950">
@@ -311,7 +311,7 @@ export const MoviesPage: React.FC = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-[#141417] via-transparent to-transparent opacity-90" />
 
                     {/* Star Rating Badge - Top Left inside image viewport */}
-                    <div className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 text-[11px] font-black text-amber-400">
+                    <div className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-border text-[11px] font-black text-amber-400">
                       <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                       <span>{movie.rating.toFixed(1)}</span>
                     </div>
@@ -335,11 +335,11 @@ export const MoviesPage: React.FC = () => {
                           </span>
                         </div>
                         
-                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-1.5">
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-1.5">
                           2024 • {movie.genres.join('/')} • {Math.floor(movie.durationMinutes / 60)}h {movie.durationMinutes % 60}m
                         </p>
 
-                        <p className="text-[11px] text-gray-300 mt-4 leading-relaxed line-clamp-4">
+                        <p className="text-[11px] text-muted-foreground mt-4 leading-relaxed line-clamp-4">
                           {movie.description || 'No description available for this title. Check showtimes or view full movie details.'}
                         </p>
                       </div>
@@ -366,7 +366,7 @@ export const MoviesPage: React.FC = () => {
                           className={`w-full py-2.5 px-4 rounded-xl border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
                             inWatchlist
                               ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-                              : 'border-white/10 hover:bg-white/5 text-gray-300 hover:text-white'
+                              : 'border-border hover:bg-white/5 text-muted-foreground hover:text-white'
                           }`}
                         >
                           {inWatchlist ? (
@@ -389,7 +389,7 @@ export const MoviesPage: React.FC = () => {
                               e.stopPropagation();
                               navigate(`/movies/${movie.id}`);
                             }}
-                            className="text-[10px] font-black text-gray-500 hover:text-[#E50914] uppercase tracking-widest transition-colors"
+                            className="text-[10px] font-black text-muted-foreground hover:text-[#E50914] uppercase tracking-widest transition-colors"
                           >
                             Movie Details
                           </button>
@@ -405,13 +405,13 @@ export const MoviesPage: React.FC = () => {
                     </h3>
                     
                     {/* Genres subtext */}
-                    <p className="text-[11px] text-gray-400 mt-1 line-clamp-1">
+                    <p className="text-[11px] text-muted-foreground mt-1 line-clamp-1">
                       {movie.genres.join(', ')}
                     </p>
 
                     {/* Duration details */}
-                    <div className="flex items-center gap-1.5 mt-3 pt-2.5 border-t border-white/5 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                      <Clock className="w-3.5 h-3.5 text-gray-600" />
+                    <div className="flex items-center gap-1.5 mt-3 pt-2.5 border-t border-border text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                      <Clock className="w-3.5 h-3.5 text-muted-foreground" />
                       <span>{movie.durationMinutes} MIN</span>
                     </div>
                   </div>
@@ -421,10 +421,10 @@ export const MoviesPage: React.FC = () => {
           </motion.div>
         ) : (
           /* Empty Search State */
-          <div className="py-20 text-center bg-[#141417] border border-white/10 rounded-3xl p-8 space-y-4">
-            <Film className="w-12 h-12 text-gray-500 mx-auto animate-pulse" />
+          <div className="py-20 text-center bg-[#141417] border border-border rounded-3xl p-8 space-y-4">
+            <Film className="w-12 h-12 text-muted-foreground mx-auto animate-pulse" />
             <h3 className="text-lg font-black text-white uppercase tracking-wider">No Movies Found</h3>
-            <p className="text-xs text-gray-400 max-w-sm mx-auto">
+            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
               We couldn't find any movies matching "{searchQuery}" or selected filters. Try adjusting your search query or filters.
             </p>
             <button
@@ -456,12 +456,12 @@ export const MoviesPage: React.FC = () => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-              className="relative w-full max-w-4xl aspect-video bg-zinc-950 rounded-2xl overflow-hidden border border-white/10 shadow-2xl"
+              className="relative w-full max-w-4xl aspect-video bg-zinc-950 rounded-2xl overflow-hidden border border-border shadow-2xl"
             >
               {/* Close Button */}
               <button
                 onClick={() => setActiveTrailerUrl(null)}
-                className="absolute top-4 right-4 p-2 rounded-full bg-black/60 border border-white/10 text-white hover:bg-white/10 transition-colors z-10"
+                className="absolute top-4 right-4 p-2 rounded-full bg-black/60 border border-border text-white hover:bg-white/10 transition-colors z-10"
               >
                 <X className="w-5 h-5" />
               </button>

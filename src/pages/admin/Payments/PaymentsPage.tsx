@@ -59,17 +59,17 @@ const columns: CrudColumn<Payment>[] = [
     header: 'Transaction',
     render: (row) =>
       row.transactionId ? (
-        <span className="font-mono text-[11px] text-gray-300" title={row.transactionId}>
+        <span className="font-mono text-[11px] text-muted-foreground" title={row.transactionId}>
           {row.transactionId}
         </span>
       ) : (
-        <span className="text-gray-500">—</span>
+        <span className="text-muted-foreground">—</span>
       ),
   },
   {
     key: 'paidAt',
     header: 'Paid At',
-    render: (row) => (row.paidAt ? formatDateTime(row.paidAt) : <span className="text-gray-500">—</span>),
+    render: (row) => (row.paidAt ? formatDateTime(row.paidAt) : <span className="text-muted-foreground">—</span>),
   },
 ];
 

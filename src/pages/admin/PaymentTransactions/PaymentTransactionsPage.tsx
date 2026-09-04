@@ -46,9 +46,9 @@ const columns: CrudColumn<PaymentTransaction>[] = [
     header: 'Reference',
     render: (row) =>
       row.reference ? (
-        <span className="font-mono text-[11px] text-gray-300">{row.reference}</span>
+        <span className="font-mono text-[11px] text-muted-foreground">{row.reference}</span>
       ) : (
-        <span className="text-gray-500">—</span>
+        <span className="text-muted-foreground">—</span>
       ),
   },
   {

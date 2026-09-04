@@ -28,7 +28,7 @@ export const Mainlayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0f0f10] text-white selection:bg-[#E50914] selection:text-white">
+    <div className="min-h-screen flex flex-col bg-background text-foreground selection:bg-[#E50914] selection:text-white">
       <Navbar />
       <main className="flex-1 relative overflow-hidden">
         <AnimatePresence mode="wait">

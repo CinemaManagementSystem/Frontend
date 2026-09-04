@@ -68,9 +68,9 @@ export const LoginForm: React.FC = () => {
         required
       />
 
-      <div className="text-xs text-gray-400 pt-1">
+      <div className="text-xs text-muted-foreground pt-1">
         <span>Demo accounts: </span>
-        <span className="text-gray-300">admin / Admin123, user / User123</span>
+        <span className="text-muted-foreground">admin / Admin123, user / User123</span>
       </div>
 
       <Button

@@ -12,7 +12,7 @@ const columns: CrudColumn<Product>[] = [
     header: 'Product',
     render: (row) => (
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-lg bg-zinc-800 border border-white/10 overflow-hidden shrink-0">
+        <div className="w-9 h-9 rounded-lg bg-zinc-800 border border-border overflow-hidden shrink-0">
           {row.imageUrl && (
             <img
               src={row.imageUrl}
@@ -26,7 +26,7 @@ const columns: CrudColumn<Product>[] = [
         </div>
         <div>
           <h4 className="font-bold text-white text-sm">{row.name}</h4>
-          <p className="text-[11px] text-gray-400">Stock: {row.stockQuantity}</p>
+          <p className="text-[11px] text-muted-foreground">Stock: {row.stockQuantity}</p>
         </div>
       </div>
     ),

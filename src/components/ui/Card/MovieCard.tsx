@@ -26,7 +26,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie, className = '' }) =
       whileHover={shouldReduceMotion ? {} : { y: -4 }}
       whileTap={{ scale: 0.98 }}
       onClick={() => navigate(`/movies/${movie.id}`)}
-      className={`group relative flex flex-col rounded-xl overflow-hidden bg-[#161619] border border-white/10 hover:border-[#E50914]/50 transition-all duration-300 hover:shadow-xl hover:shadow-[#E50914]/10 cursor-pointer ${className}`}
+      className={`group relative flex flex-col rounded-xl overflow-hidden bg-[#161619] border border-border hover:border-[#E50914]/50 transition-all duration-300 hover:shadow-xl hover:shadow-[#E50914]/10 cursor-pointer ${className}`}
     >
       {/* Poster Image & Badges */}
       <div className="relative aspect-[2/3] w-full overflow-hidden bg-zinc-900">
@@ -41,7 +41,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie, className = '' }) =
         <div className="absolute inset-0 bg-gradient-to-t from-[#161619] via-transparent to-transparent opacity-80" />
 
         {/* Rating Badge */}
-        <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-md border border-white/15 text-xs font-bold text-amber-400">
+        <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-md border border-border text-xs font-bold text-amber-400">
           <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
           <span>{movie.rating.toFixed(1)}</span>
         </div>
@@ -87,13 +87,13 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie, className = '' }) =
         </h3>
 
         {/* Genres */}
-        <p className="text-xs text-gray-400 mt-1 line-clamp-1">
+        <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
           {movie.genres.slice(0, 3).join(', ')}
         </p>
 
-        <div className="flex items-center justify-between mt-auto pt-3 border-t border-white/5 text-xs text-gray-400">
+        <div className="flex items-center justify-between mt-auto pt-3 border-t border-border text-xs text-muted-foreground">
           <div className="flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-gray-500" />
+            <Clock className="w-3.5 h-3.5 text-muted-foreground" />
             <span>{formatDuration(movie.durationMinutes)}</span>
           </div>
           <span className="font-semibold text-white">

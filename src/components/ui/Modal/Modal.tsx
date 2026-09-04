@@ -71,16 +71,16 @@ export const Modal: React.FC<ModalProps> = ({
             }}
             transition={{ type: 'spring', stiffness: 350, damping: 28 }}
             className={cn(
-              'relative w-full bg-[#161619] border border-white/10 rounded-2xl shadow-2xl p-6 overflow-hidden z-10',
+              'relative w-full bg-[#161619] border border-border rounded-2xl shadow-2xl p-6 overflow-hidden z-10',
               maxWMap[maxWidth]
             )}
           >
             {title && (
-              <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/10">
+              <div className="flex items-center justify-between pb-4 mb-4 border-b border-border">
                 <h3 className="text-lg font-bold text-white tracking-wide">{title}</h3>
                 <button
                   onClick={onClose}
-                  className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+                  className="p-1 rounded-lg text-muted-foreground hover:text-white hover:bg-white/10 transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>

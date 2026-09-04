@@ -26,7 +26,7 @@ const columns: CrudColumn<Location>[] = [
           Open map
         </a>
       ) : (
-        <span className="text-gray-500">—</span>
+        <span className="text-muted-foreground">—</span>
       ),
   },
 ];

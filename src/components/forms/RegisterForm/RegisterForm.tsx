@@ -79,12 +79,12 @@ export const RegisterForm: React.FC = () => {
         required
       />
 
-      <div className="text-xs text-gray-400 pt-1">
+      <div className="text-xs text-muted-foreground pt-1">
         <label className="flex items-start gap-2 cursor-pointer">
           <input
             type="checkbox"
             required
-            className="w-3.5 h-3.5 mt-0.5 rounded bg-[#1e1e22] border-white/20 text-[#E50914] focus:ring-0"
+            className="w-3.5 h-3.5 mt-0.5 rounded bg-[#1e1e22] border-border text-[#E50914] focus:ring-0"
           />
           <span>
             I agree to the{' '}

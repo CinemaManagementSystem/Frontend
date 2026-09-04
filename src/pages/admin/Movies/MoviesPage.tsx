@@ -19,14 +19,14 @@ const columns: CrudColumn<ApiMovie>[] = [
         <img
           src={row.posterUrl}
           alt={row.title}
-          className="w-10 h-14 object-cover rounded-lg bg-zinc-800 border border-white/10 shrink-0"
+          className="w-10 h-14 object-cover rounded-lg bg-zinc-800 border border-border shrink-0"
           onError={(e) => {
             e.currentTarget.style.visibility = 'hidden';
           }}
         />
         <div>
           <h4 className="font-bold text-white text-sm">{row.title}</h4>
-          <p className="text-[11px] text-gray-400">{row.genre}</p>
+          <p className="text-[11px] text-muted-foreground">{row.genre}</p>
         </div>
       </div>
     ),

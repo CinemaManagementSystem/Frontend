@@ -29,9 +29,9 @@ export const NotFoundPage: React.FC = () => {
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-              className="w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-[#E50914] to-red-950 p-1 border-4 border-white/10 shadow-2xl flex items-center justify-center shrink-0"
+              className="w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-[#E50914] to-red-950 p-1 border-4 border-border shadow-2xl flex items-center justify-center shrink-0"
             >
-              <div className="w-full h-full rounded-full border-4 border-dashed border-white/40 flex items-center justify-center">
+              <div className="w-full h-full rounded-full border-4 border-dashed border-border flex items-center justify-center">
                 <Film className="w-8 h-8 sm:w-12 sm:h-12 text-white/90" />
               </div>
             </motion.div>
@@ -58,7 +58,7 @@ export const NotFoundPage: React.FC = () => {
             Lost in the <span className="bg-gradient-to-r from-[#E50914] via-rose-500 to-amber-500 bg-clip-text text-transparent">Cutting Room</span> Floor?
           </h1>
           
-          <p className="text-sm sm:text-base text-gray-400 max-w-md mx-auto leading-relaxed">
+          <p className="text-sm sm:text-base text-muted-foreground max-w-md mx-auto leading-relaxed">
             The page or screening link you are looking for has been moved, deleted, or doesn't exist in our box office database.
           </p>
         </motion.div>
@@ -72,7 +72,7 @@ export const NotFoundPage: React.FC = () => {
         >
           <button
             onClick={() => navigate(-1)}
-            className="py-3 px-5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer"
+            className="py-3 px-5 rounded-xl bg-white/5 hover:bg-white/10 border border-border text-muted-foreground hover:text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
             Go Back
@@ -88,7 +88,7 @@ export const NotFoundPage: React.FC = () => {
 
           <Link
             to="/movies"
-            className="py-3 px-5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer"
+            className="py-3 px-5 rounded-xl bg-white/5 hover:bg-white/10 border border-border text-muted-foreground hover:text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer"
           >
             <MovieIcon className="w-4 h-4 text-[#E50914]" />
             Browse Movies
