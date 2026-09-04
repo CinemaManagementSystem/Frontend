@@ -1,26 +1,32 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Film, Search, Ticket, Menu, X, Shield, LogOut, Sun, Moon, Settings } from 'lucide-react';
+import { Film, Search, Ticket, Menu, X, Shield, LogOut, Sun, Moon, Settings, Languages } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuthStore } from '@/store/authStore';
 import { useTheme } from '@/context/ThemeContext';
+import { useLanguage, type Locale } from '@/i18n';
 
 export const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuthStore();
   const { theme, toggleTheme } = useTheme();
+  const { locale, setLocale, t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+
+  const toggleLang = () => setLangDropdownOpen(!langDropdownOpen);
+  const switchLang = (l: Locale) => { setLocale(l); setLangDropdownOpen(false); };
 
   const navLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'Movies', path: '/movies' },
-    { name: 'Cinemas', path: '/cinemas' },
-    { name: 'Comming Soon', path: '/coming-soon' },
-    { name: 'Offers', path: '/offers'},
-    { name: 'My Tickets', path: '/history' },
-    { name: 'Settings', path: '/settings' },
+    { name: t('nav.home'), key: 'nav.home', path: '/' },
+    { name: t('nav.movies'), key: 'nav.movies', path: '/movies' },
+    { name: t('nav.cinemas'), key: 'nav.cinemas', path: '/cinemas' },
+    { name: t('nav.comingSoon'), key: 'nav.comingSoon', path: '/coming-soon' },
+    { name: t('nav.offers'), key: 'nav.offers', path: '/offers' },
+    { name: t('nav.myTickets'), key: 'nav.myTickets', path: '/history' },
+    { name: t('nav.settings'), key: 'nav.settings', path: '/settings' },
   ];
 
   const isActive = (path: string) => {
@@ -47,7 +53,7 @@ export const Navbar: React.FC = () => {
             const active = isActive(link.path);
             return (
               <Link
-                key={link.name}
+                key={link.path}
                 to={link.path}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   active
@@ -67,13 +73,53 @@ export const Navbar: React.FC = () => {
               className="ml-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-[#E50914]/15 text-[#E50914] border border-[#E50914]/30 hover:bg-[#E50914] hover:text-white transition-all shadow-sm"
             >
               <Shield className="w-3.5 h-3.5" />
-              Admin Panel
+              {t('nav.adminPanel')}
             </Link>
           )}
         </nav>
 
         {/* Right Actions */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-2">
+          {/* Language Toggle */}
+          <div className="relative">
+            <button
+              onClick={toggleLang}
+              title={t('nav.language')}
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors flex items-center gap-1"
+            >
+              <Languages className="w-5 h-5" />
+              <span className="text-xs font-bold uppercase">{locale === 'en' ? 'EN' : 'KM'}</span>
+            </button>
+            <AnimatePresence>
+              {langDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                  transition={{ duration: 0.12 }}
+                  className="absolute right-0 mt-2 w-32 bg-card border border-border rounded-xl shadow-2xl p-1.5 z-50"
+                >
+                  <button
+                    onClick={() => switchLang('en')}
+                    className={`w-full text-left flex items-center gap-2 px-3 py-2 text-xs rounded-lg transition-colors ${
+                      locale === 'en' ? 'bg-accent/10 text-foreground font-bold' : 'text-muted-foreground hover:text-foreground hover:bg-accent/10'
+                    }`}
+                  >
+                    <span className="text-base leading-none">🇬🇧</span> English
+                  </button>
+                  <button
+                    onClick={() => switchLang('km')}
+                    className={`w-full text-left flex items-center gap-2 px-3 py-2 text-xs rounded-lg transition-colors ${
+                      locale === 'km' ? 'bg-accent/10 text-foreground font-bold' : 'text-muted-foreground hover:text-foreground hover:bg-accent/10'
+                    }`}
+                  >
+                    <span className="text-base leading-none">🇰🇭</span> ខ្មែរ
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
@@ -87,7 +133,7 @@ export const Navbar: React.FC = () => {
           <button
             onClick={() => navigate('/movies')}
             className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors"
-            title="Search Movies"
+            title={t('nav.searchMovies')}
           >
             <Search className="w-5 h-5" />
           </button>
@@ -134,7 +180,7 @@ export const Navbar: React.FC = () => {
                         className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/10 rounded-lg transition-colors"
                       >
                         <Shield className="w-4 h-4 text-[#E50914]" />
-                        Admin Dashboard
+                        {t('nav.adminDashboard')}
                       </Link>
                     ) : null}
 
@@ -144,7 +190,7 @@ export const Navbar: React.FC = () => {
                       className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/10 rounded-lg transition-colors"
                     >
                       <Ticket className="w-4 h-4 text-amber-400" />
-                      My Bookings
+                      {t('nav.myBookings')}
                     </Link>
 
                     <Link
@@ -153,19 +199,16 @@ export const Navbar: React.FC = () => {
                       className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/10 rounded-lg transition-colors"
                     >
                       <Settings className="w-4 h-4 text-muted-foreground" />
-                      Settings
+                      {t('nav.settings')}
                     </Link>
 
                     <div className="border-t border-border my-1 pt-1">
                       <button
-                        onClick={() => {
-                          logout();
-                          setUserDropdownOpen(false);
-                        }}
+                        onClick={() => { logout(); setUserDropdownOpen(false); }}
                         className="w-full text-left flex items-center gap-2 px-3 py-2 text-xs text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
                       >
                         <LogOut className="w-4 h-4" />
-                        Sign Out
+                        {t('nav.signOut')}
                       </button>
                     </div>
                   </motion.div>
@@ -176,15 +219,15 @@ export const Navbar: React.FC = () => {
             <div className="flex items-center gap-2">
               <Link
                 to="/login"
-                className="px-4 py-2 text-xs font-semibold text-white hover:text-[#E50914] transition-colors"
+                className="px-4 py-2 text-xs font-semibold text-foreground hover:text-[#E50914] transition-colors"
               >
-                Sign In
+                {t('nav.signIn')}
               </Link>
               <Link
                 to="/register"
                 className="px-4 py-2 rounded-lg bg-[#E50914] hover:bg-[#ff1f2d] text-white text-xs font-bold tracking-wide transition-all shadow-md shadow-[#E50914]/30"
               >
-                Join Now
+                {t('nav.joinNow')}
               </Link>
             </div>
           )}
@@ -192,6 +235,15 @@ export const Navbar: React.FC = () => {
 
         {/* Mobile Menu Toggle */}
         <div className="flex md:hidden items-center gap-2">
+          {/* Language Toggle (mobile) */}
+          <button
+            onClick={toggleLang}
+            title={t('nav.language')}
+            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/10 text-xs font-bold"
+          >
+            {locale === 'en' ? 'EN' : 'KM'}
+          </button>
+
           {/* Theme Toggle (mobile) */}
           <button
             onClick={toggleTheme}
@@ -221,7 +273,7 @@ export const Navbar: React.FC = () => {
           >
             {navLinks.map((link) => (
               <Link
-                key={link.name}
+                key={link.path}
                 to={link.path}
                 onClick={() => setMobileMenuOpen(false)}
                 className="block px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/10"
@@ -235,19 +287,36 @@ export const Navbar: React.FC = () => {
                 onClick={() => setMobileMenuOpen(false)}
                 className="block px-3 py-2 rounded-lg text-sm font-medium text-[#E50914] bg-[#E50914]/10"
               >
-                Admin Panel
+                {t('nav.adminPanel')}
               </Link>
             )}
+
+            {/* Mobile Language Switcher */}
+            <div className="border-t border-border pt-3">
+              <p className="px-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">{t('nav.language')}</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { switchLang('en'); }}
+                  className={`flex-1 py-2 rounded-lg text-xs font-bold transition-colors ${locale === 'en' ? 'bg-accent/10 text-foreground border border-border' : 'text-muted-foreground hover:text-foreground hover:bg-accent/10'}`}
+                >
+                  🇬🇧 English
+                </button>
+                <button
+                  onClick={() => { switchLang('km'); }}
+                  className={`flex-1 py-2 rounded-lg text-xs font-bold transition-colors ${locale === 'km' ? 'bg-accent/10 text-foreground border border-border' : 'text-muted-foreground hover:text-foreground hover:bg-accent/10'}`}
+                >
+                  🇰🇭 ខ្មែរ
+                </button>
+              </div>
+            </div>
+
             <div className="border-t border-border pt-3 flex flex-col gap-2">
               {isAuthenticated ? (
                 <button
-                  onClick={() => {
-                    logout();
-                    setMobileMenuOpen(false);
-                  }}
+                  onClick={() => { logout(); setMobileMenuOpen(false); }}
                   className="w-full text-left px-3 py-2 text-sm font-medium text-rose-400"
                 >
-                  Sign Out ({user?.username})
+                  {t('nav.signOut')} ({user?.username})
                 </button>
               ) : (
                 <Link
@@ -255,7 +324,7 @@ export const Navbar: React.FC = () => {
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-full text-center py-2.5 rounded-lg bg-[#E50914] text-white text-xs font-bold"
                 >
-                  Sign In
+                  {t('nav.signIn')}
                 </Link>
               )}
             </div>

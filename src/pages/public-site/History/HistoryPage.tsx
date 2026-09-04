@@ -12,6 +12,7 @@ import {
 import { useMovieStore } from '@/store/movieStore';
 import { Badge } from '@/components/ui/Badge/Badge';
 import { formatCurrency, formatDate } from '@/utils/formatDate';
+import { useLanguage } from '@/i18n';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -28,6 +29,7 @@ const itemVariants = {
 
 export const HistoryPage: React.FC = () => {
   const { bookings, cancelBooking } = useMovieStore();
+  const { t } = useLanguage();
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
@@ -39,13 +41,13 @@ export const HistoryPage: React.FC = () => {
             className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-white mb-2 transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            Back to Home
+            {t('history.backToMovies')}
           </Link>
           <h1 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight">
-            MY BOOKING HISTORY
+            {t('history.ticketHistory')}
           </h1>
           <p className="text-xs text-muted-foreground mt-1">
-            Access your active cinema passes, barcodes, and past transactions
+            {t('history.subtitle')}
           </p>
         </div>
 
@@ -178,15 +180,15 @@ export const HistoryPage: React.FC = () => {
       ) : (
         <div className="p-12 text-center bg-[#151518] rounded-3xl border border-border space-y-4">
           <Ticket className="w-12 h-12 text-muted-foreground mx-auto" />
-          <h3 className="text-lg font-bold text-white">No Tickets Found</h3>
+          <h3 className="text-lg font-bold text-white">{t('history.noTickets')}</h3>
           <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-            You don't have any movie ticket reservations yet. Browse our movies catalog and book your preferred seats!
+            {t('history.noTicketsDesc')}
           </p>
           <Link
             to="/#movies"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#E50914] text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-[#E50914]/30"
           >
-            Explore Movies Now
+            {t('history.browseMovies')}
           </Link>
         </div>
       )}

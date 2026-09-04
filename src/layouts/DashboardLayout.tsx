@@ -5,51 +5,53 @@ import { Sidebar } from '@/components/common/Sidebar/Sidebar';
 import { Bell, ShieldCheck, Moon, Sun } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useTheme } from '@/context/ThemeContext';
+import { useLanguage } from '@/i18n';
 
 export const DashboardLayout: React.FC = () => {
   const location = useLocation();
   const { user } = useAuthStore();
   const { theme, toggleTheme } = useTheme();
+  const { t } = useLanguage();
   const shouldReduceMotion = useReducedMotion();
 
   const getPageTitle = () => {
     switch (location.pathname) {
       case '/admin/dashboard':
-        return 'Overview & Analytics';
+        return t('dashboard.overview');
       case '/admin/movie-categories':
-        return 'Movie Categories';
+        return t('sidebar.categories');
       case '/admin/movies':
-        return 'Movie Catalog Manager';
+        return t('sidebar.movies');
       case '/admin/locations':
-        return 'Cinema Locations';
+        return t('sidebar.locations');
       case '/admin/theaters':
-        return 'Theaters';
+        return t('sidebar.theaters');
       case '/admin/screens':
-        return 'Screens';
+        return t('sidebar.screens');
       case '/admin/seats':
-        return 'Seats';
+        return t('sidebar.seats');
       case '/admin/shows':
-        return 'Show Schedules';
+        return t('sidebar.shows');
       case '/admin/bookings':
-        return 'Bookings & Orders';
+        return t('sidebar.bookings');
       case '/admin/booking-seats':
-        return 'Booking Seats';
+        return t('sidebar.bookingSeats');
       case '/admin/product-categories':
-        return 'Product Categories';
+        return t('sidebar.productCategories');
       case '/admin/products':
-        return 'Products';
+        return t('sidebar.products');
       case '/admin/orders':
-        return 'Orders';
+        return t('sidebar.orders');
       case '/admin/order-items':
-        return 'Order Items';
+        return t('sidebar.orderItems');
       case '/admin/payments':
-        return 'Payments';
+        return t('sidebar.payments');
       case '/admin/payment-transactions':
-        return 'Payment Transactions';
+        return t('sidebar.paymentTransactions');
       case '/admin/users':
-        return 'User Management';
+        return t('sidebar.users');
       default:
-        return 'Admin Dashboard';
+        return t('sidebar.dashboard');
     }
   };
 
@@ -67,7 +69,7 @@ export const DashboardLayout: React.FC = () => {
               {getPageTitle()}
             </h2>
             <p className="text-[11px] text-muted-foreground">
-              Manage theater schedules, movies, and box office sales
+              {t('dashboard.manage')}
             </p>
           </div>
 
@@ -75,7 +77,7 @@ export const DashboardLayout: React.FC = () => {
             {/* Live Indicator */}
             <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Live System</span>
+              <span>{t('dashboard.liveSystem')}</span>
             </div>
 
             {/* Theme Toggle */}

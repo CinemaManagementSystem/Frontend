@@ -4,6 +4,7 @@ import { Mail, Lock, LogIn } from 'lucide-react';
 import { Input } from '@/components/ui/Input/Input';
 import { Button } from '@/components/ui/Button/Button';
 import { useAuthStore } from '@/store/authStore';
+import { useLanguage } from '@/i18n';
 
 function getErrorMessage(error: unknown): string {
   if (typeof error === 'object' && error !== null && 'response' in error) {
@@ -17,6 +18,7 @@ function getErrorMessage(error: unknown): string {
 export const LoginForm: React.FC = () => {
   const navigate = useNavigate();
   const { login, isAuthLoading } = useAuthStore();
+  const { t } = useLanguage();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -24,7 +26,7 @@ export const LoginForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!identifier || !password) {
-      setError('Please fill in both username/email and password');
+      setError(t('auth.validation.fillBoth'));
       return;
     }
 
@@ -47,9 +49,9 @@ export const LoginForm: React.FC = () => {
       )}
 
       <Input
-        label="Username or Email"
+        label={t('auth.usernameOrEmail')}
         type="text"
-        placeholder="admin or admin@cinema.com"
+        placeholder={t('auth.usernamePlaceholder')}
         value={identifier}
         onChange={(e) => setIdentifier(e.target.value)}
         icon={<Mail className="w-4 h-4" />}
@@ -58,9 +60,9 @@ export const LoginForm: React.FC = () => {
       />
 
       <Input
-        label="Password"
+        label={t('auth.password')}
         type="password"
-        placeholder="••••••••"
+        placeholder={t('auth.passwordPlaceholder')}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         icon={<Lock className="w-4 h-4" />}
@@ -69,8 +71,8 @@ export const LoginForm: React.FC = () => {
       />
 
       <div className="text-xs text-muted-foreground pt-1">
-        <span>Demo accounts: </span>
-        <span className="text-muted-foreground">admin / Admin123, user / User123</span>
+        <span>{t('auth.demoAccounts')} </span>
+        <span className="text-muted-foreground">{t('auth.demoCredentials')}</span>
       </div>
 
       <Button
@@ -79,7 +81,7 @@ export const LoginForm: React.FC = () => {
         className="w-full bg-[#E50914] hover:bg-[#ff1f2d] text-white py-2.5 text-xs font-bold uppercase tracking-wider rounded-lg shadow-lg shadow-[#E50914]/30 flex items-center justify-center gap-2 mt-2"
       >
         <LogIn className="w-4 h-4" />
-        {isAuthLoading ? 'Signing in...' : 'Sign In'}
+        {isAuthLoading ? t('auth.signingIn') : t('auth.signIn')}
       </Button>
     </form>
   );

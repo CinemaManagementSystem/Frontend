@@ -192,6 +192,96 @@ html.light .glass-nav {
   background: #E50914;
 }
 
+/* ================================================
+   LIGHT MODE COMPREHENSIVE OVERRIDES
+   ================================================ */
+
+/* 1. Flip text-white → dark text on light surfaces.
+   Re-enable white on primary/accent buttons so brand identity stays correct. */
+html.light .text-white {
+    color: var(--foreground) !important;
+}
+html.light .bg-\[\#E50914\].text-white,
+html.light .bg-\[\#E50914\] .text-white,
+html.light .hover\:bg-\[\#ff1f2d\].text-white,
+html.light .hover\:bg-\[\#ff1f2d\] .text-white,
+html.light .bg-yellow-500\.text-white,
+html.light .bg-yellow-500 .text-white,
+html.light [class*="bg-"][class*="text-white"]:where(.bg-\[\#E50914\], [class*="bg-red"], [class*="bg-yellow"]) {
+    color: #fff !important;
+}
+
+/* 2. Keep white text inside hero / dark sections that stay dark */
+html.light .bg-black.text-white,
+html.light .bg-black .text-white {
+    color: #fff !important;
+}
+
+/* 3. Dark inputs → light inputs */
+html.light .bg-\[\#1e1e22\],
+html.light .bg-\[\#1e1e22\]\/80,
+html.light [class*="bg-zinc-950"],
+html.light .bg-\[\#161619\] {
+    background-color: #ffffff !important;
+}
+
+/* 4. Subtle overlays: bg-white/5 and bg-white/10 are white-on-dark accents.
+   In light mode they disappear on white — flip to dark tints. */
+html.light .bg-white\/5 {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+}
+html.light .bg-white\/10 {
+    background-color: rgba(0, 0, 0, 0.07) !important;
+}
+html.light .bg-white\/15 {
+    background-color: rgba(0, 0, 0, 0.08) !important;
+}
+html.light .bg-white\/20 {
+    background-color: rgba(0, 0, 0, 0.10) !important;
+}
+html.light .hover\:bg-white\/5:hover {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+}
+html.light .hover\:bg-white\/10:hover {
+    background-color: rgba(0, 0, 0, 0.07) !important;
+}
+html.light .hover\:bg-white\/15:hover {
+    background-color: rgba(0, 0, 0, 0.09) !important;
+}
+html.light .hover\:bg-white\/20:hover {
+    background-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+/* 5. Page-level dark containers that override surface — keep them readable */
+html.light .bg-\[\#0f0f10\].min-h-screen,
+html.light .bg-\[\#0c0c0e\].min-h-screen,
+html.light .bg-\[\#0b0b0d\].min-h-screen,
+html.light .bg-background.min-h-screen {
+    color: var(--foreground) !important;
+}
+
+/* 6. Selection color */
+html.light ::selection {
+    background-color: rgba(229, 9, 20, 0.2) !important;
+    color: var(--foreground) !important;
+}
+
+/* 7. Modals in light mode */
+html.light [class*="shadow-2xl"][class*="rounded-2xl"] {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* 8. Placeholder text readability */
+html.light .placeholder\:text-muted-foreground::placeholder,
+html.light [placeholder]::placeholder {
+    color: var(--muted-foreground) !important;
+}
+
+/* 9. Table row hover in light mode */
+html.light .hover\:bg-white\/10:hover {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
 /* Movie Curve Screen Graphic */
 .screen-curve {
   position: relative;

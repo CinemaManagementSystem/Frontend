@@ -25,30 +25,32 @@ import {
   Settings,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import { useLanguage } from '@/i18n';
 
 export const Sidebar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const { t } = useLanguage();
 
   const menuItems = [
-    { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
-    { name: 'Categories', path: '/admin/movie-categories', icon: Tags },
-    { name: 'Movies', path: '/admin/movies', icon: Clapperboard },
-    { name: 'Locations', path: '/admin/locations', icon: MapPin },
-    { name: 'Theaters', path: '/admin/theaters', icon: Building2 },
-    { name: 'Screens', path: '/admin/screens', icon: MonitorPlay },
-    { name: 'Seats', path: '/admin/seats', icon: Armchair },
-    { name: 'Shows', path: '/admin/shows', icon: CalendarClock },
-    { name: 'Bookings', path: '/admin/bookings', icon: Ticket },
-    { name: 'Booking Seats', path: '/admin/booking-seats', icon: Sofa },
-    { name: 'Product Categories', path: '/admin/product-categories', icon: Package },
-    { name: 'Products', path: '/admin/products', icon: Popcorn },
-    { name: 'Orders', path: '/admin/orders', icon: ShoppingCart },
-    { name: 'Order Items', path: '/admin/order-items', icon: UtensilsCrossed },
-    { name: 'Payments', path: '/admin/payments', icon: CreditCard },
-    { name: 'Payment Transactions', path: '/admin/payment-transactions', icon: ReceiptText },
-    { name: 'Users', path: '/admin/users', icon: Users },
+    { name: t('sidebar.dashboard'), path: '/admin/dashboard', icon: LayoutDashboard },
+    { name: t('sidebar.categories'), path: '/admin/movie-categories', icon: Tags },
+    { name: t('sidebar.movies'), path: '/admin/movies', icon: Clapperboard },
+    { name: t('sidebar.locations'), path: '/admin/locations', icon: MapPin },
+    { name: t('sidebar.theaters'), path: '/admin/theaters', icon: Building2 },
+    { name: t('sidebar.screens'), path: '/admin/screens', icon: MonitorPlay },
+    { name: t('sidebar.seats'), path: '/admin/seats', icon: Armchair },
+    { name: t('sidebar.shows'), path: '/admin/shows', icon: CalendarClock },
+    { name: t('sidebar.bookings'), path: '/admin/bookings', icon: Ticket },
+    { name: t('sidebar.bookingSeats'), path: '/admin/booking-seats', icon: Sofa },
+    { name: t('sidebar.productCategories'), path: '/admin/product-categories', icon: Package },
+    { name: t('sidebar.products'), path: '/admin/products', icon: Popcorn },
+    { name: t('sidebar.orders'), path: '/admin/orders', icon: ShoppingCart },
+    { name: t('sidebar.orderItems'), path: '/admin/order-items', icon: UtensilsCrossed },
+    { name: t('sidebar.payments'), path: '/admin/payments', icon: CreditCard },
+    { name: t('sidebar.paymentTransactions'), path: '/admin/payment-transactions', icon: ReceiptText },
+    { name: t('sidebar.users'), path: '/admin/users', icon: Users },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -67,7 +69,7 @@ export const Sidebar: React.FC = () => {
               CINEMA<span className="text-[#E50914]">TIQUE</span>
             </h1>
             <span className="text-[10px] font-bold tracking-widest text-[#E50914] uppercase">
-              Admin Portal
+              {t('sidebar.adminPortal')}
             </span>
           </div>
         </div>
@@ -75,14 +77,14 @@ export const Sidebar: React.FC = () => {
         {/* Navigation */}
         <nav className="p-4 space-y-1.5">
           <p className="px-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
-            Main Menu
+            {t('sidebar.mainMenu')}
           </p>
           {menuItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
             return (
               <Link
-                key={item.name}
+                key={item.path}
                 to={item.path}
                 className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all relative ${
                   active ? 'text-white' : 'text-muted-foreground hover:text-sidebar-foreground'
@@ -113,7 +115,7 @@ export const Sidebar: React.FC = () => {
           className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
         >
           <ArrowLeft className="w-4 h-4 text-muted-foreground" />
-          <span>View Public Site</span>
+          <span>{t('nav.viewPublicSite')}</span>
         </Link>
 
         {/* Settings */}
@@ -122,7 +124,7 @@ export const Sidebar: React.FC = () => {
           className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
         >
           <Settings className="w-4 h-4 text-muted-foreground" />
-          <span>Settings</span>
+          <span>{t('nav.settings')}</span>
         </Link>
 
         {/* User Card */}
@@ -140,11 +142,8 @@ export const Sidebar: React.FC = () => {
               </div>
             </div>
             <button
-              onClick={() => {
-                logout();
-                navigate('/login');
-              }}
-              title="Sign Out"
+              onClick={() => { logout(); navigate('/login'); }}
+              title={t('nav.signOut')}
               className="p-1.5 rounded-lg text-muted-foreground hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
             >
               <LogOut className="w-4 h-4" />

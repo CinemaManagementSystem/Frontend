@@ -2,9 +2,11 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Film, Home, ArrowLeft, Film as MovieIcon, Search } from 'lucide-react';
+import { useLanguage } from '@/i18n';
 
 export const NotFoundPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   return (
     <div className="min-h-[80vh] bg-[#0f0f10] text-white flex items-center justify-center px-4 py-16 selection:bg-[#E50914]">
@@ -51,7 +53,7 @@ export const NotFoundPage: React.FC = () => {
         >
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E50914]/10 border border-[#E50914]/30 text-[#E50914] text-[11px] font-black uppercase tracking-widest">
             <Search className="w-3.5 h-3.5" />
-            <span>PAGE NOT FOUND</span>
+            <span>{t('notFound.title')}</span>
           </div>
           
           <h1 className="text-3xl sm:text-5xl font-black uppercase tracking-tight text-white leading-tight">
@@ -75,7 +77,7 @@ export const NotFoundPage: React.FC = () => {
             className="py-3 px-5 rounded-xl bg-white/5 hover:bg-white/10 border border-border text-muted-foreground hover:text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
-            Go Back
+            {t('common.back')}
           </button>
 
           <Link
@@ -83,7 +85,7 @@ export const NotFoundPage: React.FC = () => {
             className="py-3 px-6 rounded-xl bg-[#E50914] hover:bg-[#ff1f2d] text-white text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 shadow-lg shadow-[#E50914]/30 cursor-pointer"
           >
             <Home className="w-4 h-4" />
-            Back to Home
+            {t('notFound.backHome')}
           </Link>
 
           <Link
