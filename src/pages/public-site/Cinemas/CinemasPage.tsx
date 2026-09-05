@@ -166,16 +166,16 @@ export const CinemasPage: React.FC = () => {
   ];
 
   return (
-    <div className="pb-24 bg-[#0f0f10] min-h-screen text-white selection:bg-[#E50914]">
+    <div className="pb-24 bg-background min-h-screen text-foreground selection:bg-[#E50914]">
       {/* Dynamic Design Header - Glassmorphic Hero */}
-      <section className="relative w-full py-16 md:py-24 overflow-hidden border-b border-border bg-gradient-to-b from-zinc-900 to-[#0f0f10]">
+      <section className="relative w-full py-16 md:py-24 overflow-hidden border-b border-border bg-gradient-to-b from-muted/70 to-transparent dark:from-zinc-900 dark:to-transparent">
         <div className="absolute inset-0 z-0">
           <img
             src="https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80"
             alt="Cinema Interior"
             className="w-full h-full object-cover object-center opacity-10 filter grayscale brightness-50"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0f0f10] via-[#0f0f10]/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent dark:from-[#0f0f10] dark:via-[#0f0f10]/80 dark:to-transparent" />
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -191,7 +191,7 @@ export const CinemasPage: React.FC = () => {
             <div className="relative inline-block text-left">
               <button
                 onClick={() => setLocationDropdownOpen(!locationDropdownOpen)}
-                className="flex items-center gap-3 text-3xl sm:text-5xl font-black text-white uppercase tracking-tight text-left focus:outline-none hover:text-muted-foreground transition-colors cursor-pointer group"
+                className="flex items-center gap-3 text-3xl sm:text-5xl font-black text-foreground uppercase tracking-tight text-left focus:outline-none hover:text-muted-foreground transition-colors cursor-pointer group"
               >
                 <span>{selectedCinema.name}</span>
                 <ChevronDown className="w-8 h-8 text-[#E50914] group-hover:translate-y-0.5 transition-transform" />
@@ -209,20 +209,20 @@ export const CinemasPage: React.FC = () => {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -8, scale: 0.98 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute left-0 mt-3 w-80 rounded-2xl bg-zinc-950 border border-border p-2 shadow-2xl z-30 origin-top-left"
-                    >
-                      <div className="px-3 py-2 text-[10px] uppercase font-bold tracking-wider text-muted-foreground border-b border-border mb-1">
-                        Choose Cinema Location
-                      </div>
-                      {cinemas.map((cinema) => (
-                        <button
-                          key={cinema.id}
-                          onClick={() => handleSelectCinema(cinema)}
-                          className={`w-full text-left p-3 rounded-xl transition-all flex flex-col gap-1 hover:bg-white/5 ${
-                            selectedCinema.id === cinema.id 
-                              ? 'bg-[#E50914]/10 text-white border border-[#E50914]/20' 
-                              : 'text-muted-foreground hover:text-white'
-                          }`}
+className="absolute left-0 mt-3 w-80 rounded-2xl bg-popover border border-border p-2 shadow-2xl z-30 origin-top-left"
+                      >
+                        <div className="px-3 py-2 text-[10px] uppercase font-bold tracking-wider text-muted-foreground border-b border-border mb-1">
+                          Choose Cinema Location
+                        </div>
+                        {cinemas.map((cinema) => (
+                          <button
+                            key={cinema.id}
+                            onClick={() => handleSelectCinema(cinema)}
+                            className={`w-full text-left p-3 rounded-xl transition-all flex flex-col gap-1 hover:bg-muted ${
+                              selectedCinema.id === cinema.id 
+                                ? 'bg-[#E50914]/10 text-foreground border border-[#E50914]/20' 
+                                : 'text-muted-foreground hover:text-foreground'
+                            }`}
                         >
                           <span className="text-sm font-bold">{cinema.name}</span>
                           <span className="text-[10px] text-muted-foreground">{cinema.address}</span>
@@ -244,13 +244,13 @@ export const CinemasPage: React.FC = () => {
           </div>
 
           {/* Today / This Week Filter Tabs */}
-          <div className="flex bg-[#18181b] border border-border p-1 rounded-xl shadow-inner max-w-xs shrink-0 self-start md:self-end relative overflow-hidden">
+          <div className="flex bg-muted border border-border p-1 rounded-xl shadow-inner max-w-xs shrink-0 self-start md:self-end relative overflow-hidden">
             <button
               onClick={() => setTimeframe('TODAY')}
               className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all relative z-10 ${
                 timeframe === 'TODAY'
                   ? 'text-white'
-                  : 'text-muted-foreground hover:text-white'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {timeframe === 'TODAY' && (
@@ -267,7 +267,7 @@ export const CinemasPage: React.FC = () => {
               className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all relative z-10 ${
                 timeframe === 'THIS_WEEK'
                   ? 'text-white'
-                  : 'text-muted-foreground hover:text-white'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {timeframe === 'THIS_WEEK' && (
@@ -284,7 +284,7 @@ export const CinemasPage: React.FC = () => {
       </section>
 
       {/* Date Picker Bar */}
-      <section className="bg-zinc-950 border-b border-border py-4 sticky top-18 z-20 shadow-md">
+      <section className="bg-card border-b border-border py-4 sticky top-18 z-20 shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 overflow-x-auto scrollbar-none pb-1">
             <div className="flex items-center gap-2 shrink-0 border-r border-border pr-4 text-xs font-bold text-muted-foreground uppercase tracking-widest">
@@ -304,7 +304,7 @@ export const CinemasPage: React.FC = () => {
                     className={`flex flex-col items-center justify-center p-2.5 rounded-xl border min-w-[70px] transition-all relative ${
                       active
                         ? 'bg-[#E50914] text-white border-transparent shadow-lg shadow-[#E50914]/40 scale-105'
-                        : 'bg-[#18181b] border-border hover:border-border text-muted-foreground hover:text-white'
+                        : 'bg-muted border-border hover:border-border text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">
@@ -327,9 +327,9 @@ export const CinemasPage: React.FC = () => {
       {/* Filters Showcase */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
         {/* Left Side: Filter Panels */}
-        <div className="lg:col-span-1 bg-[#141417] border border-border rounded-3xl p-6 space-y-8 shadow-2xl">
+        <div className="lg:col-span-1 bg-card border border-border rounded-3xl p-6 space-y-8 shadow-2xl">
           <div className="flex items-center justify-between pb-4 border-b border-border">
-            <h3 className="text-sm font-black uppercase tracking-wider text-white flex items-center gap-2">
+            <h3 className="text-sm font-black uppercase tracking-wider text-foreground flex items-center gap-2">
               <Filter className="w-4 h-4 text-[#E50914]" />
               Filter Showtimes
             </h3>
@@ -356,7 +356,7 @@ export const CinemasPage: React.FC = () => {
                   className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-semibold transition-all border ${
                     selectedFormat === fmt.id
                       ? 'bg-[#E50914] text-white border-transparent shadow-md'
-                      : 'bg-white/5 border-border hover:border-border text-muted-foreground hover:text-white'
+                      : 'bg-muted border-border hover:border-border text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   {fmt.label}
@@ -378,7 +378,7 @@ export const CinemasPage: React.FC = () => {
                   className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-semibold transition-all border ${
                     selectedTimeFilter === t.id
                       ? 'bg-[#E50914] text-white border-transparent shadow-md'
-                      : 'bg-white/5 border-border hover:border-border text-muted-foreground hover:text-white'
+                      : 'bg-muted border-border hover:border-border text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   {t.label}
@@ -418,7 +418,7 @@ export const CinemasPage: React.FC = () => {
                 <motion.div
                   key={movie.id}
                   variants={itemVariants}
-                  className="bg-[#141417] border border-border rounded-3xl p-6 shadow-2xl flex flex-col md:flex-row gap-6 hover:border-border transition-all duration-300"
+                  className="bg-card border border-border rounded-3xl p-6 shadow-2xl flex flex-col md:flex-row gap-6 hover:border-border transition-all duration-300"
                 >
                   {/* Movie Poster & Basic Details */}
                   <div className="w-full md:w-44 shrink-0 space-y-4">
@@ -444,7 +444,7 @@ export const CinemasPage: React.FC = () => {
                     <div>
                       <h4 
                         onClick={() => navigate(`/movies/${movie.id}`)}
-                        className="text-xl font-black text-white hover:text-[#E50914] cursor-pointer transition-colors uppercase tracking-tight"
+                        className="text-xl font-black text-foreground hover:text-[#E50914] cursor-pointer transition-colors uppercase tracking-tight"
                       >
                         {movie.title}
                       </h4>
@@ -492,11 +492,11 @@ export const CinemasPage: React.FC = () => {
                                   onClick={() => navigate(`/booking/${st.id}?movieId=${movie.id}`)}
                                   whileHover={isSoldOut ? {} : { scale: 1.05 }}
                                   whileTap={isSoldOut ? {} : { scale: 0.95 }}
-                                  className={`relative flex flex-col items-center justify-center p-3 rounded-2xl bg-zinc-900 border border-border min-w-[95px] transition-all group ${
-                                    isSoldOut 
-                                      ? 'opacity-40 cursor-not-allowed border-transparent' 
-                                      : `hover:bg-white/5 cursor-pointer ${hoverBorderColor}`
-                                  }`}
+className={`relative flex flex-col items-center justify-center p-3 rounded-2xl bg-muted border border-border min-w-[95px] transition-all group ${
+                                  isSoldOut 
+                                    ? 'opacity-40 cursor-not-allowed border-transparent' 
+                                    : `hover:bg-accent/10 cursor-pointer ${hoverBorderColor}`
+                                }`}
                                   title={`${occupancyLabel} (${occupiedCount}/${totalSeats} seats)`}
                                 >
                                   {isSoldOut ? (
@@ -510,11 +510,11 @@ export const CinemasPage: React.FC = () => {
                                     </>
                                   ) : (
                                     <>
-                                      <span className="text-sm font-black text-white group-hover:text-[#E50914] transition-colors">
+                                      <span className="text-sm font-black text-foreground group-hover:text-[#E50914] transition-colors">
                                         {st.time}
                                       </span>
                                       {/* Occupancy Indicator Bar */}
-                                      <div className="w-12 h-1 bg-white/10 rounded-full mt-2 overflow-hidden">
+                                      <div className="w-12 h-1 bg-black/10 dark:bg-white/10 rounded-full mt-2 overflow-hidden">
                                         <div 
                                           className={`h-full ${statusColor}`}
                                           style={{ width: `${Math.max(15, occupancyPercent)}%` }}
@@ -535,15 +535,15 @@ export const CinemasPage: React.FC = () => {
             })
           ) : (
             /* Empty State */
-            <div className="py-20 text-center bg-[#141417] border border-border rounded-3xl p-8 space-y-4">
+            <div className="py-20 text-center bg-card border border-border rounded-3xl p-8 space-y-4">
               <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto animate-pulse" />
-              <h3 className="text-lg font-black text-white uppercase tracking-wider">No Showtimes Found</h3>
+              <h3 className="text-lg font-black text-foreground uppercase tracking-wider">No Showtimes Found</h3>
               <p className="text-xs text-muted-foreground max-w-sm mx-auto">
                 There are no scheduled showtimes at {selectedCinema.name} matching your format or time filters on the selected date.
               </p>
               <button
                 onClick={handleClearFilters}
-                className="px-5 py-2.5 rounded-xl bg-white/10 text-white text-xs font-bold uppercase tracking-wider hover:bg-white/20 transition-all"
+                className="px-5 py-2.5 rounded-xl bg-secondary text-secondary-foreground text-xs font-bold uppercase tracking-wider hover:bg-muted transition-all"
               >
                 Reset Filters
               </button>

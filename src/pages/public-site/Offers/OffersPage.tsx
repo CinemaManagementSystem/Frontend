@@ -232,9 +232,9 @@ export const OffersPage: React.FC = () => {
   };
 
   return (
-    <div className="pb-24 bg-[#0f0f10] min-h-screen text-white selection:bg-[#E50914]">
+    <div className="pb-24 bg-background min-h-screen text-foreground selection:bg-[#E50914]">
       {/* 1. Main Hero Offer Section */}
-      <section className="relative w-full overflow-hidden bg-gradient-to-b from-zinc-900 to-[#0f0f10] border-b border-border py-12">
+      <section className="relative w-full overflow-hidden bg-gradient-to-b from-muted/70 to-transparent dark:from-zinc-900 dark:to-[#0f0f10] border-b border-border py-12">
         {/* Background Image of concessions */}
         <div className="absolute inset-0 z-0">
           <img
@@ -242,7 +242,7 @@ export const OffersPage: React.FC = () => {
             alt={activeOffer.title}
             className="w-full h-full object-cover object-center opacity-15 filter grayscale brightness-50"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0f0f10] via-[#0f0f10]/95 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-card via-card/90 to-transparent dark:from-[#0f0f10] dark:via-[#0f0f10]/95 dark:to-transparent" />
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row gap-12 items-center">
@@ -261,7 +261,7 @@ export const OffersPage: React.FC = () => {
             </div>
             
             <div className="space-y-2">
-              <h1 className="text-4xl sm:text-6xl font-black text-white uppercase tracking-tight leading-none">
+              <h1 className="text-4xl sm:text-6xl font-black text-foreground uppercase tracking-tight leading-none">
                 {activeOffer.title}
               </h1>
               <p className="text-lg sm:text-xl font-bold text-[#E50914]">
@@ -294,7 +294,7 @@ export const OffersPage: React.FC = () => {
                 className={`py-3 px-6 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 ${
                   isSaved
                     ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400'
-                    : 'border-border hover:bg-white/5 text-muted-foreground hover:text-white'
+                    : 'border-border hover:bg-muted text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <span>{isSaved ? 'Saved for Later' : 'Save for Later'}</span>
@@ -321,20 +321,20 @@ export const OffersPage: React.FC = () => {
         <div className="lg:col-span-2 space-y-10">
           {/* How it works grid */}
           <div className="space-y-6">
-            <h3 className="text-lg font-black uppercase tracking-wider text-white flex items-center gap-2">
+            <h3 className="text-lg font-black uppercase tracking-wider text-foreground flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-[#E50914]" />
               How it Works
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {activeOffer.steps.map((step, idx) => (
-                <div key={idx} className="relative bg-[#141417] border border-border rounded-2xl p-5 overflow-hidden group hover:border-border transition-all">
+                <div key={idx} className="relative bg-card border border-border rounded-2xl p-5 overflow-hidden group hover:border-border transition-all">
                   {/* Faded step number */}
-                  <span className="absolute -bottom-6 -right-2 text-7xl font-black text-white/5 font-mono select-none group-hover:text-white/10 transition-colors">
+                  <span className="absolute -bottom-6 -right-2 text-7xl font-black text-foreground/5 font-mono select-none group-hover:text-foreground/10 transition-colors">
                     {String(idx + 1).padStart(2, '0')}
                   </span>
                   
-                  <h4 className="text-sm font-bold text-white uppercase tracking-wider">
+                  <h4 className="text-sm font-bold text-foreground uppercase tracking-wider">
                     {step.title}
                   </h4>
                   <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
@@ -347,17 +347,17 @@ export const OffersPage: React.FC = () => {
 
           {/* Terms & Conditions Accordion */}
           <div className="space-y-4">
-            <h3 className="text-lg font-black uppercase tracking-wider text-white flex items-center gap-2">
+            <h3 className="text-lg font-black uppercase tracking-wider text-foreground flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-[#E50914]" />
               Terms & Conditions
             </h3>
 
-            <div className="border border-border rounded-2xl overflow-hidden divide-y divide-white/5 bg-[#141417]">
+            <div className="border border-border rounded-2xl overflow-hidden divide-y divide-border bg-card">
               {/* Validity & Expiration */}
               <div>
                 <button
                   onClick={() => toggleSection('VALIDITY')}
-                  className="w-full flex items-center justify-between p-5 text-left text-xs uppercase font-bold text-white hover:bg-white/5 transition-colors focus:outline-none"
+                  className="w-full flex items-center justify-between p-5 text-left text-xs uppercase font-bold text-foreground hover:bg-muted/80 transition-colors focus:outline-none"
                 >
                   <span>Validity & Expiration</span>
                   {expandedSection === 'VALIDITY' ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
@@ -369,7 +369,7 @@ export const OffersPage: React.FC = () => {
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="p-5 pt-0 text-[11px] text-muted-foreground leading-relaxed border-t border-border bg-zinc-950/10 overflow-hidden"
+                      className="p-5 pt-0 text-[11px] text-muted-foreground leading-relaxed border-t border-border bg-muted/40 dark:bg-zinc-950/10 overflow-hidden"
                     >
                       {activeOffer.terms.validity}
                     </motion.div>
@@ -381,7 +381,7 @@ export const OffersPage: React.FC = () => {
               <div>
                 <button
                   onClick={() => toggleSection('ELIGIBILITY')}
-                  className="w-full flex items-center justify-between p-5 text-left text-xs uppercase font-bold text-white hover:bg-white/5 transition-colors focus:outline-none"
+                  className="w-full flex items-center justify-between p-5 text-left text-xs uppercase font-bold text-foreground hover:bg-muted/80 transition-colors focus:outline-none"
                 >
                   <span>Eligibility</span>
                   {expandedSection === 'ELIGIBILITY' ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
@@ -393,7 +393,7 @@ export const OffersPage: React.FC = () => {
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="p-5 pt-0 text-[11px] text-muted-foreground leading-relaxed border-t border-border bg-zinc-950/10 overflow-hidden"
+                      className="p-5 pt-0 text-[11px] text-muted-foreground leading-relaxed border-t border-border bg-muted/40 dark:bg-zinc-950/10 overflow-hidden"
                     >
                       {activeOffer.terms.eligibility}
                     </motion.div>
@@ -405,7 +405,7 @@ export const OffersPage: React.FC = () => {
               <div>
                 <button
                   onClick={() => toggleSection('LIMITS')}
-                  className="w-full flex items-center justify-between p-5 text-left text-xs uppercase font-bold text-white hover:bg-white/5 transition-colors focus:outline-none"
+                  className="w-full flex items-center justify-between p-5 text-left text-xs uppercase font-bold text-foreground hover:bg-muted/80 transition-colors focus:outline-none"
                 >
                   <span>Usage Limits</span>
                   {expandedSection === 'LIMITS' ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
@@ -417,7 +417,7 @@ export const OffersPage: React.FC = () => {
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="p-5 pt-0 text-[11px] text-muted-foreground leading-relaxed border-t border-border bg-zinc-950/10 overflow-hidden"
+                      className="p-5 pt-0 text-[11px] text-muted-foreground leading-relaxed border-t border-border bg-muted/40 dark:bg-zinc-950/10 overflow-hidden"
                     >
                       {activeOffer.terms.limits}
                     </motion.div>
@@ -436,15 +436,15 @@ export const OffersPage: React.FC = () => {
             initial={{ scale: 0.98, opacity: 0.9 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-            className="bg-[#141417] border border-border rounded-3xl p-6 text-center space-y-6 shadow-2xl relative overflow-hidden"
+            className="bg-card border border-border rounded-3xl p-6 text-center space-y-6 shadow-2xl relative overflow-hidden"
           >
             {/* Faux ticket jagged edges decor */}
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-8 bg-[#0f0f10] rounded-r-full border-r border-border" />
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-8 bg-[#0f0f10] rounded-l-full border-l border-border" />
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-8 bg-background rounded-r-full border-r border-border" />
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-8 bg-background rounded-l-full border-l border-border" />
 
             <div className="flex items-center justify-between border-b border-border pb-4">
               <div className="text-left">
-                <span className="text-sm font-bold text-white block uppercase tracking-wider">
+                <span className="text-sm font-bold text-foreground block uppercase tracking-wider">
                   Your Digital Pass
                 </span>
                 <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest mt-0.5 block">
@@ -480,7 +480,7 @@ export const OffersPage: React.FC = () => {
 
             {/* Code */}
             <div className="space-y-1 pt-2 border-t border-border">
-              <span className="text-sm font-black tracking-widest text-white font-mono block">
+              <span className="text-sm font-black tracking-widest text-foreground font-mono block">
                 {isClaimed ? activeOffer.code : '••••-••••-••••'}
               </span>
               <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-semibold block">
@@ -490,8 +490,8 @@ export const OffersPage: React.FC = () => {
           </motion.div>
 
           {/* Need Help? Card */}
-          <div className="bg-[#141417] border border-border rounded-3xl p-6 space-y-3 shadow-2xl">
-            <h4 className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-1.5">
+          <div className="bg-card border border-border rounded-3xl p-6 space-y-3 shadow-2xl">
+            <h4 className="text-xs font-black uppercase tracking-wider text-foreground flex items-center gap-1.5">
               <HelpCircle className="w-4 h-4 text-[#E50914]" />
               Need Help?
             </h4>
@@ -515,7 +515,7 @@ export const OffersPage: React.FC = () => {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 border-t border-border pt-12">
         <div className="flex items-end justify-between mb-8">
           <div className="space-y-1">
-            <h3 className="text-xl font-black uppercase tracking-tight text-white">
+            <h3 className="text-xl font-black uppercase tracking-tight text-foreground">
               You might also like
             </h3>
             <p className="text-xs text-muted-foreground">
@@ -545,14 +545,14 @@ export const OffersPage: React.FC = () => {
                 whileHover={shouldReduceMotion ? {} : { y: -4 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleSelectOffer(item)}
-                className={`group flex flex-col rounded-2xl overflow-hidden bg-[#141417] border transition-all duration-300 cursor-pointer h-full ${
+                className={`group flex flex-col rounded-2xl overflow-hidden bg-card border transition-all duration-300 cursor-pointer h-full ${
                   active
                     ? 'border-[#E50914]/80 shadow-lg shadow-[#E50914]/10 scale-102'
                     : 'border-border hover:border-border hover:scale-102'
                 }`}
               >
                 {/* Card thumbnail image */}
-                <div className="aspect-[16/10] w-full overflow-hidden bg-zinc-950">
+                <div className="aspect-[16/10] w-full overflow-hidden bg-muted dark:bg-zinc-950">
                   <img
                     src={item.image}
                     alt={item.title}
@@ -567,7 +567,7 @@ export const OffersPage: React.FC = () => {
                     {item.badge}
                   </span>
                   
-                  <h4 className="font-bold text-white text-sm uppercase mt-1 leading-tight group-hover:text-[#E50914] transition-colors">
+                  <h4 className="font-bold text-foreground text-sm uppercase mt-1 leading-tight group-hover:text-[#E50914] transition-colors">
                     {item.title}
                   </h4>
 
@@ -575,7 +575,7 @@ export const OffersPage: React.FC = () => {
                     className={`mt-6 w-full py-2.5 rounded-xl border text-[10px] font-black uppercase tracking-widest text-center transition-all ${
                       active
                         ? 'bg-[#E50914]/10 border-[#E50914] text-[#E50914]'
-                        : 'border-border hover:border-border text-muted-foreground hover:text-white'
+                        : 'border-border hover:border-border text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     Details

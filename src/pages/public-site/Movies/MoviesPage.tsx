@@ -102,22 +102,22 @@ export const MoviesPage: React.FC = () => {
   };
 
   return (
-    <div className="pb-24 bg-[#0f0f10] min-h-screen text-white selection:bg-[#E50914]">
+    <div className="pb-24 bg-background min-h-screen text-foreground selection:bg-[#E50914]">
       {/* Search & Header Section */}
-      <section className="relative pt-12 pb-6 bg-gradient-to-b from-zinc-900 to-[#0f0f10]">
+      <section className="relative pt-12 pb-6 bg-gradient-to-b from-muted/70 to-transparent dark:from-zinc-900/60 dark:to-transparent">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
           <div className="space-y-1">
             <span className="flex items-center gap-1.5 text-[10px] font-black text-[#E50914] tracking-widest uppercase">
               <Sparkles className="w-3.5 h-3.5" />
               CINEMATIQUE IMMERSIVE
             </span>
-            <h1 className="text-3xl sm:text-5xl font-black text-white uppercase tracking-tight">
+            <h1 className="text-3xl sm:text-5xl font-black text-foreground uppercase tracking-tight">
               Explore Movies
             </h1>
           </div>
 
           {/* Premium Filter Toolbar matching mockup */}
-          <div className="bg-zinc-900/40 border border-border backdrop-blur-md rounded-2xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between shadow-2xl relative z-30">
+          <div className="bg-muted/50 border border-border backdrop-blur-md rounded-2xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between shadow-2xl relative z-30 dark:bg-zinc-900/40">
             {/* Find a movie search input */}
             <div className="relative w-full md:flex-1 max-w-md">
               <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
@@ -126,7 +126,7 @@ export const MoviesPage: React.FC = () => {
                 placeholder="Find a movie..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-zinc-950/80 border border-border text-white text-xs rounded-xl pl-10 pr-4 py-2.5 outline-none focus:border-[#E50914] transition-all placeholder:text-muted-foreground"
+                className="w-full bg-input border border-border text-foreground text-xs rounded-xl pl-10 pr-4 py-2.5 outline-none focus:border-[#E50914] transition-all placeholder:text-muted-foreground"
               />
             </div>
 
@@ -140,7 +140,7 @@ export const MoviesPage: React.FC = () => {
                     setLangOpen(false);
                     setSortOpen(false);
                   }}
-                  className="flex items-center gap-2 bg-zinc-950/80 border border-border text-muted-foreground text-xs rounded-xl px-4 py-2.5 hover:border-border transition-all focus:outline-none"
+                  className="flex items-center gap-2 bg-input border border-border text-muted-foreground text-xs rounded-xl px-4 py-2.5 hover:border-border transition-all focus:outline-none"
                 >
                   <span className="font-semibold">
                     {selectedGenre === 'ALL' ? 'All Genres' : selectedGenre}
@@ -156,7 +156,7 @@ export const MoviesPage: React.FC = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -6, scale: 0.98 }}
                         transition={{ duration: 0.12 }}
-                        className="absolute right-0 mt-2 w-48 rounded-xl bg-zinc-950 border border-border p-1 shadow-2xl z-20 max-h-60 overflow-y-auto origin-top-right"
+                        className="absolute right-0 mt-2 w-48 rounded-xl bg-popover border border-border p-1 shadow-2xl z-20 max-h-60 overflow-y-auto origin-top-right"
                       >
                         {genres.map((g) => (
                           <button
@@ -165,7 +165,7 @@ export const MoviesPage: React.FC = () => {
                               setSelectedGenre(g);
                               setGenreOpen(false);
                             }}
-                            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold hover:bg-white/5 ${
+                            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold hover:bg-muted ${
                               selectedGenre === g ? 'text-[#E50914] bg-[#E50914]/5' : 'text-muted-foreground'
                             }`}
                           >
@@ -186,7 +186,7 @@ export const MoviesPage: React.FC = () => {
                     setGenreOpen(false);
                     setSortOpen(false);
                   }}
-                  className="flex items-center gap-2 bg-zinc-950/80 border border-border text-muted-foreground text-xs rounded-xl px-4 py-2.5 hover:border-border transition-all focus:outline-none"
+                  className="flex items-center gap-2 bg-input border border-border text-muted-foreground text-xs rounded-xl px-4 py-2.5 hover:border-border transition-all focus:outline-none"
                 >
                   <span className="font-semibold">
                     {selectedLanguage === 'ALL' ? 'Language' : selectedLanguage}
@@ -202,7 +202,7 @@ export const MoviesPage: React.FC = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -6, scale: 0.98 }}
                         transition={{ duration: 0.12 }}
-                        className="absolute right-0 mt-2 w-40 rounded-xl bg-zinc-950 border border-border p-1 shadow-2xl z-20 origin-top-right"
+                        className="absolute right-0 mt-2 w-40 rounded-xl bg-popover border border-border p-1 shadow-2xl z-20 origin-top-right"
                       >
                         {languages.map((l) => (
                           <button
@@ -211,7 +211,7 @@ export const MoviesPage: React.FC = () => {
                               setSelectedLanguage(l);
                               setLangOpen(false);
                             }}
-                            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold hover:bg-white/5 ${
+                            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold hover:bg-muted ${
                               selectedLanguage === l ? 'text-[#E50914] bg-[#E50914]/5' : 'text-muted-foreground'
                             }`}
                           >
@@ -232,7 +232,7 @@ export const MoviesPage: React.FC = () => {
                     setGenreOpen(false);
                     setLangOpen(false);
                   }}
-                  className="flex items-center gap-2 bg-zinc-950/80 border border-border text-muted-foreground text-xs rounded-xl px-4 py-2.5 hover:border-border transition-all focus:outline-none"
+                  className="flex items-center gap-2 bg-input border border-border text-muted-foreground text-xs rounded-xl px-4 py-2.5 hover:border-border transition-all focus:outline-none"
                 >
                   <SlidersHorizontal className="w-3.5 h-3.5 text-muted-foreground" />
                   <span className="font-semibold">{getSortLabel(sortBy)}</span>
@@ -247,7 +247,7 @@ export const MoviesPage: React.FC = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -6, scale: 0.98 }}
                         transition={{ duration: 0.12 }}
-                        className="absolute right-0 mt-2 w-44 rounded-xl bg-zinc-950 border border-border p-1 shadow-2xl z-20 origin-top-right"
+                        className="absolute right-0 mt-2 w-44 rounded-xl bg-popover border border-border p-1 shadow-2xl z-20 origin-top-right"
                       >
                         {[
                           { id: 'POPULARITY', label: 'Popularity' },
@@ -260,7 +260,7 @@ export const MoviesPage: React.FC = () => {
                               setSortBy(item.id);
                               setSortOpen(false);
                             }}
-                            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold hover:bg-white/5 ${
+                            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold hover:bg-muted ${
                               sortBy === item.id ? 'text-[#E50914] bg-[#E50914]/5' : 'text-muted-foreground'
                             }`}
                           >
@@ -296,7 +296,7 @@ export const MoviesPage: React.FC = () => {
                   whileHover={shouldReduceMotion ? {} : { y: -4 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => navigate(`/movies/${movie.id}`)}
-                  className="group relative flex flex-col rounded-2xl overflow-hidden bg-[#141417] border border-border hover:border-[#E50914]/40 hover:shadow-xl hover:shadow-[#E50914]/5 transition-all duration-300 cursor-pointer h-full"
+                  className="group relative flex flex-col rounded-2xl overflow-hidden bg-card border border-border hover:border-[#E50914]/40 hover:shadow-xl hover:shadow-[#E50914]/5 transition-all duration-300 cursor-pointer h-full"
                 >
                   {/* Poster Image Area */}
                   <div className="relative aspect-[2/3] w-full overflow-hidden bg-zinc-950">
@@ -308,7 +308,7 @@ export const MoviesPage: React.FC = () => {
                     />
 
                     {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#141417] via-transparent to-transparent opacity-90" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent opacity-90" />
 
                     {/* Star Rating Badge - Top Left inside image viewport */}
                     <div className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-border text-[11px] font-black text-amber-400">
@@ -330,16 +330,16 @@ export const MoviesPage: React.FC = () => {
                           <h4 className="text-base font-black text-white uppercase tracking-tight leading-snug">
                             {movie.title}
                           </h4>
-                          <span className="text-[10px] font-black text-amber-400 shrink-0">
+                          <span className="text-[10px] font-black text-[#fbbf24] shrink-0">
                             ★ {movie.rating.toFixed(1)}
                           </span>
                         </div>
                         
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-1.5">
+                        <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider mt-1.5">
                           2024 • {movie.genres.join('/')} • {Math.floor(movie.durationMinutes / 60)}h {movie.durationMinutes % 60}m
                         </p>
 
-                        <p className="text-[11px] text-muted-foreground mt-4 leading-relaxed line-clamp-4">
+                        <p className="text-[11px] text-zinc-400 mt-4 leading-relaxed line-clamp-4">
                           {movie.description || 'No description available for this title. Check showtimes or view full movie details.'}
                         </p>
                       </div>
@@ -365,13 +365,13 @@ export const MoviesPage: React.FC = () => {
                           onClick={(e) => toggleWatchlist(e, movie.id)}
                           className={`w-full py-2.5 px-4 rounded-xl border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
                             inWatchlist
-                              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-                              : 'border-border hover:bg-white/5 text-muted-foreground hover:text-white'
+                              ? 'border-emerald-500/30 bg-emerald-500/10 text-[#34d399]'
+                              : 'border-zinc-700 hover:bg-white/10 text-zinc-300 hover:text-white'
                           }`}
                         >
                           {inWatchlist ? (
                             <>
-                              <Check className="w-3.5 h-3.5 text-emerald-400" />
+                              <Check className="w-3.5 h-3.5 text-[#34d399]" />
                               <span>Added</span>
                             </>
                           ) : (
@@ -389,7 +389,7 @@ export const MoviesPage: React.FC = () => {
                               e.stopPropagation();
                               navigate(`/movies/${movie.id}`);
                             }}
-                            className="text-[10px] font-black text-muted-foreground hover:text-[#E50914] uppercase tracking-widest transition-colors"
+                            className="text-[10px] font-black text-zinc-400 hover:text-[#E50914] uppercase tracking-widest transition-colors"
                           >
                             Movie Details
                           </button>
@@ -400,7 +400,7 @@ export const MoviesPage: React.FC = () => {
 
                   {/* Movie Info below Poster */}
                   <div className="p-4 flex flex-col flex-1">
-                    <h3 className="font-bold text-white text-sm sm:text-base line-clamp-1 group-hover:text-[#E50914] transition-colors leading-tight uppercase">
+                    <h3 className="font-bold text-foreground text-sm sm:text-base line-clamp-1 group-hover:text-[#E50914] transition-colors leading-tight uppercase">
                       {movie.title}
                     </h3>
                     
@@ -421,9 +421,9 @@ export const MoviesPage: React.FC = () => {
           </motion.div>
         ) : (
           /* Empty Search State */
-          <div className="py-20 text-center bg-[#141417] border border-border rounded-3xl p-8 space-y-4">
+          <div className="py-20 text-center bg-card border border-border rounded-3xl p-8 space-y-4">
             <Film className="w-12 h-12 text-muted-foreground mx-auto animate-pulse" />
-            <h3 className="text-lg font-black text-white uppercase tracking-wider">No Movies Found</h3>
+            <h3 className="text-lg font-black text-foreground uppercase tracking-wider">No Movies Found</h3>
             <p className="text-xs text-muted-foreground max-w-sm mx-auto">
               We couldn't find any movies matching "{searchQuery}" or selected filters. Try adjusting your search query or filters.
             </p>
@@ -433,7 +433,7 @@ export const MoviesPage: React.FC = () => {
                 setSelectedGenre('ALL');
                 setSelectedLanguage('ALL');
               }}
-              className="px-5 py-2.5 rounded-xl bg-white/10 text-white text-xs font-bold uppercase tracking-wider hover:bg-white/20 transition-all"
+              className="px-5 py-2.5 rounded-xl bg-secondary text-secondary-foreground text-xs font-bold uppercase tracking-wider hover:bg-muted transition-all"
             >
               Reset Filters
             </button>

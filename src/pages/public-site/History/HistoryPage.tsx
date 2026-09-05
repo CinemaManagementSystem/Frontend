@@ -38,12 +38,12 @@ export const HistoryPage: React.FC = () => {
         <div>
           <Link
             to="/"
-            className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-white mb-2 transition-colors"
+            className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground mb-2 transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             {t('history.backToMovies')}
           </Link>
-          <h1 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-foreground uppercase tracking-tight">
             {t('history.ticketHistory')}
           </h1>
           <p className="text-xs text-muted-foreground mt-1">
@@ -74,13 +74,13 @@ export const HistoryPage: React.FC = () => {
                 key={booking.id}
                 variants={itemVariants}
                 whileHover={isCancelled ? {} : { y: -3 }}
-                className={`relative overflow-hidden rounded-3xl bg-[#151518] border border-border transition-all ${
+                className={`relative overflow-hidden rounded-3xl bg-card border border-border transition-all ${
                   isCancelled ? 'opacity-50 grayscale' : 'hover:border-border shadow-2xl'
                 }`}
               >
                 <div className="grid grid-cols-1 md:grid-cols-4">
                   {/* Left Movie Poster */}
-                  <div className="md:col-span-1 relative min-h-[160px] md:min-h-full bg-zinc-900 overflow-hidden">
+                  <div className="md:col-span-1 relative min-h-[160px] md:min-h-full bg-muted dark:bg-zinc-900 overflow-hidden">
                     <img
                       src={booking.moviePoster}
                       alt={booking.movieTitle}
@@ -96,7 +96,7 @@ export const HistoryPage: React.FC = () => {
                         <span className="text-[10px] font-bold tracking-widest text-[#E50914] uppercase">
                           E-TICKET REF: {booking.id}
                         </span>
-                        <h3 className="text-xl font-bold text-white uppercase mt-0.5">
+                        <h3 className="text-xl font-bold text-foreground uppercase mt-0.5">
                           {booking.movieTitle}
                         </h3>
                       </div>
@@ -125,7 +125,7 @@ export const HistoryPage: React.FC = () => {
                       </div>
                       <div className="flex items-center gap-2 col-span-2">
                         <MapPin className="w-3.5 h-3.5 text-[#E50914]" />
-                        <span className="text-white font-medium">
+                        <span className="text-foreground font-medium">
                           {booking.cinemaName} • {booking.hallName}
                         </span>
                       </div>
@@ -134,7 +134,7 @@ export const HistoryPage: React.FC = () => {
                     <div className="flex items-center justify-between pt-3 border-t border-border text-xs">
                       <div>
                         <span className="text-muted-foreground block text-[11px]">Reserved Seats</span>
-                        <span className="font-black text-white text-sm">
+                        <span className="font-black text-foreground text-sm">
                           {booking.seats.join(', ')}
                         </span>
                       </div>
@@ -148,7 +148,7 @@ export const HistoryPage: React.FC = () => {
                   </div>
 
                   {/* Right QR Code Pass section */}
-                  <div className="md:col-span-1 p-6 bg-[#1a1a1e] md:border-l border-t md:border-t-0 border-dashed border-border flex flex-col items-center justify-center text-center space-y-3">
+                  <div className="md:col-span-1 p-6 bg-muted/50 dark:bg-[#1a1a1e] md:border-l border-t md:border-t-0 border-dashed border-border flex flex-col items-center justify-center text-center space-y-3">
                     <div className="p-2.5 bg-white rounded-xl shadow-lg">
                       <img
                         src={booking.qrCodeUrl || 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=CINEMATIQUE'}
@@ -164,7 +164,7 @@ export const HistoryPage: React.FC = () => {
                       <div className="flex items-center gap-2 pt-1">
                         <button
                           onClick={() => cancelBooking(booking.id)}
-                          className="text-[11px] text-rose-400 hover:text-rose-300 transition-colors flex items-center gap-1"
+                          className="text-[11px] text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 transition-colors flex items-center gap-1"
                         >
                           <XCircle className="w-3 h-3" />
                           Cancel Pass
@@ -178,9 +178,9 @@ export const HistoryPage: React.FC = () => {
           })}
         </motion.div>
       ) : (
-        <div className="p-12 text-center bg-[#151518] rounded-3xl border border-border space-y-4">
+        <div className="p-12 text-center bg-card rounded-3xl border border-border space-y-4">
           <Ticket className="w-12 h-12 text-muted-foreground mx-auto" />
-          <h3 className="text-lg font-bold text-white">{t('history.noTickets')}</h3>
+          <h3 className="text-lg font-bold text-foreground">{t('history.noTickets')}</h3>
           <p className="text-xs text-muted-foreground max-w-sm mx-auto">
             {t('history.noTicketsDesc')}
           </p>

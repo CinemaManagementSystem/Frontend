@@ -28,7 +28,7 @@ export const MovieDetailPage: React.FC = () => {
   if (!movie) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center space-y-4">
-        <h2 className="text-2xl font-bold text-white">Movie Not Found</h2>
+        <h2 className="text-2xl font-bold text-foreground">Movie Not Found</h2>
         <p className="text-sm text-muted-foreground">
           The requested movie could not be found in our catalog.
         </p>
@@ -53,14 +53,14 @@ export const MovieDetailPage: React.FC = () => {
             alt={movie.title}
             className="w-full h-full object-cover opacity-40 filter contrast-125"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0f0f10] via-[#0f0f10]/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-card via-card/80 to-transparent dark:from-[#0f0f10] dark:via-[#0f0f10]/80 dark:to-transparent" />
         </div>
 
         {/* Back link & breadcrumbs */}
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
           <Link
             to="/movies"
-            className="inline-flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-white mb-6 transition-colors"
+            className="inline-flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground mb-6 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Movies
@@ -73,7 +73,7 @@ export const MovieDetailPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 lg:gap-12">
           {/* Movie Poster Card */}
           <div className="md:col-span-1 space-y-4">
-            <div className="aspect-[2/3] w-full rounded-2xl overflow-hidden shadow-2xl border border-border bg-zinc-900">
+            <div className="aspect-[2/3] w-full rounded-2xl overflow-hidden shadow-2xl border border-border bg-muted dark:bg-zinc-900">
               <img
                 src={movie.posterUrl}
                 alt={movie.title}
@@ -84,7 +84,7 @@ export const MovieDetailPage: React.FC = () => {
             {movie.trailerUrl && (
               <button
                 onClick={() => setTrailerOpen(true)}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white/10 hover:bg-white/15 border border-border text-white text-xs font-bold uppercase tracking-wider transition-colors"
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-muted hover:bg-accent border border-border text-foreground text-xs font-bold uppercase tracking-wider transition-colors"
               >
                 <Play className="w-4 h-4 text-[#E50914] fill-[#E50914]" />
                 Watch Trailer
@@ -108,7 +108,7 @@ export const MovieDetailPage: React.FC = () => {
                 </div>
               </div>
 
-              <h1 className="text-3xl sm:text-5xl font-black text-white uppercase tracking-tight">
+              <h1 className="text-3xl sm:text-5xl font-black text-foreground uppercase tracking-tight">
                 {movie.title}
               </h1>
 
@@ -123,14 +123,14 @@ export const MovieDetailPage: React.FC = () => {
                   Release: {formatDate(movie.releaseDate)}
                 </span>
                 <span>•</span>
-                <span className="text-white font-medium">
+                <span className="text-foreground font-medium">
                   {movie.genres.join(', ')}
                 </span>
               </div>
             </div>
 
             {/* Synopsis */}
-            <div className="p-6 rounded-2xl bg-white/5 border border-border space-y-2">
+            <div className="p-6 rounded-2xl bg-card border border-border space-y-2">
               <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Synopsis
               </h3>
@@ -141,18 +141,18 @@ export const MovieDetailPage: React.FC = () => {
 
             {/* Crew & Cast */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl bg-white/5 border border-border space-y-1">
+              <div className="p-4 rounded-xl bg-card border border-border space-y-1">
                 <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                   Director
                 </span>
-                <p className="text-sm font-semibold text-white">{movie.director}</p>
+                <p className="text-sm font-semibold text-foreground">{movie.director}</p>
               </div>
 
-              <div className="p-4 rounded-xl bg-white/5 border border-border space-y-1">
+              <div className="p-4 rounded-xl bg-card border border-border space-y-1">
                 <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                   Starring Cast
                 </span>
-                <p className="text-sm font-semibold text-white">
+                <p className="text-sm font-semibold text-foreground">
                   {movie.cast.join(', ')}
                 </p>
               </div>
@@ -166,7 +166,7 @@ export const MovieDetailPage: React.FC = () => {
         <div className="border-t border-border pt-10">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
-              <h2 className="text-xl font-black text-white uppercase tracking-wide">
+              <h2 className="text-xl font-black text-foreground uppercase tracking-wide">
                 SELECT SHOWTIME & THEATER
               </h2>
               <p className="text-xs text-muted-foreground mt-1">
@@ -183,7 +183,7 @@ export const MovieDetailPage: React.FC = () => {
                   className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
                     selectedDate === d
                       ? 'bg-[#E50914] text-white shadow-md shadow-[#E50914]/30'
-                      : 'bg-white/5 text-muted-foreground hover:text-white border border-border'
+                      : 'bg-muted text-muted-foreground hover:text-foreground border border-border'
                   }`}
                 >
                   {formatDate(d)}
@@ -198,7 +198,7 @@ export const MovieDetailPage: React.FC = () => {
               showtimes.map((st) => (
                 <div
                   key={st.id}
-                  className="p-5 rounded-2xl bg-[#161619] border border-border flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-border transition-all"
+                  className="p-5 rounded-2xl bg-card border border-border flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-border transition-all"
                 >
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 rounded-xl bg-[#E50914]/15 border border-[#E50914]/30 flex items-center justify-center shrink-0">
@@ -206,7 +206,7 @@ export const MovieDetailPage: React.FC = () => {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-white text-base">
+                        <h4 className="font-bold text-foreground text-base">
                           {st.cinemaName}
                         </h4>
                         <Badge variant="primary" size="sm">
@@ -223,7 +223,7 @@ export const MovieDetailPage: React.FC = () => {
                   <div className="flex items-center justify-between md:justify-end gap-6">
                     <div className="text-left md:text-right">
                       <span className="text-xs text-muted-foreground block">Ticket Price</span>
-                      <span className="text-base font-black text-white">
+                      <span className="text-base font-black text-foreground">
                         {formatCurrency(st.price)}
                       </span>
                     </div>
@@ -239,9 +239,9 @@ export const MovieDetailPage: React.FC = () => {
                 </div>
               ))
             ) : (
-              <div className="p-8 text-center bg-white/5 rounded-2xl border border-border space-y-2">
+              <div className="p-8 text-center bg-card rounded-2xl border border-border space-y-2">
                 <Ticket className="w-8 h-8 text-muted-foreground mx-auto" />
-                <p className="text-sm font-semibold text-white">
+                <p className="text-sm font-semibold text-foreground">
                   No showtimes currently available for this date
                 </p>
                 <p className="text-xs text-muted-foreground">
