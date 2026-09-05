@@ -25,7 +25,7 @@ const columns: CrudColumn<ApiMovie>[] = [
           }}
         />
         <div>
-          <h4 className="font-bold text-white text-sm">{row.title}</h4>
+          <h4 className="font-bold text-foreground text-sm">{row.title}</h4>
           <p className="text-[11px] text-muted-foreground">{row.genre}</p>
         </div>
       </div>

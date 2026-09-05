@@ -15,7 +15,7 @@ const PAYMENT_METHODS = [
 
 const columns: CrudColumn<Payment>[] = [
   { key: 'amount', header: 'Amount', render: (row) => (
-      <span className="font-bold text-white">{formatCurrency(row.amount)}</span>
+      <span className="font-bold text-foreground">{formatCurrency(row.amount)}</span>
     ) },
   {
     key: 'paymentMethod',

@@ -134,7 +134,7 @@ export const MovieDetailPage: React.FC = () => {
               <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Synopsis
               </h3>
-              <p className="text-sm text-gray-200 leading-relaxed">
+              <p className="text-sm text-foreground leading-relaxed">
                 {movie.description}
               </p>
             </div>

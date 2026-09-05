@@ -10,5 +10,9 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
   if (token) config.headers.Authorization = `Bearer ${token}`
+  const locale = localStorage.getItem('cinematique-locale')
+  if (locale === 'km' || locale === 'en') {
+    config.headers['Accept-Language'] = locale
+  }
   return config
 })

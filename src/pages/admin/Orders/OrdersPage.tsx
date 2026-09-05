@@ -20,7 +20,7 @@ const STATUS_OPTIONS = [
 
 const columns: CrudColumn<Order>[] = [
   { key: 'orderNumber', header: 'Order No', render: (row) => (
-      <span className="font-mono font-bold text-white">{row.orderNumber}</span>
+      <span className="font-mono font-bold text-foreground">{row.orderNumber}</span>
     ) },
   { key: 'customerId', header: 'Customer Id', render: (row) => `#${row.customerId}` },
   {

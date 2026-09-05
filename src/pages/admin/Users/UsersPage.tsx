@@ -26,7 +26,7 @@ function roleVariant(role: string): 'primary' | 'secondary' | 'warning' | 'outli
 
 const columns: CrudColumn<User>[] = [
   { key: 'username', header: 'Username', render: (row) => (
-      <span className="font-bold text-white">{row.username}</span>
+      <span className="font-bold text-foreground">{row.username}</span>
     ) },
   { key: 'email', header: 'Email', render: (row) => <span className="text-muted-foreground">{row.email}</span> },
   {

@@ -83,7 +83,7 @@ export const MovieForm: React.FC<MovieFormProps> = ({
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as Movie['status'])}
-            className="w-full bg-[#1e1e22] text-white text-sm rounded-lg border border-border px-3.5 py-2.5 outline-none focus:border-[#E50914]"
+            className="w-full bg-input text-foreground text-sm rounded-lg border border-border px-3.5 py-2.5 outline-none focus:border-[#E50914]"
           >
             <option value="NOW_SHOWING">Now Showing</option>
             <option value="COMING_SOON">Coming Soon</option>
@@ -101,7 +101,7 @@ export const MovieForm: React.FC<MovieFormProps> = ({
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Movie synopsis..."
-          className="w-full bg-[#1e1e22] text-white text-sm rounded-lg border border-border px-3.5 py-2.5 outline-none focus:border-[#E50914] placeholder:text-muted-foreground"
+          className="w-full bg-input text-foreground text-sm rounded-lg border border-border px-3.5 py-2.5 outline-none focus:border-[#E50914] placeholder:text-muted-foreground"
           required
         />
       </div>

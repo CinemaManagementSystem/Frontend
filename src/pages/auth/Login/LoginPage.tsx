@@ -8,7 +8,7 @@ export const LoginPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="text-center space-y-1">
-        <h2 className="text-2xl font-black text-white uppercase tracking-tight">
+        <h2 className="text-2xl font-black text-foreground uppercase tracking-tight">
           {t('auth.welcomeBack')}
         </h2>
         <p className="text-xs text-muted-foreground">

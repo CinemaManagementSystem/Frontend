@@ -91,18 +91,18 @@ export const DashboardPage: React.FC = () => {
   return (
     <div className="space-y-8">
       {/* Top Banner Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-[#18181c] via-[#151518] to-[#201113] border border-border shadow-xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-[#E50914] via-[#c90a14] to-[#8c0710] text-white border border-border shadow-xl">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-[#E50914]" />
-            <span className="text-xs font-bold text-[#E50914] uppercase tracking-wider">
+            <Sparkles className="w-4 h-4 text-white/90" />
+            <span className="text-xs font-bold text-white/90 uppercase tracking-wider">
               Control Center
             </span>
           </div>
           <h2 className="text-xl font-bold text-white tracking-wide">
             Welcome to Cinematique Admin Console
           </h2>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-white/80">
             Real-time box office statistics, movie schedules, and booking logs
           </p>
         </div>
@@ -110,7 +110,7 @@ export const DashboardPage: React.FC = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setAddMovieModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#E50914] hover:bg-[#ff1f2d] text-white text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-[#E50914]/30"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-[#E50914] hover:bg-white/90 text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-black/20"
           >
             <Plus className="w-4 h-4" />
             Add Movie
@@ -132,7 +132,7 @@ export const DashboardPage: React.FC = () => {
               key={stat.title}
               variants={itemVariants}
               whileHover={{ y: -3 }}
-              className="p-5 rounded-2xl bg-[#141417] border border-border space-y-3 shadow-lg"
+              className="p-5 rounded-2xl bg-card border border-border space-y-3 shadow-lg"
             >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-muted-foreground">{stat.title}</span>
@@ -141,7 +141,7 @@ export const DashboardPage: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-baseline justify-between">
-                <span className="text-2xl font-black text-white tracking-tight">
+                <span className="text-2xl font-black text-foreground tracking-tight">
                   {stat.value}
                 </span>
                 <span className="flex items-center gap-0.5 text-xs font-semibold text-emerald-400">
@@ -157,10 +157,10 @@ export const DashboardPage: React.FC = () => {
       {/* Chart & Live Status Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Weekly Revenue & Bookings Bar Chart */}
-        <div className="lg:col-span-2 p-6 rounded-2xl bg-[#141417] border border-border space-y-6 shadow-lg">
+        <div className="lg:col-span-2 p-6 rounded-2xl bg-card border border-border space-y-6 shadow-lg">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+              <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
                 Weekly Box Office Performance
               </h3>
               <p className="text-xs text-muted-foreground mt-0.5">
@@ -191,7 +191,7 @@ export const DashboardPage: React.FC = () => {
                       className="w-full max-w-[36px] bg-gradient-to-t from-[#E50914]/60 to-[#E50914] rounded-t-lg group-hover:brightness-125 transition-all shadow-md shadow-[#E50914]/20"
                     />
                     {/* Day label */}
-                    <span className="text-[11px] font-medium text-muted-foreground group-hover:text-white transition-colors">
+                    <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors">
                       {data.day}
                     </span>
                   </div>
@@ -202,9 +202,9 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         {/* Popular / Active Cinema Halls */}
-        <div className="p-6 rounded-2xl bg-[#141417] border border-border space-y-4 shadow-lg flex flex-col justify-between">
+        <div className="p-6 rounded-2xl bg-card border border-border space-y-4 shadow-lg flex flex-col justify-between">
           <div>
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-1">
+            <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-1">
               Screen Occupancy
             </h3>
             <p className="text-xs text-muted-foreground mb-4">
@@ -218,9 +218,9 @@ export const DashboardPage: React.FC = () => {
                 { name: 'VIP Lounge 3', movie: 'Avatar 2', fill: 95, format: '3D' },
                 { name: '4DX Theater 4', movie: 'Dune 2', fill: 62, format: '4DX' },
               ].map((hall) => (
-                <div key={hall.name} className="space-y-1.5 p-3 rounded-xl bg-white/5 border border-border">
+                <div key={hall.name} className="space-y-1.5 p-3 rounded-xl bg-muted border border-border">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-white">{hall.name}</span>
+                    <span className="font-bold text-foreground">{hall.name}</span>
                     <span className="text-emerald-400 font-bold">{hall.fill}% Full</span>
                   </div>
                   <div className="flex items-center justify-between text-[11px] text-muted-foreground">
@@ -241,7 +241,7 @@ export const DashboardPage: React.FC = () => {
 
           <button
             onClick={() => navigate('/admin/movies')}
-            className="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold uppercase tracking-wider transition-colors text-center"
+            className="w-full py-2.5 rounded-xl bg-secondary hover:bg-muted text-secondary-foreground text-xs font-bold uppercase tracking-wider transition-colors text-center"
           >
             Manage All Movies
           </button>
@@ -249,10 +249,10 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {/* Recent Bookings Live Table */}
-      <div className="p-6 rounded-2xl bg-[#141417] border border-border space-y-4 shadow-lg">
+      <div className="p-6 rounded-2xl bg-card border border-border space-y-4 shadow-lg">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+            <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
               Recent Transactions & Bookings
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
@@ -279,21 +279,21 @@ export const DashboardPage: React.FC = () => {
                 <th className="pb-3 font-semibold">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5 text-muted-foreground">
+            <tbody className="divide-y divide-border text-muted-foreground">
               {bookings.slice(0, 5).map((booking) => (
-                <tr key={booking.id} className="hover:bg-white/5 transition-colors">
-                  <td className="py-3 font-mono font-bold text-white">
+                <tr key={booking.id} className="hover:bg-muted/40 transition-colors">
+                  <td className="py-3 font-mono font-bold text-foreground">
                     {booking.id}
                   </td>
                   <td className="py-3">
-                    <div className="font-semibold text-white">{booking.userName}</div>
+                    <div className="font-semibold text-foreground">{booking.userName}</div>
                     <div className="text-[10px] text-muted-foreground">{booking.userEmail}</div>
                   </td>
-                  <td className="py-3 font-medium text-white">
+                  <td className="py-3 font-medium text-foreground">
                     {booking.movieTitle}
                   </td>
                   <td className="py-3">
-                    <span className="px-2 py-0.5 rounded bg-white/10 text-white font-mono text-[11px]">
+                    <span className="px-2 py-0.5 rounded bg-secondary text-secondary-foreground font-mono text-[11px]">
                       {booking.seats.join(', ')}
                     </span>
                   </td>

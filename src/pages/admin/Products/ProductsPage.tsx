@@ -25,7 +25,7 @@ const columns: CrudColumn<Product>[] = [
           )}
         </div>
         <div>
-          <h4 className="font-bold text-white text-sm">{row.name}</h4>
+          <h4 className="font-bold text-foreground text-sm">{row.name}</h4>
           <p className="text-[11px] text-muted-foreground">Stock: {row.stockQuantity}</p>
         </div>
       </div>

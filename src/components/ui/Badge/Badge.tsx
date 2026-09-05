@@ -15,7 +15,7 @@ export const Badge: React.FC<BadgeProps> = ({
 }) => {
   const variantStyles = {
     primary: 'bg-[#E50914] text-white border-transparent shadow-sm',
-    secondary: 'bg-white/10 text-white border-border backdrop-blur-md',
+    secondary: 'bg-secondary text-secondary-foreground border-border',
     outline: 'border-border text-muted-foreground bg-transparent',
     warning: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
     success: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',

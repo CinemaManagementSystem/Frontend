@@ -54,6 +54,12 @@ const translations: Record<Locale, Record<string, string>> = {
     // Sidebar (Admin)
     'sidebar.adminPortal': 'Admin Portal',
     'sidebar.mainMenu': 'Main Menu',
+    'sidebar.catalog': 'Catalog',
+    'sidebar.screening': 'Screening',
+    'sidebar.sales': 'Sales',
+    'sidebar.section.products': 'Products',
+    'sidebar.section.payments': 'Payments',
+    'sidebar.administration': 'Administration',
     'sidebar.dashboard': 'Dashboard',
     'sidebar.categories': 'Categories',
     'sidebar.movies': 'Movies',
@@ -268,7 +274,13 @@ const translations: Record<Locale, Record<string, string>> = {
 
     // Sidebar (Admin)
     'sidebar.adminPortal': 'ផ្ទាំងគ្រប់គ្រង',
-    'sidebar.mainMenu': 'ម៉ឺនុយមេ',
+    'sidebar.mainMenu': 'ម៉ឺនុយ',
+    'sidebar.catalog': 'បញ្ជីភាពយន្ត',
+    'sidebar.screening': 'ការចាក់បញ្ចាំង',
+    'sidebar.sales': 'ការលក់',
+    'sidebar.section.products': 'ផលិតផល',
+    'sidebar.section.payments': 'ការទូទាត់',
+    'sidebar.administration': 'ការគ្រប់គ្រង',
     'sidebar.dashboard': 'ផ្ទាំងគ្រប់គ្រង',
     'sidebar.categories': 'ប្រភេទ',
     'sidebar.movies': 'រឿងភាគ',
@@ -283,7 +295,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'sidebar.products': 'ផលិតផល',
     'sidebar.orders': 'បញ្ជាទិញ',
     'sidebar.orderItems': 'មាតិកាបញ្ជាទិញ',
-    'sidebar.payments': 'ការชำระប្រាក់',
+    'sidebar.payments': 'ការទូទាត់ប្រាក់',
     'sidebar.paymentTransactions': 'ប្រវត្តិនៃការបង់ប្រាក់',
     'sidebar.users': 'អ្នកប្រើប្រាស់',
 

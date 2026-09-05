@@ -86,15 +86,15 @@ export const RegisterForm: React.FC = () => {
           <input
             type="checkbox"
             required
-            className="w-3.5 h-3.5 mt-0.5 rounded bg-[#1e1e22] border-border text-[#E50914] focus:ring-0"
+            className="w-3.5 h-3.5 mt-0.5 rounded bg-input border-border text-[#E50914] focus:ring-0"
           />
           <span>
             {t('auth.agreeTerms')}{' '}
-            <a href="#terms" className="text-white hover:underline">
+            <a href="#terms" className="text-[#E50914] hover:underline">
               {t('auth.termsOfService')}
             </a>{' '}
             {t('auth.and')}{' '}
-            <a href="#privacy" className="text-white hover:underline">
+            <a href="#privacy" className="text-[#E50914] hover:underline">
               {t('auth.privacyPolicy')}
             </a>
           </span>

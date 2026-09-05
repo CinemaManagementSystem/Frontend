@@ -15,7 +15,7 @@ const STATUS_OPTIONS = [
 
 const columns: CrudColumn<ApiBooking>[] = [
   { key: 'bookingCode', header: 'Booking Ref', render: (row) => (
-      <span className="font-mono font-bold text-white">{row.bookingCode}</span>
+      <span className="font-mono font-bold text-foreground">{row.bookingCode}</span>
     ) },
   { key: 'customerId', header: 'Customer Id', render: (row) => `#${row.customerId}` },
   {

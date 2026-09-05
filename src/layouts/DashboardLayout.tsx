@@ -1,18 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { Sidebar } from '@/components/common/Sidebar/Sidebar';
-import { Bell, ShieldCheck, Moon, Sun } from 'lucide-react';
+import { Bell, ShieldCheck, Moon, Sun, Languages } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useTheme } from '@/context/ThemeContext';
-import { useLanguage } from '@/i18n';
+import { useLanguage, type Locale } from '@/i18n';
 
 export const DashboardLayout: React.FC = () => {
   const location = useLocation();
   const { user } = useAuthStore();
   const { theme, toggleTheme } = useTheme();
-  const { t } = useLanguage();
+  const { locale, setLocale, t } = useLanguage();
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const shouldReduceMotion = useReducedMotion();
+
+  const switchLang = (l: Locale) => {
+    setLocale(l);
+    setLangDropdownOpen(false);
+  };
 
   const getPageTitle = () => {
     switch (location.pathname) {
@@ -78,6 +84,46 @@ export const DashboardLayout: React.FC = () => {
             <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span>{t('dashboard.liveSystem')}</span>
+            </div>
+
+            {/* Language Toggle */}
+            <div className="relative">
+              <button
+                onClick={() => setLangDropdownOpen(!langDropdownOpen)}
+                title={t('nav.language')}
+                className="flex items-center gap-1 p-2 rounded-xl bg-muted border border-border hover:bg-muted/70 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Languages className="w-4 h-4" />
+                <span className="text-[10px] font-bold uppercase">{locale === 'en' ? 'EN' : 'KM'}</span>
+              </button>
+              <AnimatePresence>
+                {langDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                    transition={{ duration: 0.12 }}
+                    className="absolute right-0 mt-2 w-32 bg-card border border-border rounded-xl shadow-2xl p-1.5 z-50"
+                  >
+                    <button
+                      onClick={() => switchLang('en')}
+                      className={`w-full text-left flex items-center gap-2 px-3 py-2 text-xs rounded-lg transition-colors ${
+                        locale === 'en' ? 'bg-accent/10 text-foreground font-bold' : 'text-muted-foreground hover:text-foreground hover:bg-accent/10'
+                      }`}
+                    >
+                      <span className="text-base leading-none">🇬🇧</span> English
+                    </button>
+                    <button
+                      onClick={() => switchLang('km')}
+                      className={`w-full text-left flex items-center gap-2 px-3 py-2 text-xs rounded-lg transition-colors ${
+                        locale === 'km' ? 'bg-accent/10 text-foreground font-bold' : 'text-muted-foreground hover:text-foreground hover:bg-accent/10'
+                      }`}
+                    >
+                      <span className="text-base leading-none">🇰🇭</span> ខ្មែរ
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Theme Toggle */}

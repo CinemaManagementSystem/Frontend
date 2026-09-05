@@ -10,7 +10,7 @@ import { formatCurrency, formatDateTime } from '@/utils/formatDate';
 
 const columns: CrudColumn<PaymentTransaction>[] = [
   { key: 'amount', header: 'Amount', render: (row) => (
-      <span className="font-bold text-white">{formatCurrency(row.amount)}</span>
+      <span className="font-bold text-foreground">{formatCurrency(row.amount)}</span>
     ) },
   {
     key: 'transactionType',

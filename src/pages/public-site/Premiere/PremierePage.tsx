@@ -290,7 +290,7 @@ export const PremierePage: React.FC = () => {
                 </span>
               </div>
 
-              <div className="space-y-3 pt-4 border-t border-border text-xs text-gray-200">
+              <div className="space-y-3 pt-4 border-t border-border text-xs text-foreground">
                 <div className="flex items-center gap-2.5">
                   <Check className="w-4 h-4 text-emerald-400 shrink-0" />
                   <span className="font-semibold">12 Tickets + 2 Bonus Tickets (14 Total)</span>

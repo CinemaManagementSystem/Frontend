@@ -170,7 +170,7 @@ export function CrudTable<T>({
       {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h3 className="text-lg font-bold text-white tracking-wide">{title}</h3>
+          <h3 className="text-lg font-bold text-foreground tracking-wide">{title}</h3>
           <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
         </div>
         <Button variant="primary" size="sm" onClick={openCreate}>
@@ -180,7 +180,7 @@ export function CrudTable<T>({
       </div>
 
       {/* Search Bar */}
-      <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#141417] border border-border">
+      <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-card border border-border">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
@@ -188,13 +188,13 @@ export function CrudTable<T>({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search records..."
-            className="w-full bg-transparent text-sm text-white pl-9 pr-4 py-1.5 outline-none placeholder:text-muted-foreground"
+            className="w-full bg-transparent text-sm text-foreground pl-9 pr-4 py-1.5 outline-none placeholder:text-muted-foreground"
           />
         </div>
       </div>
 
       {/* Table */}
-      <div className="rounded-2xl bg-[#141417] border border-border shadow-xl overflow-hidden">
+      <div className="rounded-2xl bg-card border border-border shadow-xl overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Spinner size="lg" />
@@ -203,7 +203,7 @@ export function CrudTable<T>({
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-border bg-white/[0.02]">
+                <tr className="border-b border-border bg-muted/40">
                   <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground w-12">
                     #
                   </th>
@@ -242,11 +242,11 @@ export function CrudTable<T>({
                           hidden: { opacity: 0, y: 6 },
                           show: { opacity: 1, y: 0, transition: { duration: 0.2 } },
                         }}
-                        className="border-b border-border hover:bg-white/[0.03] transition-colors"
+                        className="border-b border-border hover:bg-muted/40 transition-colors"
                       >
                         <td className="px-4 py-3 text-xs text-muted-foreground">{index + 1}</td>
                         {columns.map((col) => (
-                          <td key={col.key} className="px-4 py-3 text-sm text-gray-200">
+                          <td key={col.key} className="px-4 py-3 text-sm text-foreground">
                             {col.render
                               ? col.render(row, columnContext)
                               : String((row as Record<string, unknown>)[col.key] ?? '')}
@@ -273,7 +273,7 @@ export function CrudTable<T>({
                             <button
                               onClick={() => openEdit(row)}
                               title="Edit"
-                              className="p-1.5 rounded-lg text-muted-foreground hover:text-amber-400 hover:bg-white/10 transition-colors"
+                              className="p-1.5 rounded-lg text-muted-foreground hover:text-amber-400 hover:bg-muted transition-colors"
                             >
                               <Edit2 className="w-4 h-4" />
                             </button>
@@ -317,13 +317,13 @@ export function CrudTable<T>({
                 return (
                   <label
                     key={field.name}
-                    className="flex items-center gap-3 text-sm text-gray-200 cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={Boolean(value)}
-                      onChange={(e) => setFieldValue(field.name, e.target.checked)}
-                      className="w-4 h-4 rounded bg-[#1e1e22] border-border text-[#E50914] focus:ring-0"
+className="flex items-center gap-3 text-sm text-foreground cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={Boolean(value)}
+                        onChange={(e) => setFieldValue(field.name, e.target.checked)}
+                        className="w-4 h-4 rounded bg-input border-border text-[#E50914] focus:ring-0"
                     />
                     <span>{field.label}</span>
                   </label>
@@ -338,7 +338,7 @@ export function CrudTable<T>({
                     <select
                       value={String(value ?? '')}
                       onChange={(e) => setFieldValue(field.name, e.target.value)}
-                      className="w-full bg-[#1e1e22]/80 text-white text-sm rounded-lg border border-border px-3.5 py-2.5 outline-none focus:border-[#E50914] focus:ring-2 focus:ring-[#E50914]/20"
+                      className="w-full bg-input text-foreground text-sm rounded-lg border border-border px-3.5 py-2.5 outline-none focus:border-[#E50914] focus:ring-2 focus:ring-[#E50914]/20"
                     >
                       <option value="">Select...</option>
                       {field.options.map((opt) => (
@@ -362,7 +362,7 @@ export function CrudTable<T>({
                       required={field.required}
                       placeholder={field.placeholder}
                       rows={3}
-                      className="w-full bg-[#1e1e22]/80 text-white text-sm rounded-lg border border-border px-3.5 py-2.5 outline-none focus:border-[#E50914] focus:ring-2 focus:ring-[#E50914]/20 resize-none"
+                      className="w-full bg-input text-foreground text-sm rounded-lg border border-border px-3.5 py-2.5 outline-none focus:border-[#E50914] focus:ring-2 focus:ring-[#E50914]/20 resize-none"
                     />
                   </div>
                 );
@@ -379,7 +379,7 @@ export function CrudTable<T>({
                       onChange={(e) =>
                         setFieldValue(field.name, e.target.files?.[0] ?? null)
                       }
-                      className="w-full text-sm text-muted-foreground file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-white/10 file:text-white file:text-xs file:font-semibold hover:file:bg-white/20 cursor-pointer"
+                      className="w-full text-sm text-muted-foreground file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-secondary file:text-secondary-foreground file:text-xs file:font-semibold hover:file:bg-muted cursor-pointer"
                     />
                   </div>
                 );

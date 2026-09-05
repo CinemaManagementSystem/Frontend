@@ -29,7 +29,7 @@ const columns: CrudColumn<OrderItem>[] = [
     key: 'subtotal',
     header: 'Subtotal',
     render: (row) => (
-      <span className="font-semibold text-white">{formatCurrency(row.subtotal)}</span>
+      <span className="font-semibold text-foreground">{formatCurrency(row.subtotal)}</span>
     ),
   },
 ];
