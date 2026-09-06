@@ -4,7 +4,6 @@ import { User, Mail, Lock, UserPlus } from 'lucide-react';
 import { Input } from '@/components/ui/Input/Input';
 import { Button } from '@/components/ui/Button/Button';
 import { useAuthStore } from '@/store/authStore';
-import { useLanguage } from '@/i18n';
 
 function getErrorMessage(error: unknown): string {
   if (typeof error === 'object' && error !== null && 'response' in error) {
@@ -18,7 +17,6 @@ function getErrorMessage(error: unknown): string {
 export const RegisterForm: React.FC = () => {
   const navigate = useNavigate();
   const { register, isAuthLoading } = useAuthStore();
-  const { t } = useLanguage();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -27,7 +25,7 @@ export const RegisterForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !email || !password) {
-      setError(t('auth.validation.fillAll'));
+      setError('Please fill in all fields');
       return;
     }
 
@@ -49,9 +47,9 @@ export const RegisterForm: React.FC = () => {
       )}
 
       <Input
-        label={t('auth.username')}
+        label="Username"
         type="text"
-        placeholder={t('auth.usernamePlaceholderReg')}
+        placeholder="jane_doe"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
         icon={<User className="w-4 h-4" />}
@@ -60,9 +58,9 @@ export const RegisterForm: React.FC = () => {
       />
 
       <Input
-        label={t('auth.email')}
+        label="Email Address"
         type="email"
-        placeholder={t('auth.emailPlaceholder')}
+        placeholder="name@example.com"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         icon={<Mail className="w-4 h-4" />}
@@ -71,9 +69,9 @@ export const RegisterForm: React.FC = () => {
       />
 
       <Input
-        label={t('auth.password')}
+        label="Password"
         type="password"
-        placeholder={t('auth.passwordPlaceholderReg')}
+        placeholder="At least 6 characters"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         icon={<Lock className="w-4 h-4" />}
@@ -89,13 +87,13 @@ export const RegisterForm: React.FC = () => {
             className="w-3.5 h-3.5 mt-0.5 rounded bg-input border-border text-[#E50914] focus:ring-0"
           />
           <span>
-            {t('auth.agreeTerms')}{' '}
+            I agree to the{' '}
             <a href="#terms" className="text-[#E50914] hover:underline">
-              {t('auth.termsOfService')}
+              Terms of Service
             </a>{' '}
-            {t('auth.and')}{' '}
+            and{' '}
             <a href="#privacy" className="text-[#E50914] hover:underline">
-              {t('auth.privacyPolicy')}
+              Privacy Policy
             </a>
           </span>
         </label>
@@ -107,7 +105,7 @@ export const RegisterForm: React.FC = () => {
         className="w-full bg-[#E50914] hover:bg-[#ff1f2d] text-white py-2.5 text-xs font-bold uppercase tracking-wider rounded-lg shadow-lg shadow-[#E50914]/30 flex items-center justify-center gap-2 mt-2"
       >
         <UserPlus className="w-4 h-4" />
-        {isAuthLoading ? t('auth.creatingAccount') : t('auth.createAccount')}
+        {isAuthLoading ? 'Creating Account...' : 'Create an account'}
       </Button>
     </form>
   );

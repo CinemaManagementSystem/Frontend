@@ -2,7 +2,6 @@ import React from 'react';
 import { Sun, Moon, Monitor, Palette, Shield, Bell, Check } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useTheme, type Theme } from '@/context/ThemeContext';
-import { useLanguage } from '@/i18n';
 import { cn } from '@/lib/utils';
 
 interface SettingRowProps {
@@ -67,11 +66,10 @@ const ThemeOption: React.FC<ThemeOptionProps> = ({ value, label, icon, active, o
 
 export const SettingsPage: React.FC = () => {
   const { theme, setTheme } = useTheme();
-  const { t } = useLanguage();
 
   const themes: { value: Theme; label: string; icon: React.ReactNode }[] = [
-    { value: 'dark', label: t('settings.dark'), icon: <Moon className="w-5 h-5" /> },
-    { value: 'light', label: t('settings.light'), icon: <Sun className="w-5 h-5" /> },
+    { value: 'dark', label: 'Dark', icon: <Moon className="w-5 h-5" /> },
+    { value: 'light', label: 'Light', icon: <Sun className="w-5 h-5" /> },
   ];
 
   return (
@@ -80,11 +78,11 @@ export const SettingsPage: React.FC = () => {
       <div className="space-y-1.5">
         <div className="flex items-center gap-2 text-[#E50914]">
           <Palette className="w-4 h-4" />
-          <span className="text-xs font-bold uppercase tracking-widest">{t('settings.preferences')}</span>
+          <span className="text-xs font-bold uppercase tracking-widest">Preferences</span>
         </div>
-        <h1 className="text-3xl font-black text-foreground tracking-tight">{t('settings.title')}</h1>
+        <h1 className="text-3xl font-black text-foreground tracking-tight">Settings</h1>
         <p className="text-sm text-muted-foreground">
-          {t('settings.description')}
+          Customize your Cinematique experience. Preferences are saved on this device.
         </p>
       </div>
 
@@ -97,8 +95,8 @@ export const SettingsPage: React.FC = () => {
       >
         <SettingRow
           icon={<Monitor className="w-5 h-5" />}
-          title={t('settings.themeMode')}
-          description={t('settings.themeDescription')}
+          title="Theme Mode"
+          description="Choose whether Cinematique uses a light or dark appearance."
         >
           <div className="flex items-center gap-2">
             {themes.map(({ value, label, icon }) => (
@@ -122,11 +120,11 @@ export const SettingsPage: React.FC = () => {
         transition={{ duration: 0.2, delay: 0.05 }}
         className="bg-card border border-border rounded-2xl shadow-sm p-6 sm:p-8 space-y-2"
       >
-        <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-2">{t('settings.general')}</h2>
+        <h2 className="text-sm font-bold text-foreground uppercase tracking-wide mb-2">General</h2>
         <SettingRow
           icon={<Bell className="w-5 h-5" />}
-          title={t('settings.notifications')}
-          description={t('settings.notificationsDesc')}
+          title="Notifications"
+          description="Email me about new premieres, showtimes, and exclusive offers."
         >
           <label className="flex items-center cursor-pointer">
             <input
@@ -134,15 +132,15 @@ export const SettingsPage: React.FC = () => {
               defaultChecked
               className="w-4 h-4 rounded border-border accent-[#E50914]"
             />
-            <span className="ml-2 text-xs text-muted-foreground">{t('settings.enabled')}</span>
+            <span className="ml-2 text-xs text-muted-foreground">Enabled</span>
           </label>
         </SettingRow>
         <SettingRow
           icon={<Shield className="w-5 h-5" />}
-          title={t('settings.accountSecurity')}
-          description={t('settings.accountSecurityDesc')}
+          title="Account & Security"
+          description="Manage your password, email, and sign-in preferences."
         >
-          <span className="text-xs text-muted-foreground">{t('settings.comingSoon')}</span>
+          <span className="text-xs text-muted-foreground">Coming soon</span>
         </SettingRow>
       </motion.div>
     </div>

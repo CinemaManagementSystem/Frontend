@@ -12,7 +12,6 @@ import {
 import { useMovieStore } from '@/store/movieStore';
 import { Badge } from '@/components/ui/Badge/Badge';
 import { formatCurrency, formatDate } from '@/utils/formatDate';
-import { useLanguage } from '@/i18n';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -29,7 +28,6 @@ const itemVariants = {
 
 export const HistoryPage: React.FC = () => {
   const { bookings, cancelBooking } = useMovieStore();
-  const { t } = useLanguage();
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
@@ -41,13 +39,13 @@ export const HistoryPage: React.FC = () => {
             className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground mb-2 transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            {t('history.backToMovies')}
+            Back to Movies
           </Link>
           <h1 className="text-2xl sm:text-3xl font-black text-foreground uppercase tracking-tight">
-            {t('history.ticketHistory')}
+            TICKET HISTORY
           </h1>
           <p className="text-xs text-muted-foreground mt-1">
-            {t('history.subtitle')}
+            Review your past bookings and manage your cinema experiences
           </p>
         </div>
 
@@ -180,15 +178,15 @@ export const HistoryPage: React.FC = () => {
       ) : (
         <div className="p-12 text-center bg-card rounded-3xl border border-border space-y-4">
           <Ticket className="w-12 h-12 text-muted-foreground mx-auto" />
-          <h3 className="text-lg font-bold text-foreground">{t('history.noTickets')}</h3>
+          <h3 className="text-lg font-bold text-foreground">No Tickets Found</h3>
           <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-            {t('history.noTicketsDesc')}
+            You haven't booked any movie tickets yet. Start exploring our cinema catalog!
           </p>
           <Link
             to="/#movies"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#E50914] text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-[#E50914]/30"
           >
-            {t('history.browseMovies')}
+            Browse Movies
           </Link>
         </div>
       )}

@@ -1,10 +1,8 @@
 import React from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import { Film, ArrowLeft } from 'lucide-react';
-import { useLanguage } from '@/i18n';
 
 export const AuthLayout: React.FC = () => {
-  const { t } = useLanguage();
   return (
     <div className="min-h-screen relative flex flex-col justify-between bg-background text-foreground selection:bg-[#E50914] selection:text-white overflow-hidden">
       {/* Background Graphic Ambient Glow */}
@@ -32,7 +30,7 @@ export const AuthLayout: React.FC = () => {
           className="flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>{t('auth.backToHome')}</span>
+          <span>Back to Home</span>
         </Link>
       </header>
 
@@ -45,7 +43,7 @@ export const AuthLayout: React.FC = () => {
 
       {/* Footer */}
       <footer className="relative z-10 py-4 text-center text-xs text-muted-foreground border-t border-border">
-        © {new Date().getFullYear()} {t('auth.copyright')}.
+        © {new Date().getFullYear()} Cinematique. All rights reserved.
       </footer>
     </div>
   );
