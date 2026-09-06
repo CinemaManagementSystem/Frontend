@@ -20,13 +20,13 @@ export const Navbar: React.FC = () => {
   const switchLang = (l: Locale) => { setLocale(l); setLangDropdownOpen(false); };
 
   const navLinks = [
-    { name: t('nav.home'), key: 'nav.home', path: '/' },
-    { name: t('nav.movies'), key: 'nav.movies', path: '/movies' },
-    { name: t('nav.cinemas'), key: 'nav.cinemas', path: '/cinemas' },
-    { name: t('nav.comingSoon'), key: 'nav.comingSoon', path: '/coming-soon' },
-    { name: t('nav.offers'), key: 'nav.offers', path: '/offers' },
-    { name: t('nav.myTickets'), key: 'nav.myTickets', path: '/history' },
-    { name: t('nav.settings'), key: 'nav.settings', path: '/settings' },
+    { name: 'Home', path: '/' },
+    { name: 'Movies', path: '/movies' },
+    { name: 'Showcase', path: '/showcase' },
+    { name: 'Cinemas', path: '/cinemas' },
+    { name: 'Comming Soon', path: '/coming-soon' },
+    { name: 'Offers', path: '/offers'},
+    { name: 'My Tickets', path: '/history' },
   ];
 
   const isActive = (path: string) => {

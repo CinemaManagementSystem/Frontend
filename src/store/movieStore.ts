@@ -20,7 +20,7 @@ interface MovieState {
   seedShowtimesForDate: (dateStr: string) => void;
 }
 
-const INITIAL_MOVIES: Movie[] = [
+export const INITIAL_MOVIES: Movie[] = [
   {
     id: 'm-1',
     title: 'NEON NIGHTS',
@@ -185,7 +185,7 @@ const INITIAL_MOVIES: Movie[] = [
   }
 ];
 
-const INITIAL_SHOWTIMES: Showtime[] = [
+export const INITIAL_SHOWTIMES: Showtime[] = [
   {
     id: 'st-1',
     movieId: 'm-1',
@@ -253,7 +253,7 @@ const INITIAL_SHOWTIMES: Showtime[] = [
   },
 ];
 
-const INITIAL_BOOKINGS: Booking[] = [
+export const INITIAL_BOOKINGS: Booking[] = [
   {
     id: 'BK-98421',
     userId: 'u-1',

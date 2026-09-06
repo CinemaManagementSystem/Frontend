@@ -40,6 +40,7 @@ import { OrderItemsPage } from '@/pages/admin/OrderItems/OrderItemsPage';
 import { PaymentsPage } from '@/pages/admin/Payments/PaymentsPage';
 import { PaymentTransactionsPage } from '@/pages/admin/PaymentTransactions/PaymentTransactionsPage';
 import { UsersPage } from '@/pages/admin/Users/UsersPage';
+import { ShowcasePage } from '@/pages/public-site/Showcase/ShowcasePage';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -48,6 +49,7 @@ export const AppRoutes: React.FC = () => {
       <Route element={<Mainlayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/movies" element={<PublicMoviesPage />} />
+        <Route path="/showcase" element={<ShowcasePage />} />
         <Route path="/movies/:id" element={<MovieDetailPage />} />
         <Route path="/booking/:showtimeId" element={<BookingPage />} />
         <Route path="/history" element={<HistoryPage />} />
