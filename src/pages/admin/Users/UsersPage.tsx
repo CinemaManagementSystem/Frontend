@@ -7,7 +7,6 @@ import { User, UserInput, Role } from '@/types/user';
 const ROLES = [
   { value: 'USER', label: 'USER' },
   { value: 'STAFF', label: 'STAFF' },
-  { value: 'MANAGER', label: 'MANAGER' },
   { value: 'ADMIN', label: 'ADMIN' },
 ];
 
@@ -16,12 +15,23 @@ const STATUSES = [
   { value: 'DISABLED', label: 'DISABLED' },
 ];
 
+const roleOptionsForEdit = (values: Record<string, CrudValue>) => {
+  const role = String(values.role ?? '').toUpperCase().replace(/^ROLE_/, '');
+  return role === 'ADMIN' ? ROLES.filter((option) => option.value === 'ADMIN') : ROLES;
+};
+
 function roleVariant(role: string): 'primary' | 'secondary' | 'warning' | 'outline' {
   const base = role.replace('ROLE_', '');
   if (base === 'ADMIN') return 'primary';
   if (base === 'STAFF') return 'warning';
-  if (base === 'MANAGER') return 'outline';
   return 'secondary';
+}
+
+function statusVariant(status?: string): 'success' | 'destructive' | 'outline' {
+  const normalized = status?.toUpperCase();
+  if (normalized === 'ACTIVE') return 'success';
+  if (normalized === 'DISABLED') return 'destructive';
+  return 'outline';
 }
 
 const columns: CrudColumn<User>[] = [
@@ -36,14 +46,28 @@ const columns: CrudColumn<User>[] = [
       <Badge variant={roleVariant(row.role)} size="sm">{row.role}</Badge>
     ),
   },
+  {
+    key: 'status',
+    header: 'Status',
+    render: (row) => (
+      <Badge variant={statusVariant(row.status)} size="sm">
+        {row.status ?? '—'}
+      </Badge>
+    ),
+  },
 ];
 
 function toInput(values: Record<string, CrudValue>): UserInput {
+  const username = String(values.username ?? '').trim();
+  const password = String(values.password ?? '');
+  const email = String(values.email ?? '').trim();
+
   return {
-    username: String(values.username ?? ''),
-    email: String(values.email ?? ''),
-    name: String(values.name ?? ''),
-    password: String(values.password ?? ''),
+    ...(username ? { username } : {}),
+    email,
+    // The API requires `name`, while the modal intentionally does not expose it.
+    name: username || email,
+    ...(password ? { password } : {}),
     role: String(values.role ?? 'USER') as Role,
     status: String(values.status ?? 'ACTIVE'),
   };
@@ -57,12 +81,39 @@ export const UsersPage: React.FC = () => {
   }, [fetchAll]);
 
   const fields: CrudField[] = [
-    { name: 'name', label: 'Full Name', placeholder: 'e.g. Jane Smith', required: true },
-    { name: 'username', label: 'Username', placeholder: '3-50 characters', required: true },
+    { name: 'username', label: 'Username', placeholder: '3-50 characters (optional)', required: false },
     { name: 'email', label: 'Email', placeholder: 'user@example.com', required: true },
-    { name: 'password', label: 'Password', placeholder: 'min. 6 characters', required: true },
-    { name: 'role', label: 'Role', type: 'select', options: ROLES, required: true },
-    { name: 'status', label: 'Status', type: 'select', options: STATUSES, required: true },
+    {
+      name: 'password',
+      label: 'Password',
+      type: 'password',
+      placeholder: 'min. 6 characters (leave blank to keep current password)',
+      requiredOnCreate: true,
+      hidden: (values, editingId) => {
+        const role = String(values.role ?? '').toUpperCase().replace(/^ROLE_/, '');
+        return editingId != null && (role === 'USER' || role === 'STAFF');
+      },
+    },
+    {
+      name: 'role',
+      label: 'Role',
+      type: 'select',
+      options: roleOptionsForEdit,
+      required: true,
+      defaultValue: 'USER',
+    },
+    {
+      name: 'status',
+      label: 'Status',
+      type: 'select',
+      options: STATUSES,
+      required: true,
+      defaultValue: 'ACTIVE',
+      disabled: (values, editingId) => {
+        const role = String(values.role ?? '').toUpperCase().replace(/^ROLE_/, '');
+        return editingId != null && (role === 'USER' || role === 'STAFF');
+      },
+    },
   ];
 
   return (
@@ -73,7 +124,7 @@ export const UsersPage: React.FC = () => {
       loading={loading}
       columns={columns}
       fields={fields}
-      searchKeys={['username', 'email', 'role']}
+      searchKeys={['username', 'email', 'role', 'status']}
       createLabel="Add User"
       getId={(row) => row.id}
       getDisplayName={(row) => row.username}

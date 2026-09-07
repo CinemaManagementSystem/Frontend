@@ -5,8 +5,15 @@ import { Modal } from '@/components/ui/Modal/Modal';
 import { Button } from '@/components/ui/Button/Button';
 import { Input } from '@/components/ui/Input/Input';
 import { Spinner } from '@/components/ui/Spinner/Spinner';
+import { AlertDialog } from '@/components/ui/Alert/AlertDialog';
 
-export type CrudFieldType = 'text' | 'textarea' | 'number' | 'date' | 'datetime' | 'checkbox' | 'select' | 'file';
+function singularize(label: string): string {
+  if (label.endsWith('ies')) return `${label.slice(0, -3)}y`;
+  if (label.endsWith('s')) return label.slice(0, -1);
+  return label;
+}
+
+export type CrudFieldType = 'text' | 'password' | 'textarea' | 'number' | 'date' | 'datetime' | 'checkbox' | 'select' | 'file';
 
 export interface CrudField {
   name: string;
@@ -14,7 +21,13 @@ export interface CrudField {
   type?: CrudFieldType;
   placeholder?: string;
   required?: boolean;
-  options?: { value: string; label: string }[];
+  requiredOnCreate?: boolean;
+  defaultValue?: CrudValue;
+  options?:
+    | { value: string; label: string }[]
+    | ((values: Record<string, CrudValue>, editingId: number | null) => { value: string; label: string }[]);
+  disabled?: (values: Record<string, CrudValue>, editingId: number | null) => boolean;
+  hidden?: (values: Record<string, CrudValue>, editingId: number | null) => boolean;
 }
 
 export interface CrudColumn<T> {
@@ -73,6 +86,13 @@ export function CrudTable<T>({
   const [formError, setFormError] = useState('');
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [busyAction, setBusyAction] = useState<string | null>(null);
+  const [alert, setAlert] = useState<{
+    title: string;
+    description: string;
+    variant: 'danger' | 'warning' | 'info' | 'success';
+    confirmLabel?: string;
+    onConfirm?: () => void | Promise<void>;
+  } | null>(null);
 
   const filteredItems = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -89,7 +109,8 @@ export function CrudTable<T>({
     const values: Record<string, CrudValue> = {};
     fields.forEach((field) => {
       values[field.name] =
-        field.type === 'checkbox' ? false : field.type === 'file' ? null : '';
+        field.defaultValue ??
+        (field.type === 'checkbox' ? false : field.type === 'file' ? null : '');
     });
     return values;
   };
@@ -105,14 +126,28 @@ export function CrudTable<T>({
     const values: Record<string, CrudValue> = {};
     fields.forEach((field) => {
       const raw = (row as Record<string, unknown>)[field.name];
+      const rawString = raw == null ? '' : String(raw);
+      const options =
+        typeof field.options === 'function' ? field.options(values, getId(row)) : field.options;
+      const normalizedSelectValue =
+        field.type === 'select' && options
+          ? options.find((option) => {
+              const optionValue = option.value.toUpperCase();
+              const optionLabel = option.label.toUpperCase();
+              const value = rawString.toUpperCase().replace(/^ROLE_/, '');
+              return optionValue === value || optionLabel === rawString.toUpperCase();
+            })?.value
+          : undefined;
+
       values[field.name] =
         field.type === 'file'
           ? null
-          : raw != null
-            ? (raw as CrudValue)
-            : field.type === 'checkbox'
-              ? false
-              : '';
+          : normalizedSelectValue ??
+            (raw != null
+              ? (raw as CrudValue)
+              : field.type === 'checkbox'
+                ? false
+                : '');
     });
     setEditingId(getId(row));
     setFormError('');
@@ -129,8 +164,15 @@ export function CrudTable<T>({
     setSaving(true);
     setFormError('');
     try {
+      const wasCreating = editingId == null;
+      const resourceName = singularize(title);
       await onSave(formValues, editingId);
       setModalOpen(false);
+      setAlert({
+        title: wasCreating ? 'Created successfully' : 'Updated successfully',
+        description: `${resourceName} ${wasCreating ? 'was created' : 'was updated'} successfully.`,
+        variant: 'success',
+      });
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Failed to save. Please try again.');
     } finally {
@@ -138,18 +180,34 @@ export function CrudTable<T>({
     }
   };
 
-  const handleDelete = async (row: T) => {
+  const requestDelete = (row: T) => {
     const id = getId(row);
     const label = getDisplayName ? getDisplayName(row) : `item #${id}`;
-    if (!window.confirm(`Delete "${label}"? This cannot be undone.`)) return;
-    setDeletingId(id);
-    try {
-      await onDelete(id);
-    } catch (err) {
-      window.alert(err instanceof Error ? err.message : 'Failed to delete item.');
-    } finally {
-      setDeletingId(null);
-    }
+    setAlert({
+      title: 'Delete record?',
+      description: `Delete "${label}"? This cannot be undone.`,
+      variant: 'danger',
+      confirmLabel: 'Delete',
+      onConfirm: async () => {
+        setDeletingId(id);
+        try {
+          await onDelete(id);
+          setAlert({
+            title: 'Deleted successfully',
+            description: `"${label}" was deleted successfully.`,
+            variant: 'success',
+          });
+        } catch (err) {
+          setAlert({
+            title: 'Delete failed',
+            description: err instanceof Error ? err.message : 'Failed to delete item.',
+            variant: 'danger',
+          });
+        } finally {
+          setDeletingId(null);
+        }
+      },
+    });
   };
 
   const runAction = async (title: string, row: T) => {
@@ -159,7 +217,11 @@ export function CrudTable<T>({
     try {
       await action.onClick(row);
     } catch (err) {
-      window.alert(err instanceof Error ? err.message : `Failed to ${title.toLowerCase()}.`);
+      setAlert({
+        title: `${title} failed`,
+        description: err instanceof Error ? err.message : `Failed to ${title.toLowerCase()}.`,
+        variant: 'danger',
+      });
     } finally {
       setBusyAction(null);
     }
@@ -278,7 +340,7 @@ export function CrudTable<T>({
                               <Edit2 className="w-4 h-4" />
                             </button>
                             <button
-                              onClick={() => handleDelete(row)}
+                              onClick={() => requestDelete(row)}
                               disabled={deleting}
                               title="Delete"
                               className="p-1.5 rounded-lg text-muted-foreground hover:text-rose-400 hover:bg-rose-500/10 transition-colors disabled:opacity-50"
@@ -312,6 +374,8 @@ export function CrudTable<T>({
 
           <div className="space-y-4">
             {fields.map((field) => {
+              if (field.hidden?.(formValues, editingId)) return null;
+
               const value = formValues[field.name];
               if (field.type === 'checkbox') {
                 return (
@@ -330,6 +394,9 @@ className="flex items-center gap-3 text-sm text-foreground cursor-pointer"
                 );
               }
               if (field.type === 'select' && field.options) {
+                const options =
+                  typeof field.options === 'function' ? field.options(formValues, editingId) : field.options;
+                const disabled = field.disabled?.(formValues, editingId) ?? false;
                 return (
                   <div key={field.name} className="space-y-1.5">
                     <label className="block text-xs font-medium text-muted-foreground">
@@ -338,10 +405,12 @@ className="flex items-center gap-3 text-sm text-foreground cursor-pointer"
                     <select
                       value={String(value ?? '')}
                       onChange={(e) => setFieldValue(field.name, e.target.value)}
+                      required={field.required || (field.requiredOnCreate && editingId == null)}
+                      disabled={disabled}
                       className="w-full bg-input text-foreground text-sm rounded-lg border border-border px-3.5 py-2.5 outline-none focus:border-[#E50914] focus:ring-2 focus:ring-[#E50914]/20"
                     >
                       <option value="">Select...</option>
-                      {field.options.map((opt) => (
+                      {options.map((opt) => (
                         <option key={opt.value} value={opt.value}>
                           {opt.label}
                         </option>
@@ -389,7 +458,9 @@ className="flex items-center gap-3 text-sm text-foreground cursor-pointer"
                   key={field.name}
                   label={field.label}
                   type={
-                    field.type === 'number'
+                    field.type === 'password'
+                      ? 'password'
+                      : field.type === 'number'
                       ? 'number'
                       : field.type === 'date'
                         ? 'date'
@@ -398,7 +469,8 @@ className="flex items-center gap-3 text-sm text-foreground cursor-pointer"
                           : 'text'
                   }
                   placeholder={field.placeholder}
-                  required={field.required}
+                  required={field.required || (field.requiredOnCreate && editingId == null)}
+                  disabled={field.disabled?.(formValues, editingId) ?? false}
                   value={String(value ?? '')}
                   onChange={(e) =>
                     setFieldValue(
@@ -421,6 +493,16 @@ className="flex items-center gap-3 text-sm text-foreground cursor-pointer"
           </div>
         </form>
       </Modal>
+
+      <AlertDialog
+        isOpen={alert != null}
+        onClose={() => setAlert(null)}
+        title={alert?.title ?? ''}
+        description={alert?.description ?? ''}
+        variant={alert?.variant ?? 'info'}
+        confirmLabel={alert?.confirmLabel}
+        onConfirm={alert?.onConfirm}
+      />
     </div>
   );
 }
