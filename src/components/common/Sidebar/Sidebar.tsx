@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
 import {
   Film,
   LayoutDashboard,
@@ -18,14 +17,14 @@ import {
   ShoppingCart,
   UtensilsCrossed,
   CreditCard,
-  Airplay,
   ReceiptText,
-  ArrowLeft,
   LogOut,
   Settings,
+  ChevronDown,
   type LucideIcon,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import { cn } from '@/lib/utils';
 
 interface MenuItem {
   name: string;
@@ -45,19 +44,11 @@ export const Sidebar: React.FC = () => {
 
   const sections: MenuSection[] = [
     {
-      label: 'Main Menu',
-      items: [{ name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard }],
-    },
-    {
-      label: 'Catalog',
+      label: 'Cinema',
       items: [
+        { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
         { name: 'Categories', path: '/admin/movie-categories', icon: Tags },
         { name: 'Movies', path: '/admin/movies', icon: Clapperboard },
-      ],
-    },
-    {
-      label: 'Screening',
-      items: [
         { name: 'Locations', path: '/admin/locations', icon: MapPin },
         { name: 'Theaters', path: '/admin/theaters', icon: Building2 },
         { name: 'Screens', path: '/admin/screens', icon: MonitorPlay },
@@ -69,7 +60,9 @@ export const Sidebar: React.FC = () => {
       label: 'Sales',
       items: [
         { name: 'Bookings', path: '/admin/bookings', icon: Ticket },
-        { name: 'Booking Seats', path: '/admin/booking-seats', icon: Airplay },
+        { name: 'Booking Seats', path: '/admin/booking-seats', icon: Armchair },
+        { name: 'Orders', path: '/admin/orders', icon: ShoppingCart },
+        { name: 'Order Items', path: '/admin/order-items', icon: UtensilsCrossed },
       ],
     },
     {
@@ -77,8 +70,6 @@ export const Sidebar: React.FC = () => {
       items: [
         { name: 'Product Categories', path: '/admin/product-categories', icon: Package },
         { name: 'Products', path: '/admin/products', icon: Popcorn },
-        { name: 'Orders', path: '/admin/orders', icon: ShoppingCart },
-        { name: 'Order Items', path: '/admin/order-items', icon: UtensilsCrossed },
       ],
     },
     {
@@ -94,7 +85,15 @@ export const Sidebar: React.FC = () => {
     },
   ];
 
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+
   const isActive = (path: string) => location.pathname === path;
+  const isSectionActive = (section: MenuSection) =>
+    section.items.some((item) => isActive(item.path));
+
+  const toggleSection = (label: string) => {
+    setCollapsed((prev) => ({ ...prev, [label]: !prev[label] }));
+  };
 
   return (
     <aside className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col justify-between shrink-0 h-screen sticky top-0 overflow-hidden">
@@ -103,7 +102,7 @@ export const Sidebar: React.FC = () => {
         {/* Brand */}
         <div className="h-16 px-6 flex items-center gap-3 border-b border-sidebar-border shrink-0">
           <Link to="/admin/dashboard" className="flex items-center gap-3 group">
-            <div className="w-9 h-9 rounded-xl bg-[#E50914] flex items-center justify-center shadow-lg shadow-[#E50914]/30 group-hover:scale-105 transition-transform">
+            <div className="w-9 h-9 rounded-xl bg-[#E50914] flex items-center justify-center shadow-md shadow-[#E50914]/25 group-hover:scale-105 transition-transform">
               <Film className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -118,76 +117,61 @@ export const Sidebar: React.FC = () => {
         </div>
 
         {/* Navigation */}
-        <nav className="p-3 space-y-4 overflow-y-auto flex-1 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none]">
-          {sections.map((section) => (
-            <div key={section.label}>
-              <p className="px-3 mb-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider leading-relaxed">
-                {section.label}
-              </p>
-              <div className="space-y-1">
-                {section.items.map((item) => {
-                  const Icon = item.icon;
-                  const active = isActive(item.path);
-                  return (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      title={item.name}
-                      className={`relative flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-semibold transition-all overflow-hidden ${
-                        active
-                          ? 'text-white'
-                          : 'text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent'
-                      }`}
-                    >
-                      {/* Active background */}
-                      {active && (
-                        <motion.div
-                          layoutId="activeAdminNav"
-                          className="absolute inset-0 bg-[#E50914] rounded-lg shadow-sm shadow-[#E50914]/20 z-0"
-                          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                        />
-                      )}
-                      
-                      {/* Active Left Accent Indicator Bar */}
-                      {active && (
-                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-md bg-black/30 z-10" />
-                      )}
-                      
-                      {/* Icon */}
-                      <Icon
-                        className={`relative z-10 w-4 h-4 shrink-0 transition-colors ${
-                          active ? 'text-white' : 'text-muted-foreground'
-                        }`}
-                      />
-                      
-                      {/* Label Text */}
-                      <span
-                        className={`relative z-10 truncate leading-relaxed transition-colors ${
-                          active ? 'text-white font-bold' : 'group-hover:text-sidebar-foreground'
-                        }`}
-                      >
-                        {item.name}
-                      </span>
-                    </Link>
-                  );
-                })}
+        <nav className="p-3 space-y-1.5 overflow-y-auto flex-1 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none]">
+          {sections.map((section) => {
+            const open = !collapsed[section.label];
+            const sectionActive = isSectionActive(section);
+            return (
+              <div key={section.label} className="rounded-lg">
+                <button
+                  onClick={() => toggleSection(section.label)}
+                  className={cn(
+                    'w-full flex items-center justify-between px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors',
+                    sectionActive ? 'text-sidebar-foreground' : 'text-muted-foreground hover:text-sidebar-foreground',
+                  )}
+                >
+                  <span>{section.label}</span>
+                  <ChevronDown
+                    className={cn('w-3.5 h-3.5 transition-transform', open ? '' : '-rotate-90')}
+                  />
+                </button>
+                {open && (
+                  <div className="space-y-0.5 mt-0.5">
+                    {section.items.map((item) => {
+                      const Icon = item.icon;
+                      const active = isActive(item.path);
+                      return (
+                        <Link
+                          key={item.path}
+                          to={item.path}
+                          title={item.name}
+                          className={cn(
+                            'relative flex items-center gap-3 px-3 py-2 rounded-md text-xs font-medium transition-colors',
+                            active
+                              ? 'bg-[#E50914]/15 text-[#E50914] font-semibold'
+                              : 'text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent',
+                          )}
+                        >
+                          {active && (
+                            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 rounded-r-md bg-[#E50914]" />
+                          )}
+                          <Icon
+                            className={cn('w-4 h-4 shrink-0', active ? 'text-[#E50914]' : 'text-muted-foreground')}
+                          />
+                          <span className="truncate leading-relaxed">{item.name}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </nav>
       </div>
 
       {/* Bottom Section */}
       <div className="p-3 border-t border-sidebar-border space-y-2 shrink-0 bg-sidebar">
-        {/* Back to Public Site */}
-        <Link
-          to="/"
-          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4 text-muted-foreground shrink-0" />
-          <span className="leading-relaxed truncate">View Public Site</span>
-        </Link>
-
         {/* Settings */}
         <Link
           to="/settings"
