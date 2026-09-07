@@ -1,5 +1,13 @@
 import React, { useEffect } from 'react';
-import { CrudTable, CrudColumn, CrudField, CrudValue } from '@/components/admin/CrudTable/CrudTable';
+import { Armchair, CheckCircle2, CircleAlert, DollarSign } from 'lucide-react';
+import {
+  CrudTable,
+  CrudColumn,
+  CrudField,
+  CrudFilter,
+  CrudStat,
+  CrudValue,
+} from '@/components/admin/CrudTable/CrudTable';
 import { Badge } from '@/components/ui/Badge/Badge';
 import { useSeatStore } from '@/store/seatStore';
 import { useScreenStore } from '@/store/screenStore';
@@ -13,10 +21,10 @@ const SEAT_TYPES = [
 ];
 
 const STATUS_OPTIONS = [
-  { value: 'AVAILABLE', label: 'AVAILABLE' },
-  { value: 'RESERVED', label: 'RESERVED' },
-  { value: 'OCCUPIED', label: 'OCCUPIED' },
-  { value: 'MAINTENANCE', label: 'MAINTENANCE' },
+  { value: 'AVAILABLE', label: 'Available' },
+  { value: 'RESERVED', label: 'Reserved' },
+  { value: 'OCCUPIED', label: 'Occupied' },
+  { value: 'MAINTENANCE', label: 'Maintenance' },
 ];
 
 const columns: CrudColumn<Seat>[] = [
@@ -66,6 +74,43 @@ export const SeatsPage: React.FC = () => {
   const { seats, loading, fetchAll, create, update, remove } = useSeatStore();
   const { screens, fetchAll: fetchScreens } = useScreenStore();
 
+  const stats: CrudStat[] = [
+    { label: 'Total Seats', value: seats.length, icon: Armchair, tone: 'border-border bg-muted text-foreground' },
+    {
+      label: 'Available',
+      value: seats.filter((seat) => seat.status === 'AVAILABLE').length,
+      icon: CheckCircle2,
+      tone: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400',
+    },
+    {
+      label: 'Occupied',
+      value: seats.filter((seat) => seat.status === 'OCCUPIED').length,
+      icon: CircleAlert,
+      tone: 'border-rose-500/20 bg-rose-500/10 text-rose-400',
+    },
+    {
+      label: 'Average Price',
+      value: seats.length ? formatCurrency(seats.reduce((sum, seat) => sum + seat.price, 0) / seats.length) : formatCurrency(0),
+      icon: DollarSign,
+      tone: 'border-amber-500/20 bg-amber-500/10 text-amber-400',
+    },
+  ];
+
+  const filters: CrudFilter<Seat>[] = [
+    {
+      key: 'status',
+      label: 'Filter by status',
+      options: [{ value: 'ALL', label: 'All statuses' }, ...STATUS_OPTIONS],
+      getValue: (seat) => seat.status,
+    },
+    {
+      key: 'type',
+      label: 'Filter by type',
+      options: [{ value: 'ALL', label: 'All types' }, ...SEAT_TYPES],
+      getValue: (seat) => seat.seatType,
+    },
+  ];
+
   useEffect(() => {
     void fetchAll();
     void fetchScreens();
@@ -97,6 +142,9 @@ export const SeatsPage: React.FC = () => {
       loading={loading}
       columns={columns}
       fields={fields}
+      stats={stats}
+      filters={filters}
+      searchPlaceholder="Search by seat number, row, or type..."
       searchKeys={['seatNumber', 'rowName', 'seatType']}
       columnContext={{ names }}
       createLabel="Add Seat"

@@ -1,5 +1,13 @@
 import React, { useEffect } from 'react';
-import { CrudTable, CrudColumn, CrudField, CrudValue } from '@/components/admin/CrudTable/CrudTable';
+import { CheckCircle2, List, Tags, XCircle } from 'lucide-react';
+import {
+  CrudTable,
+  CrudColumn,
+  CrudField,
+  CrudFilter,
+  CrudStat,
+  CrudValue,
+} from '@/components/admin/CrudTable/CrudTable';
 import { Badge } from '@/components/ui/Badge/Badge';
 import { useCategoryStore } from '@/store/categoryStore';
 import { MovieCategory, MovieCategoryInput } from '@/types/category';
@@ -26,19 +34,54 @@ const fields: CrudField[] = [
     type: 'textarea',
     placeholder: 'Short description of the category',
   },
-  { name: 'isActive', label: 'Active', type: 'checkbox' },
+  { name: 'isActive', label: 'Active', type: 'checkbox', defaultValue: true },
 ];
 
 function toInput(values: Record<string, CrudValue>): MovieCategoryInput {
   return {
     name: String(values.name ?? ''),
     description: String(values.description ?? ''),
-    isActive: Boolean(values.isActive),
+    isActive: Boolean(values.isActive ?? true),
   };
 }
 
 export const CategoriesPage: React.FC = () => {
   const { categories, loading, fetchAll, create, update, remove } = useCategoryStore();
+
+  const stats: CrudStat[] = [
+    { label: 'Total Categories', value: categories.length, icon: List, tone: 'border-border bg-muted text-foreground' },
+    {
+      label: 'Active',
+      value: categories.filter((category) => category.isActive).length,
+      icon: CheckCircle2,
+      tone: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400',
+    },
+    {
+      label: 'Inactive',
+      value: categories.filter((category) => !category.isActive).length,
+      icon: XCircle,
+      tone: 'border-rose-500/20 bg-rose-500/10 text-rose-400',
+    },
+    {
+      label: 'Catalog Usage',
+      value: categories.length ? 'Ready' : 'Empty',
+      icon: Tags,
+      tone: 'border-amber-500/20 bg-amber-500/10 text-amber-400',
+    },
+  ];
+
+  const filters: CrudFilter<MovieCategory>[] = [
+    {
+      key: 'status',
+      label: 'Filter by status',
+      options: [
+        { value: 'ALL', label: 'All statuses' },
+        { value: 'ACTIVE', label: 'Active' },
+        { value: 'INACTIVE', label: 'Inactive' },
+      ],
+      getValue: (category) => (category.isActive ? 'ACTIVE' : 'INACTIVE'),
+    },
+  ];
 
   useEffect(() => {
     void fetchAll();
@@ -52,6 +95,10 @@ export const CategoriesPage: React.FC = () => {
       loading={loading}
       columns={columns}
       fields={fields}
+      stats={stats}
+      filters={filters}
+      searchPlaceholder="Search by category name or description..."
+      modalMaxWidth="md"
       searchKeys={['name', 'description']}
       createLabel="Add Category"
       getId={(row) => row.id}

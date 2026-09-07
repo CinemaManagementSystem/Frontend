@@ -1,5 +1,13 @@
 import React, { useEffect } from 'react';
-import { CrudTable, CrudColumn, CrudField, CrudValue } from '@/components/admin/CrudTable/CrudTable';
+import { Building2, Globe2, Link2, MapPin } from 'lucide-react';
+import {
+  CrudTable,
+  CrudColumn,
+  CrudField,
+  CrudFilter,
+  CrudStat,
+  CrudValue,
+} from '@/components/admin/CrudTable/CrudTable';
 import { useLocationStore } from '@/store/locationStore';
 import { Location, LocationInput } from '@/types/location';
 
@@ -43,7 +51,29 @@ function toInput(values: Record<string, CrudValue>): LocationInput {
 }
 
 export const LocationsPage: React.FC = () => {
-  const { locations, loading, fetchAll, create, update, remove } = useLocationStore();
+  const { locations, loading, error, fetchAll, create, update, remove } = useLocationStore();
+
+  const cities = Array.from(new Set(locations.map((location) => location.city).filter(Boolean))).sort();
+  const stats: CrudStat[] = [
+    { label: 'Total Locations', value: locations.length, icon: MapPin, tone: 'border-border bg-muted text-foreground' },
+    { label: 'Cities', value: cities.length, icon: Globe2, tone: 'border-sky-500/20 bg-sky-500/10 text-sky-400' },
+    {
+      label: 'Map Links',
+      value: locations.filter((location) => Boolean(location.googleMapsUrl)).length,
+      icon: Link2,
+      tone: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400',
+    },
+    { label: 'Branch Network', value: locations.length ? 'Active' : 'Empty', icon: Building2, tone: 'border-amber-500/20 bg-amber-500/10 text-amber-400' },
+  ];
+
+  const filters: CrudFilter<Location>[] = [
+    {
+      key: 'city',
+      label: 'Filter by city',
+      options: [{ value: 'ALL', label: 'All cities' }, ...cities.map((city) => ({ value: city, label: city }))],
+      getValue: (location) => location.city,
+    },
+  ];
 
   useEffect(() => {
     void fetchAll();
@@ -59,25 +89,30 @@ export const LocationsPage: React.FC = () => {
   ];
 
   return (
-    <CrudTable
-      title="Cinema Locations"
-      subtitle="Manage cinema branches and their geo-coordinates"
-      items={locations}
-      loading={loading}
-      columns={columns}
-      fields={fields}
-      searchKeys={['name', 'city', 'address']}
-      createLabel="Add Location"
-      getId={(row) => row.id}
-      getDisplayName={(row) => row.name}
-      onSave={async (values, id) => {
-        if (id == null) {
-          await create(toInput(values));
-        } else {
-          await update(id, toInput(values));
-        }
-      }}
-      onDelete={remove}
-    />
+      <CrudTable
+        title="Cinema Locations"
+        subtitle="Manage cinema branches and their geo-coordinates"
+        items={locations}
+        loading={loading}
+        columns={columns}
+        fields={fields}
+        stats={stats}
+        filters={filters}
+        searchPlaceholder="Search by location, city, or address..."
+        error={error ?? ''}
+        onRetry={() => void fetchAll()}
+        searchKeys={['name', 'city', 'address']}
+        createLabel="Add Location"
+        getId={(row) => row.id}
+        getDisplayName={(row) => row.name}
+        onSave={async (values, id) => {
+          if (id == null) {
+            await create(toInput(values));
+          } else {
+            await update(id, toInput(values));
+          }
+        }}
+        onDelete={remove}
+      />
   );
 };

@@ -1,5 +1,13 @@
 import React, { useEffect } from 'react';
-import { CrudTable, CrudColumn, CrudField, CrudValue } from '@/components/admin/CrudTable/CrudTable';
+import { Building2, CheckCircle2, MonitorPlay, Wrench } from 'lucide-react';
+import {
+  CrudTable,
+  CrudColumn,
+  CrudField,
+  CrudFilter,
+  CrudStat,
+  CrudValue,
+} from '@/components/admin/CrudTable/CrudTable';
 import { Badge } from '@/components/ui/Badge/Badge';
 import { useScreenStore } from '@/store/screenStore';
 import { useTheaterStore } from '@/store/theaterStore';
@@ -14,9 +22,9 @@ const SCREEN_TYPES = [
 ];
 
 const STATUS_OPTIONS = [
-  { value: 'ACTIVE', label: 'ACTIVE' },
-  { value: 'INACTIVE', label: 'INACTIVE' },
-  { value: 'MAINTENANCE', label: 'MAINTENANCE' },
+  { value: 'ACTIVE', label: 'Active' },
+  { value: 'INACTIVE', label: 'Inactive' },
+  { value: 'MAINTENANCE', label: 'Maintenance' },
 ];
 
 const columns: CrudColumn<Screen>[] = [
@@ -64,6 +72,38 @@ export const ScreensPage: React.FC = () => {
   const { screens, loading, fetchAll, create, update, remove } = useScreenStore();
   const { theaters, fetchAll: fetchTheaters } = useTheaterStore();
 
+  const stats: CrudStat[] = [
+    { label: 'Total Screens', value: screens.length, icon: MonitorPlay, tone: 'border-border bg-muted text-foreground' },
+    {
+      label: 'Active',
+      value: screens.filter((screen) => screen.status === 'ACTIVE').length,
+      icon: CheckCircle2,
+      tone: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400',
+    },
+    {
+      label: 'Maintenance',
+      value: screens.filter((screen) => screen.status === 'MAINTENANCE').length,
+      icon: Wrench,
+      tone: 'border-amber-500/20 bg-amber-500/10 text-amber-400',
+    },
+    { label: 'Total Capacity', value: screens.reduce((sum, screen) => sum + screen.totalSeats, 0), icon: Building2, tone: 'border-sky-500/20 bg-sky-500/10 text-sky-400' },
+  ];
+
+  const filters: CrudFilter<Screen>[] = [
+    {
+      key: 'status',
+      label: 'Filter by status',
+      options: [{ value: 'ALL', label: 'All statuses' }, ...STATUS_OPTIONS],
+      getValue: (screen) => screen.status,
+    },
+    {
+      key: 'type',
+      label: 'Filter by type',
+      options: [{ value: 'ALL', label: 'All types' }, ...SCREEN_TYPES],
+      getValue: (screen) => screen.screenType,
+    },
+  ];
+
   useEffect(() => {
     void fetchAll();
     void fetchTheaters();
@@ -100,6 +140,9 @@ export const ScreensPage: React.FC = () => {
       loading={loading}
       columns={columns}
       fields={fields}
+      stats={stats}
+      filters={filters}
+      searchPlaceholder="Search by screen name or type..."
       searchKeys={['name', 'screenType']}
       columnContext={{ names }}
       createLabel="Add Screen"

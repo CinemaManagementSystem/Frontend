@@ -1,5 +1,13 @@
 import React, { useEffect } from 'react';
-import { CrudTable, CrudColumn, CrudField, CrudValue } from '@/components/admin/CrudTable/CrudTable';
+import { CalendarDays, CheckCircle2, CircleAlert, Clapperboard } from 'lucide-react';
+import {
+  CrudTable,
+  CrudColumn,
+  CrudField,
+  CrudFilter,
+  CrudStat,
+  CrudValue,
+} from '@/components/admin/CrudTable/CrudTable';
 import { Badge } from '@/components/ui/Badge/Badge';
 import { useShowStore } from '@/store/showStore';
 import { useMovieAdminStore } from '@/store/movieAdminStore';
@@ -8,10 +16,10 @@ import { Show, ShowInput } from '@/types/show';
 import { formatCurrency, formatDateTime } from '@/utils/formatDate';
 
 const STATUS_OPTIONS = [
-  { value: 'ACTIVE', label: 'ACTIVE' },
-  { value: 'SOLD_OUT', label: 'SOLD OUT' },
-  { value: 'CANCELLED', label: 'CANCELLED' },
-  { value: 'COMPLETED', label: 'COMPLETED' },
+  { value: 'ACTIVE', label: 'Active' },
+  { value: 'SOLD_OUT', label: 'Sold Out' },
+  { value: 'CANCELLED', label: 'Cancelled' },
+  { value: 'COMPLETED', label: 'Completed' },
 ];
 
 const columns: CrudColumn<Show>[] = [
@@ -74,6 +82,37 @@ export const ShowsPage: React.FC = () => {
   const { movies, fetchAll: fetchMovies } = useMovieAdminStore();
   const { screens, fetchAll: fetchScreens } = useScreenStore();
 
+  const stats: CrudStat[] = [
+    { label: 'Total Shows', value: shows.length, icon: CalendarDays, tone: 'border-border bg-muted text-foreground' },
+    {
+      label: 'Active',
+      value: shows.filter((show) => show.status === 'ACTIVE').length,
+      icon: CheckCircle2,
+      tone: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400',
+    },
+    {
+      label: 'Sold Out',
+      value: shows.filter((show) => show.status === 'SOLD_OUT').length,
+      icon: Clapperboard,
+      tone: 'border-amber-500/20 bg-amber-500/10 text-amber-400',
+    },
+    {
+      label: 'Cancelled',
+      value: shows.filter((show) => show.status === 'CANCELLED').length,
+      icon: CircleAlert,
+      tone: 'border-rose-500/20 bg-rose-500/10 text-rose-400',
+    },
+  ];
+
+  const filters: CrudFilter<Show>[] = [
+    {
+      key: 'status',
+      label: 'Filter by status',
+      options: [{ value: 'ALL', label: 'All statuses' }, ...STATUS_OPTIONS],
+      getValue: (show) => show.status,
+    },
+  ];
+
   useEffect(() => {
     void fetchAll();
     void fetchMovies();
@@ -120,7 +159,11 @@ export const ShowsPage: React.FC = () => {
       loading={loading}
       columns={columns}
       fields={fields}
+      stats={stats}
+      filters={filters}
+      searchPlaceholder="Search by show status..."
       searchKeys={['status']}
+      searchText={(show) => `${movieNames[show.movieId] ?? ''} ${screenNames[show.screenId] ?? ''} ${show.status}`}
       columnContext={{ movies: movieNames, screens: screenNames }}
       createLabel="Add Show"
       getId={(row) => row.id}
