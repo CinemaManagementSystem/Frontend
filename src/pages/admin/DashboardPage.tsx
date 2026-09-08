@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   DollarSign,
@@ -15,8 +15,17 @@ import {
   Info,
 } from 'lucide-react';
 import { useMovieStore } from '@/store/movieStore';
-import { Showtime } from '@/types/movie';
+import { useBookingAdminStore } from '@/store/bookingAdminStore';
 import { Booking } from '@/types/booking';
+import { BookingSeat as ApiBookingSeat } from '@/types/bookingSeat';
+import { Screen } from '@/types/screen';
+import { Show } from '@/types/show';
+import { Seat as ApiSeat } from '@/types/seat';
+import { bookingSeatService } from '@/services/bookingSeatService';
+import { getApiErrorMessage } from '@/services/apiClient';
+import { screenService } from '@/services/screenService';
+import { seatService } from '@/services/seatService';
+import { showService } from '@/services/showService';
 import { Badge } from '@/components/ui/Badge/Badge';
 import { Modal } from '@/components/ui/Modal/Modal';
 import { MovieForm } from '@/components/forms/MovieForm/MovieForm';
@@ -62,23 +71,14 @@ interface Kpi {
   spark: number[];
 }
 
-function inferHallCapacities(showtimes: Showtime[]): Record<string, number> {
-  const seen: Record<string, { row: number; col: number }> = {};
-  showtimes.forEach((st) => {
-    st.occupiedSeats.forEach((seat) => {
-      const m = seat.match(/^([A-Z])(\d+)$/);
-      if (!m) return;
-      const row = m[1].charCodeAt(0) - 64;
-      const col = parseInt(m[2], 10);
-      const cur = seen[st.hallName] || { row: 0, col: 0 };
-      seen[st.hallName] = { row: Math.max(cur.row, row), col: Math.max(cur.col, col) };
-    });
-  });
-  const cap: Record<string, number> = {};
-  Object.entries(seen).forEach(([hall, r]) => {
-    cap[hall] = r.row > 0 && r.col > 0 ? r.row * r.col : 80;
-  });
-  return cap;
+function getScreenLabel(screen: Screen, screens: Screen[]): string {
+  if (screen.screenType.toUpperCase() !== 'IMAX') return screen.name;
+
+  const imaxNumber = screens
+    .filter((candidate) => candidate.screenType.toUpperCase() === 'IMAX')
+    .findIndex((candidate) => candidate.id === screen.id);
+
+  return `IMAX Theater ${imaxNumber + 1}`;
 }
 
 function buildChartData(bookings: Booking[], range: ChartRange): ChartBucket[] {
@@ -141,8 +141,51 @@ function buildChartData(bookings: Booking[], range: ChartRange): ChartBucket[] {
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { movies, showtimes, bookings, addMovie } = useMovieStore();
+  const {
+    bookings: adminBookings,
+    loading: bookingsLoading,
+    error: bookingsError,
+    fetchAll: fetchAdminBookings,
+  } = useBookingAdminStore();
   const [addMovieModalOpen, setAddMovieModalOpen] = useState(false);
   const [range, setRange] = useState<ChartRange>('7D');
+  const [liveShows, setLiveShows] = useState<Show[]>([]);
+  const [liveScreens, setLiveScreens] = useState<Screen[]>([]);
+  const [liveSeats, setLiveSeats] = useState<ApiSeat[]>([]);
+  const [liveBookingSeats, setLiveBookingSeats] = useState<ApiBookingSeat[]>([]);
+  const [occupancyLoading, setOccupancyLoading] = useState(false);
+  const [occupancyError, setOccupancyError] = useState<string | null>(null);
+
+  useEffect(() => {
+    void fetchAdminBookings();
+  }, [fetchAdminBookings]);
+
+  const fetchOccupancyData = useCallback(async () => {
+    setOccupancyLoading(true);
+    setOccupancyError(null);
+
+    try {
+      const [shows, screens, seats, bookingSeats] = await Promise.all([
+        showService.list(),
+        screenService.list(),
+        seatService.list(),
+        bookingSeatService.list(),
+      ]);
+
+      setLiveShows(shows);
+      setLiveScreens(screens);
+      setLiveSeats(seats);
+      setLiveBookingSeats(bookingSeats);
+    } catch (error) {
+      setOccupancyError(getApiErrorMessage(error, 'screen occupancy'));
+    } finally {
+      setOccupancyLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void fetchOccupancyData();
+  }, [fetchOccupancyData]);
 
   const cards = useMemo(() => {
     const confirmed = bookings.filter((b) => b.status === 'CONFIRMED');
@@ -206,27 +249,81 @@ export const DashboardPage: React.FC = () => {
     return kpis;
   }, [bookings, showtimes]);
 
-  const hallCapacities = useMemo(
-    () => inferHallCapacities(showtimes),
-    [showtimes],
-  );
-
   const occupancy: OccupancyRow[] = useMemo(() => {
-    return showtimes.map((st) => {
-      const movie = movies.find((m) => m.id === st.movieId);
-      const capacity = hallCapacities[st.hallName] ?? 80;
-      const occupied = st.occupiedSeats.length;
+    const activeScreens = liveScreens.filter(
+      (screen) => !['CLOSED', 'INACTIVE', 'MAINTENANCE'].includes(screen.status.toUpperCase()),
+    );
+    const screenById = new Map(activeScreens.map((screen) => [screen.id, screen]));
+    const seatById = new Map(liveSeats.map((seat) => [seat.id, seat]));
+    const bookingSeatsByBooking = new Map<number, ApiBookingSeat[]>();
+
+    liveBookingSeats.forEach((bookingSeat) => {
+      const seatsForBooking = bookingSeatsByBooking.get(bookingSeat.bookingId) ?? [];
+      seatsForBooking.push(bookingSeat);
+      bookingSeatsByBooking.set(bookingSeat.bookingId, seatsForBooking);
+    });
+
+    const scheduledShows = liveShows
+      .filter((show) => show.status.toUpperCase() !== 'CANCELLED' && screenById.has(show.screenId))
+      .sort((left, right) => left.startTime.localeCompare(right.startTime));
+
+    const rowsForShow = (show: Show, screen: Screen): OccupancyRow => {
+      const occupiedSeatIds = new Set<number>();
+
+      adminBookings
+        .filter((booking) => booking.showId === show.id && booking.status.toUpperCase() !== 'CANCELLED')
+        .forEach((booking) => {
+          (bookingSeatsByBooking.get(booking.id) ?? [])
+            .filter((bookingSeat) => bookingSeat.status.toUpperCase() !== 'CANCELLED')
+            .forEach((bookingSeat) => {
+              const seat = seatById.get(bookingSeat.seatId);
+              if (seat?.screenId === screen.id) occupiedSeatIds.add(bookingSeat.seatId);
+            });
+        });
+
+      const configuredCapacity = screen.totalSeats > 0 ? screen.totalSeats : 0;
+      const seatCapacity = liveSeats.filter(
+        (seat) => seat.screenId === screen.id && seat.status.toUpperCase() !== 'MAINTENANCE',
+      ).length;
+      const capacity = configuredCapacity || seatCapacity;
+      const occupied = occupiedSeatIds.size;
+      const movie = movies.find((candidate) => String(candidate.id) === String(show.movieId));
+
       return {
-        hall: st.hallName,
-        movieTitle: movie?.title ?? 'Unknown movie',
-        format: st.format,
+        hall: getScreenLabel(screen, activeScreens),
+        movieTitle: movie?.title ?? `Movie #${show.movieId}`,
+        format: screen.screenType,
         occupied,
         capacity,
         percent: capacity > 0 ? Math.min(100, Math.round((occupied / capacity) * 100)) : 0,
-        nextTime: st.time,
+        nextTime: formatDateTime(show.startTime),
       };
-    });
-  }, [showtimes, hallCapacities, movies]);
+    };
+
+    const scheduledScreenIds = new Set(scheduledShows.map((show) => show.screenId));
+    const scheduledRows = scheduledShows.map((show) => rowsForShow(show, screenById.get(show.screenId)!));
+    const unscheduledRows = activeScreens
+      .filter((screen) => !scheduledScreenIds.has(screen.id))
+      .map((screen) => {
+        const capacity = screen.totalSeats > 0
+          ? screen.totalSeats
+          : liveSeats.filter(
+              (seat) => seat.screenId === screen.id && seat.status.toUpperCase() !== 'MAINTENANCE',
+            ).length;
+
+        return {
+          hall: getScreenLabel(screen, activeScreens),
+          movieTitle: 'No active screening scheduled',
+          format: screen.screenType,
+          occupied: 0,
+          capacity,
+          percent: 0,
+          nextTime: 'No show scheduled',
+        };
+      });
+
+    return [...scheduledRows, ...unscheduledRows];
+  }, [adminBookings, liveBookingSeats, liveScreens, liveSeats, liveShows, movies]);
 
   const alerts = useMemo(() => {
     const list: { level: 'warning' | 'danger' | 'info'; text: string; url?: string }[] = [];
@@ -271,10 +368,10 @@ export const DashboardPage: React.FC = () => {
 
   const recentBookings = useMemo(
     () =>
-      [...bookings]
-        .sort((a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime())
+      [...adminBookings]
+        .sort((a, b) => new Date(b.bookedAt).getTime() - new Date(a.bookedAt).getTime())
         .slice(0, 6),
-    [bookings],
+    [adminBookings],
   );
 
   const statusBadge = (status: string) => {
@@ -440,7 +537,23 @@ export const DashboardPage: React.FC = () => {
             <Armchair className="w-4 h-4 text-muted-foreground" />
           </div>
 
-          {occupancy.length === 0 ? (
+          {occupancyLoading || bookingsLoading ? (
+            <EmptyState title="Loading occupancy" hint="Fetching the latest screening and seat data." />
+          ) : occupancyError || bookingsError ? (
+            <div className="space-y-3 rounded-lg border border-rose-500/20 bg-rose-500/5 p-3">
+              <p className="text-xs text-rose-500">{occupancyError ?? bookingsError}</p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={() => {
+                  void Promise.all([fetchOccupancyData(), fetchAdminBookings()]);
+                }}
+              >
+                Retry
+              </Button>
+            </div>
+          ) : occupancy.length === 0 ? (
             <EmptyState title="No screenings" hint="Screenings will appear here when shows are scheduled." />
           ) : (
             <div className="space-y-3 max-h-[340px] overflow-y-auto pr-1">
@@ -551,7 +664,17 @@ export const DashboardPage: React.FC = () => {
             </button>
           </div>
 
-          {recentBookings.length === 0 ? (
+          {bookingsLoading ? (
+            <EmptyState title="Loading recent activity" hint="Fetching the latest bookings from the API." />
+          ) : bookingsError ? (
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <p className="text-sm font-semibold text-foreground">Unable to load recent activity</p>
+              <p className="text-xs text-muted-foreground mt-1 max-w-md">{bookingsError}</p>
+              <Button variant="outline" size="sm" className="mt-4" onClick={() => void fetchAdminBookings()}>
+                Retry
+              </Button>
+            </div>
+          ) : recentBookings.length === 0 ? (
             <EmptyState title="No recent activity" hint="New bookings will show up here." />
           ) : (
             <div className="overflow-x-auto -mx-1">
@@ -560,7 +683,7 @@ export const DashboardPage: React.FC = () => {
                   <tr className="border-b border-border text-muted-foreground uppercase text-[10px] tracking-wider">
                     <th className="py-2.5 pr-3 font-semibold">Booking</th>
                     <th className="py-2.5 pr-3 font-semibold">Customer</th>
-                    <th className="py-2.5 pr-3 font-semibold">Movie</th>
+                    <th className="py-2.5 pr-3 font-semibold">Show</th>
                     <th className="py-2.5 pr-3 font-semibold">Amount</th>
                     <th className="py-2.5 pr-3 font-semibold">Status</th>
                     <th className="py-2.5 font-semibold">Time</th>
@@ -569,12 +692,12 @@ export const DashboardPage: React.FC = () => {
                 <tbody className="divide-y divide-border">
                   {recentBookings.map((b) => (
                     <tr key={b.id} className="hover:bg-muted/40 transition-colors">
-                      <td className="py-3 pr-3 font-mono font-semibold text-foreground">{b.id}</td>
-                      <td className="py-3 pr-3 font-medium text-foreground">{b.userName}</td>
-                      <td className="py-3 pr-3 text-muted-foreground truncate max-w-[160px]">{b.movieTitle}</td>
+                      <td className="py-3 pr-3 font-mono font-semibold text-foreground">{b.bookingCode}</td>
+                      <td className="py-3 pr-3 font-medium text-foreground">#{b.customerId}</td>
+                      <td className="py-3 pr-3 text-muted-foreground">Show #{b.showId}</td>
                       <td className="py-3 pr-3 font-semibold text-emerald-500">{formatCurrency(b.totalAmount)}</td>
                       <td className="py-3 pr-3">{statusBadge(b.status)}</td>
-                      <td className="py-3 text-muted-foreground whitespace-nowrap">{formatDateTime(b.bookingDate)}</td>
+                      <td className="py-3 text-muted-foreground whitespace-nowrap">{formatDateTime(b.bookedAt)}</td>
                     </tr>
                   ))}
                 </tbody>
