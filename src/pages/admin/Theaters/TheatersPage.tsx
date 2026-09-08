@@ -55,7 +55,7 @@ function toInput(values: Record<string, CrudValue>): TheaterInput {
 }
 
 export const TheatersPage: React.FC = () => {
-  const { theaters, loading, fetchAll, create, update, remove } = useTheaterStore();
+  const { theaters, loading, error: theatersError, fetchAll, create, update, remove } = useTheaterStore();
   const { locations, error: locationsError, fetchAll: fetchLocations } = useLocationStore();
 
   const stats: CrudStat[] = [
@@ -129,8 +129,11 @@ export const TheatersPage: React.FC = () => {
         stats={stats}
         filters={filters}
         searchPlaceholder="Search by theater name, address, or phone..."
-        error={locationsError ?? ''}
-        onRetry={() => void fetchLocations()}
+        error={theatersError ?? locationsError ?? ''}
+        onRetry={() => {
+          void fetchAll();
+          void fetchLocations();
+        }}
         searchKeys={['name', 'address', 'phone']}
         columnContext={{ names }}
         createLabel="Add Theater"

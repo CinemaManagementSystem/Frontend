@@ -1,27 +1,45 @@
 import { create } from 'zustand';
 import { Theater, TheaterInput } from '@/types/theater';
+import { getApiErrorMessage } from '@/services/apiClient';
 import { theaterService } from '@/services/theaterService';
 
 interface TheaterState {
   theaters: Theater[];
   loading: boolean;
+  error: string | null;
   fetchAll: () => Promise<void>;
   create: (payload: TheaterInput) => Promise<void>;
   update: (id: number, payload: TheaterInput) => Promise<void>;
   remove: (id: number) => Promise<void>;
 }
 
+let inFlightFetch: Promise<void> | null = null;
+
 export const useTheaterStore = create<TheaterState>((set, get) => ({
   theaters: [],
   loading: false,
+  error: null,
 
   fetchAll: async () => {
-    set({ loading: true });
+    if (inFlightFetch) return inFlightFetch;
+
+    const request = (async () => {
+      set({ loading: true, error: null });
+      try {
+        const theaters = await theaterService.list();
+        set({ theaters, error: null });
+      } catch (error) {
+        set({ error: getApiErrorMessage(error, 'theaters') });
+      } finally {
+        set({ loading: false });
+      }
+    })();
+
+    inFlightFetch = request;
     try {
-      const theaters = await theaterService.list();
-      set({ theaters });
+      await request;
     } finally {
-      set({ loading: false });
+      if (inFlightFetch === request) inFlightFetch = null;
     }
   },
 
