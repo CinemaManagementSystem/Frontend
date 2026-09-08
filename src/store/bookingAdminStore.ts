@@ -1,27 +1,45 @@
 import { create } from 'zustand';
 import { ApiBooking, ApiBookingInput } from '@/types/bookingApi';
+import { getApiErrorMessage } from '@/services/apiClient';
 import { bookingAdminService } from '@/services/bookingAdminService';
 
 interface BookingAdminState {
   bookings: ApiBooking[];
   loading: boolean;
+  error: string | null;
   fetchAll: () => Promise<void>;
   create: (payload: ApiBookingInput) => Promise<void>;
   update: (id: number, payload: ApiBookingInput) => Promise<void>;
   remove: (id: number) => Promise<void>;
 }
 
+let inFlightFetch: Promise<void> | null = null;
+
 export const useBookingAdminStore = create<BookingAdminState>((set, get) => ({
   bookings: [],
   loading: false,
+  error: null,
 
   fetchAll: async () => {
-    set({ loading: true });
+    if (inFlightFetch) return inFlightFetch;
+
+    const request = (async () => {
+      set({ loading: true, error: null });
+      try {
+        const bookings = await bookingAdminService.list();
+        set({ bookings, error: null });
+      } catch (error) {
+        set({ error: getApiErrorMessage(error, 'bookings') });
+      } finally {
+        set({ loading: false });
+      }
+    })();
+
+    inFlightFetch = request;
     try {
-      const bookings = await bookingAdminService.list();
-      set({ bookings });
+      await request;
     } finally {
-      set({ loading: false });
+      if (inFlightFetch === request) inFlightFetch = null;
     }
   },
 
