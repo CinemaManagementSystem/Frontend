@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Play, Ticket, Star, Clock, Sparkles, Search, Compass } from 'lucide-react';
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import { useMovieStore } from '@/store/movieStore';
 import { MovieCard } from '@/components/ui/Card/MovieCard';
 import { Badge } from '@/components/ui/Badge/Badge';
@@ -13,8 +13,36 @@ export const HomePage: React.FC = () => {
   const { movies, selectedCategory, setSelectedCategory, searchQuery, setSearchQuery } = useMovieStore();
   const [trailerModalOpen, setTrailerModalOpen] = useState(false);
   const [activeTrailerUrl, setActiveTrailerUrl] = useState('');
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [isHeroPaused, setIsHeroPaused] = useState(false);
 
-  const featuredMovie = movies.find((m) => m.status === 'FEATURED') || movies[0];
+  const featuredMovies = useMemo(() => {
+    const priority = ['FEATURED', 'NOW_SHOWING', 'COMING_SOON'] as const;
+    return priority
+      .flatMap((status) => movies.filter((movie) => movie.status === status))
+      .filter((movie, index, allMovies) => allMovies.findIndex((item) => item.id === movie.id) === index)
+      .slice(0, 4);
+  }, [movies]);
+
+  const featuredMovie = featuredMovies[activeSlide] ?? featuredMovies[0];
+
+  useEffect(() => {
+    setActiveSlide((current) => Math.min(current, Math.max(featuredMovies.length - 1, 0)));
+  }, [featuredMovies.length]);
+
+  useEffect(() => {
+    if (isHeroPaused || featuredMovies.length < 2) return undefined;
+
+    const timer = window.setInterval(() => {
+      setActiveSlide((current) => (current + 1) % featuredMovies.length);
+    }, 6500);
+
+    return () => window.clearInterval(timer);
+  }, [featuredMovies.length, isHeroPaused]);
+
+  const scrollToReviews = () => {
+    document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const categories = [
     { id: 'ALL', name: 'All Movies' },
@@ -43,27 +71,51 @@ export const HomePage: React.FC = () => {
     <div className="space-y-12 pb-20">
       {/* Hero Banner Section */}
       {featuredMovie && (
-        <section className="relative w-full min-h-[75vh] lg:min-h-[85vh] flex items-end overflow-hidden bg-black">
+        <section
+          className="relative w-full min-h-[75vh] lg:min-h-[85vh] flex items-end overflow-hidden bg-black"
+          onMouseEnter={() => setIsHeroPaused(true)}
+          onMouseLeave={() => setIsHeroPaused(false)}
+          aria-roledescription="carousel"
+          aria-label="Featured movies"
+        >
           {/* Backdrop Image */}
           <div className="absolute inset-0 z-0">
-            <img
-              src={featuredMovie.backdropUrl}
-              alt={featuredMovie.title}
-              className="w-full h-full object-cover object-center opacity-60 filter contrast-125"
-            />
+            <AnimatePresence initial={false} mode="sync">
+              <motion.div
+                key={featuredMovie.id}
+                className="absolute inset-0"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.7, ease: 'easeInOut' }}
+              >
+                <motion.img
+                  src={featuredMovie.backdropUrl}
+                  alt=""
+                  initial={{ scale: 1.08 }}
+                  animate={{ scale: 1.01 }}
+                  transition={{ duration: 8, ease: 'linear' }}
+                  className="w-full h-full object-cover object-center opacity-60 filter contrast-125"
+                />
+              </motion.div>
+            </AnimatePresence>
             {/* Multi-angle cinematic gradients */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0f0f10] via-[#0f0f10]/60 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-background via-background/80 to-transparent" />
             <div className="absolute inset-0 bg-gradient-to-r from-[#0f0f10] via-[#0f0f10]/70 to-transparent w-full md:w-3/4" />
           </div>
 
           {/* Hero Content */}
-          <motion.div   
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
-            className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 w-full"
-          >
-            <div className="max-w-2xl space-y-5">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={featuredMovie.id}
+              initial={{ opacity: 0, x: 24 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -24 }}
+              transition={{ duration: 0.45, ease: 'easeOut' }}
+              className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 w-full"
+              aria-live="polite"
+            >
+              <div className="max-w-2xl space-y-5">
               {/* Badges */}
               <div className="flex flex-wrap items-center gap-2.5">
                 <span className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#E50914] text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-[#E50914]/40">
@@ -73,10 +125,15 @@ export const HomePage: React.FC = () => {
                 <Badge variant="secondary" size="md">
                   PG-13
                 </Badge>
-                <div className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-md border border-border text-xs font-bold text-amber-400">
+                <button
+                  type="button"
+                  onClick={scrollToReviews}
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-md border border-border text-xs font-bold text-amber-400 transition-all hover:bg-black/80 hover:ring-2 hover:ring-amber-400/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                  aria-label={`View reviews for ${featuredMovie.title}`}
+                >
                   <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                   <span>{featuredMovie.rating.toFixed(1)} / 10</span>
-                </div>
+                </button>
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Clock className="w-3.5 h-3.5 text-muted-foreground" />
                   <span>{formatDuration(featuredMovie.durationMinutes)}</span>
@@ -118,8 +175,30 @@ export const HomePage: React.FC = () => {
                   </button>
                 )}
               </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+
+          {featuredMovies.length > 1 && (
+            <div className="absolute bottom-7 right-4 sm:right-6 lg:right-8 z-20 flex items-center gap-2" aria-label="Choose featured movie">
+              {featuredMovies.map((movie, index) => (
+                <button
+                  key={movie.id}
+                  type="button"
+                  onClick={() => setActiveSlide(index)}
+                  aria-label={`Show featured movie ${index + 1}: ${movie.title}`}
+                  aria-current={index === activeSlide ? 'true' : undefined}
+                  className="group rounded-full p-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                >
+                  <span
+                    className={`block h-2 rounded-full transition-all duration-300 ${
+                      index === activeSlide ? 'w-8 bg-[#E50914]' : 'w-2 bg-white/50 group-hover:bg-white'
+                    }`}
+                  />
+                </button>
+              ))}
             </div>
-          </motion.div>
+          )}
         </section>
       )}
 
@@ -208,6 +287,26 @@ export const HomePage: React.FC = () => {
             </button>
           </div>
         )}
+      </section>
+
+      {/* Reviews anchor for the hero rating */}
+      <section id="reviews" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24">
+        <div className="rounded-2xl border border-border bg-card p-6 sm:p-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-[#E50914]">Audience ratings</p>
+              <h2 className="mt-1 text-2xl font-black text-foreground">What moviegoers are watching</h2>
+              <p className="mt-2 text-sm text-muted-foreground">Tap a movie rating in the hero to jump back here.</p>
+            </div>
+            {featuredMovie && (
+              <div className="flex items-center gap-2 rounded-xl bg-muted px-4 py-3 text-amber-400">
+                <Star className="h-5 w-5 fill-amber-400" />
+                <span className="text-lg font-black">{featuredMovie.rating.toFixed(1)}</span>
+                <span className="text-xs text-muted-foreground">/ 10 community rating</span>
+              </div>
+            )}
+          </div>
+        </div>
       </section>
 
       {/* Cinema Formats Showcase Section */}

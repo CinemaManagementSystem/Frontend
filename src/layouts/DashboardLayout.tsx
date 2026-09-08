@@ -31,6 +31,7 @@ export const DashboardLayout: React.FC = () => {
       '/admin/payments': 'Payments',
       '/admin/payment-transactions': 'Payment Transactions',
       '/admin/users': 'Users',
+      '/admin/audit-logs': 'Security & Audit Log',
     };
     return titles[location.pathname] || 'Dashboard';
   };

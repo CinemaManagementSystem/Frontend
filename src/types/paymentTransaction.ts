@@ -8,8 +8,8 @@ export interface PaymentTransaction {
   reference: string;
   createdAt: string;
   paymentId: number;
-  bookingId: number;
-  orderId: number;
+  bookingId: number | null;
+  orderId: number | null;
 }
 
 export interface PaymentTransactionInput {

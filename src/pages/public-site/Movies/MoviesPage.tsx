@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Clock, Star, Play, Plus, Check, ChevronDown, SlidersHorizontal, Sparkles, Film, X } from 'lucide-react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
@@ -15,6 +15,18 @@ const containerVariants = {
 const itemVariants = {
   hidden: { opacity: 0, y: 12 },
   show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut' as const } }
+};
+
+const MOVIE_LANGUAGE_BY_ID: Record<string, string> = {
+  'm-1': 'English',
+  'm-2': 'English',
+  'm-3': 'English',
+  'm-4': 'English',
+  'm-5': 'English',
+  'm-6': 'English',
+  'm-7': 'French',
+  'm-8': 'Japanese',
+  'm-9': 'English',
 };
 
 export const MoviesPage: React.FC = () => {
@@ -34,6 +46,16 @@ export const MoviesPage: React.FC = () => {
   const [langOpen, setLangOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
 
+  const genres = useMemo(
+    () => ['ALL', ...Array.from(new Set(movies.flatMap((movie) => movie.genres))).sort()],
+    [movies],
+  );
+  const languages = useMemo(
+    () => ['ALL', ...Array.from(new Set(movies.map((movie) => MOVIE_LANGUAGE_BY_ID[movie.id] ?? 'English'))).sort()],
+    [movies],
+  );
+  const getMovieLanguage = (movieId: string) => MOVIE_LANGUAGE_BY_ID[movieId] ?? 'English';
+
   // Load Watchlist from LocalStorage
   useEffect(() => {
     const saved = localStorage.getItem('cinematique_watchlist');
@@ -44,7 +66,7 @@ export const MoviesPage: React.FC = () => {
         console.error('Error parsing watchlist', e);
       }
     }
-  }, []);
+  }, [])
 
   const toggleWatchlist = (e: React.MouseEvent, movieId: string) => {
     e.stopPropagation();
@@ -56,17 +78,6 @@ export const MoviesPage: React.FC = () => {
     }
     setWatchlist(updated);
     localStorage.setItem('cinematique_watchlist', JSON.stringify(updated));
-  };
-
-  // Collect all unique genres from movies list
-  const genres = ['ALL', ...Array.from(new Set(movies.flatMap((m) => m.genres)))];
-  const languages = ['ALL', 'English', 'Spanish', 'French'];
-
-  // Map languages dynamically to movie IDs for filtering
-  const getMovieLanguage = (movieId: string): string => {
-    if (movieId === 'm-7') return 'Spanish';
-    if (movieId === 'm-2') return 'Spanish'; // The Last Oasis has Spanish sub/dub
-    return 'English';
   };
 
   // Filter and Sort movies

@@ -4,6 +4,7 @@ import { Film, Search, Ticket, Menu, X, Shield, LogOut, Sun, Moon, Settings } fr
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuthStore } from '@/store/authStore';
 import { useTheme } from '@/context/ThemeContext';
+import { isAdminRole } from '@/lib/authRole';
 
 export const Navbar: React.FC = () => {
   const location = useLocation();
@@ -12,6 +13,7 @@ export const Navbar: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const canViewAdminPanel = isAdminRole(user?.role);
 
   const navLinks = [
     { name: 'Home', path: '/' },
@@ -59,7 +61,7 @@ export const Navbar: React.FC = () => {
               {link.name}
             </Link>
           ))}
-          {user?.role === 'ADMIN' && (
+          {canViewAdminPanel && (
             <Link
               to="/admin/dashboard"
               className="ml-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-[#E50914]/15 text-[#E50914] border border-[#E50914]/30 hover:bg-[#E50914] hover:text-white transition-all shadow-sm"
@@ -115,7 +117,7 @@ export const Navbar: React.FC = () => {
                         {user.role} Role
                       </span>
                     </div>
-                    {user.role === 'ADMIN' && (
+                    {canViewAdminPanel && (
                       <Link to="/admin/dashboard" onClick={closeMenus} className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/10 rounded-lg transition-colors">
                         <Shield className="w-4 h-4 text-[#E50914]" /> Admin Dashboard
                       </Link>
@@ -167,7 +169,7 @@ export const Navbar: React.FC = () => {
                 {link.name}
               </Link>
             ))}
-            {user?.role === 'ADMIN' && (
+            {canViewAdminPanel && (
               <Link to="/admin/dashboard" onClick={closeMenus} className="block px-3 py-2 rounded-lg text-sm font-medium text-[#E50914] bg-[#E50914]/10">Admin Panel</Link>
             )}
             <div className="border-t border-border pt-3 flex flex-col gap-2">

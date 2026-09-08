@@ -21,6 +21,7 @@ import {
   LogOut,
   Settings,
   ChevronDown,
+  ShieldCheck,
   type LucideIcon,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
@@ -81,13 +82,17 @@ export const Sidebar: React.FC = () => {
     },
     {
       label: 'Administration',
-      items: [{ name: 'Users', path: '/admin/users', icon: Users }],
+      items: [
+        { name: 'Users', path: '/admin/users', icon: Users },
+        { name: 'Security Page', path: '/admin/security', icon: ShieldCheck },
+      ],
     },
-  ];
+  ].filter((section) => section.items.length > 0);
 
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) =>
+    location.pathname === path || (path === '/admin/security' && location.pathname === '/admin/audit-logs');
   const isSectionActive = (section: MenuSection) =>
     section.items.some((item) => isActive(item.path));
 

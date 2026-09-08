@@ -109,10 +109,6 @@ export const UsersPage: React.FC = () => {
       options: STATUSES,
       required: true,
       defaultValue: 'ACTIVE',
-      disabled: (values, editingId) => {
-        const role = String(values.role ?? '').toUpperCase().replace(/^ROLE_/, '');
-        return editingId != null && (role === 'USER' || role === 'STAFF');
-      },
     },
   ];
 

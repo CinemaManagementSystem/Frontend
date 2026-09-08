@@ -40,6 +40,7 @@ import { OrderItemsPage } from '@/pages/admin/OrderItems/OrderItemsPage';
 import { PaymentsPage } from '@/pages/admin/Payments/PaymentsPage';
 import { PaymentTransactionsPage } from '@/pages/admin/PaymentTransactions/PaymentTransactionsPage';
 import { UsersPage } from '@/pages/admin/Users/UsersPage';
+import { AuditLogsPage } from '@/pages/admin/AuditLogs/AuditLogsPage';
 import { ShowcasePage } from '@/pages/public-site/Showcase/ShowcasePage';
 
 export const AppRoutes: React.FC = () => {
@@ -92,6 +93,8 @@ export const AppRoutes: React.FC = () => {
         <Route path="payments" element={<PaymentsPage />} />
         <Route path="payment-transactions" element={<PaymentTransactionsPage />} />
         <Route path="users" element={<UsersPage />} />
+        <Route path="audit-logs" element={<AuditLogsPage />} />
+        <Route path="security" element={<Navigate to="/admin/audit-logs" replace />} />
       </Route>
 
       {/* 404 Page Not Found Fallback */}

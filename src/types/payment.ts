@@ -6,14 +6,23 @@ export interface Payment {
   amount: number;
   paymentMethod: PaymentMethod;
   status: PaymentStatus;
-  transactionId: string;
-  paidAt: string;
-  expiresAt: string;
-  khqrString: string;
-  md5Hash: string;
-  bookingId: number;
+  transactionId: string | null;
+  paidAt: string | null;
+  expiresAt: string | null;
+  khqrString: string | null;
+  md5Hash: string | null;
+  bookingId: number | null;
   customerId: number;
-  orderId: number;
+  orderId: number | null;
+  qrCodeUrl?: string | null;
+  qrImageUrl?: string | null;
+  khqrImageUrl?: string | null;
+  qrUrl?: string | null;
+  paymentUrl?: string | null;
+  qrCode?: string | null;
+  qrCodeData?: string | null;
+  khqrCode?: string | null;
+  bakongQr?: string | null;
 }
 
 export interface PaymentInput {
@@ -22,4 +31,6 @@ export interface PaymentInput {
   customerId: number;
   bookingId: number | null;
   orderId: number | null;
+  merchantName?: string;
+  accountId?: string;
 }

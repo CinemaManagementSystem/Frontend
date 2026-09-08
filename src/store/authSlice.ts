@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { authService } from '@/services/authService';
-import type { AuthResponse, AuthState, User, UserRole, RegisterResponse } from '@/types/auth';
+import type { AuthResponse, AuthState, User, RegisterResponse } from '@/types/auth';
+import { normalizeUserRole } from '@/lib/authRole';
 
 const TOKEN_KEY = 'token';
 const USER_KEY = 'auth_user';
@@ -8,16 +9,8 @@ const USER_KEY = 'auth_user';
 const DEFAULT_AVATAR =
   'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80';
 
-function normalizeRole(role: string): UserRole {
-  const normalized = role.replace(/^ROLE_/, '').toUpperCase();
-  if (normalized === 'ADMIN' || normalized === 'STAFF') {
-    return normalized;
-  }
-  return 'USER';
-}
-
 function mapUser(user: User): User {
-  return { ...user, role: normalizeRole(user.role), avatar: user.avatar || DEFAULT_AVATAR };
+  return { ...user, role: normalizeUserRole(user.role), avatar: user.avatar || DEFAULT_AVATAR };
 }
 
 function loadPersisted(): { user: User | null; token: string | null } {
@@ -25,7 +18,7 @@ function loadPersisted(): { user: User | null; token: string | null } {
     const token = localStorage.getItem(TOKEN_KEY);
     const rawUser = localStorage.getItem(USER_KEY);
     if (!token || !rawUser) return { user: null, token: null };
-    return { user: JSON.parse(rawUser) as User, token };
+    return { user: mapUser(JSON.parse(rawUser) as User), token };
   } catch {
     return { user: null, token: null };
   }
@@ -46,9 +39,10 @@ export const login = createAsyncThunk<User, { principal: string; password: strin
     const isEmail = principal.includes('@');
     const payload = isEmail ? { email: principal, password } : { username: principal, password };
     const response: AuthResponse = await authService.login(payload);
+    const user = mapUser(response.user);
     localStorage.setItem(TOKEN_KEY, response.accessToken);
-    localStorage.setItem(USER_KEY, JSON.stringify(response.user));
-    return response.user;
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    return user;
   },
 );
 
