@@ -1,30 +1,68 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Ticket, Star, Clock, Sparkles, Search, Compass } from 'lucide-react';
+import { Clock, Compass, Play, Search, Star, Ticket } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useMovieStore } from '@/store/movieStore';
 import { MovieCard } from '@/components/ui/Card/MovieCard';
 import { Badge } from '@/components/ui/Badge/Badge';
 import { Modal } from '@/components/ui/Modal/Modal';
 import { formatDuration } from '@/utils/formatDate';
+import type { Movie } from '@/types/movie';
+
+type ListingTab = 'NOW_SHOWING' | 'COMING_SOON';
+
+const getMovieStatusLabel = (status: Movie['status']) => {
+  if (status === 'COMING_SOON') return 'Coming Soon';
+  if (status === 'FEATURED') return 'Featured';
+  return 'Now Showing';
+};
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
-  const { movies, selectedCategory, setSelectedCategory, searchQuery, setSearchQuery } = useMovieStore();
+  const { movies, showtimes, searchQuery, setSearchQuery } = useMovieStore();
   const [trailerModalOpen, setTrailerModalOpen] = useState(false);
   const [activeTrailerUrl, setActiveTrailerUrl] = useState('');
   const [activeSlide, setActiveSlide] = useState(0);
   const [isHeroPaused, setIsHeroPaused] = useState(false);
+  const [activeListingTab, setActiveListingTab] = useState<ListingTab>('NOW_SHOWING');
+  const [activeDateIndex, setActiveDateIndex] = useState(0);
 
   const featuredMovies = useMemo(() => {
     const priority = ['FEATURED', 'NOW_SHOWING', 'COMING_SOON'] as const;
+
     return priority
       .flatMap((status) => movies.filter((movie) => movie.status === status))
       .filter((movie, index, allMovies) => allMovies.findIndex((item) => item.id === movie.id) === index)
-      .slice(0, 4);
+      .slice(0, 6);
   }, [movies]);
 
   const featuredMovie = featuredMovies[activeSlide] ?? featuredMovies[0];
+
+  const dateCards = useMemo(() => {
+    return Array.from({ length: 6 }, (_, index) => {
+      const date = new Date();
+      date.setDate(date.getDate() + index);
+
+      return {
+        id: date.toISOString(),
+        label: index === 0 ? 'Today' : new Intl.DateTimeFormat('en', { weekday: 'short' }).format(date),
+        day: new Intl.DateTimeFormat('en', { day: '2-digit' }).format(date),
+        month: new Intl.DateTimeFormat('en', { month: 'short' }).format(date),
+      };
+    });
+  }, []);
+
+  const filteredMovies = movies.filter((movie) => {
+    const matchesListing =
+      movie.status === activeListingTab || (activeListingTab === 'NOW_SHOWING' && movie.status === 'FEATURED');
+    const normalizedSearch = searchQuery.trim().toLowerCase();
+    const matchesSearch =
+      normalizedSearch.length === 0 ||
+      movie.title.toLowerCase().includes(normalizedSearch) ||
+      movie.genres.some((genre) => genre.toLowerCase().includes(normalizedSearch));
+
+    return matchesListing && matchesSearch;
+  });
 
   useEffect(() => {
     setActiveSlide((current) => Math.min(current, Math.max(featuredMovies.length - 1, 0)));
@@ -35,7 +73,7 @@ export const HomePage: React.FC = () => {
 
     const timer = window.setInterval(() => {
       setActiveSlide((current) => (current + 1) % featuredMovies.length);
-    }, 6500);
+    }, 6000);
 
     return () => window.clearInterval(timer);
   }, [featuredMovies.length, isHeroPaused]);
@@ -44,259 +82,266 @@ export const HomePage: React.FC = () => {
     document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const categories = [
-    { id: 'ALL', name: 'All Movies' },
-    { id: 'NOW_SHOWING', name: 'Now Showing' },
-    { id: 'COMING_SOON', name: 'Coming Soon' },
-    { id: 'FEATURED', name: 'Featured' },
-  ];
-
-  const filteredMovies = movies.filter((movie) => {
-    const matchesCategory =
-      selectedCategory === 'ALL' || movie.status === selectedCategory;
-    const matchesSearch =
-      movie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      movie.genres.some((g) => g.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesCategory && matchesSearch;
-  });
-
   const handleWatchTrailer = (url?: string) => {
-    if (url) {
-      setActiveTrailerUrl(url);
-      setTrailerModalOpen(true);
-    }
+    if (!url) return;
+    setActiveTrailerUrl(url);
+    setTrailerModalOpen(true);
+  };
+
+  const getBookingPath = (movieId: string) => {
+    const matchingShowtime = showtimes.find((showtime) => showtime.movieId === movieId);
+    return `/booking/${matchingShowtime?.id ?? 'st-1'}?movieId=${movieId}`;
   };
 
   return (
-    <div className="space-y-12 pb-20">
-      {/* Hero Banner Section */}
+    <div className="min-h-screen bg-background pb-20">
       {featuredMovie && (
         <section
-          className="relative w-full min-h-[75vh] lg:min-h-[85vh] flex items-end overflow-hidden bg-black"
+          className="relative isolate overflow-hidden border-b border-border/80 bg-[#06080b]"
           onMouseEnter={() => setIsHeroPaused(true)}
           onMouseLeave={() => setIsHeroPaused(false)}
           aria-roledescription="carousel"
-          aria-label="Featured movies"
+          aria-label="Featured Cinematique movies"
         >
-          {/* Backdrop Image */}
-          <div className="absolute inset-0 z-0">
-            <AnimatePresence initial={false} mode="sync">
-              <motion.div
-                key={featuredMovie.id}
-                className="absolute inset-0"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.7, ease: 'easeInOut' }}
-              >
-                <motion.img
-                  src={featuredMovie.backdropUrl}
-                  alt=""
-                  initial={{ scale: 1.08 }}
-                  animate={{ scale: 1.01 }}
-                  transition={{ duration: 8, ease: 'linear' }}
-                  className="w-full h-full object-cover object-center opacity-60 filter contrast-125"
-                />
-              </motion.div>
-            </AnimatePresence>
-            {/* Multi-angle cinematic gradients */}
-            <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-background via-background/80 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0f0f10] via-[#0f0f10]/70 to-transparent w-full md:w-3/4" />
-          </div>
-
-          {/* Hero Content */}
-          <AnimatePresence mode="wait" initial={false}>
+          <AnimatePresence initial={false} mode="sync">
             <motion.div
               key={featuredMovie.id}
-              initial={{ opacity: 0, x: 24 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -24 }}
-              transition={{ duration: 0.45, ease: 'easeOut' }}
-              className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 w-full"
-              aria-live="polite"
+              className="absolute inset-0 -z-20"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.65, ease: 'easeInOut' }}
             >
-              <div className="max-w-2xl space-y-5">
-              {/* Badges */}
-              <div className="flex flex-wrap items-center gap-2.5">
-                <span className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#E50914] text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-[#E50914]/40">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  PREMIERE OF THE WEEK
-                </span>
-                <Badge variant="secondary" size="md">
-                  PG-13
-                </Badge>
-                <button
-                  type="button"
-                  onClick={scrollToReviews}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-md border border-border text-xs font-bold text-amber-400 transition-all hover:bg-black/80 hover:ring-2 hover:ring-amber-400/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-                  aria-label={`View reviews for ${featuredMovie.title}`}
-                >
-                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                  <span>{featuredMovie.rating.toFixed(1)} / 10</span>
-                </button>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span>{formatDuration(featuredMovie.durationMinutes)}</span>
-                </div>
-              </div>
-
-              {/* Title */}
-              <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tight uppercase drop-shadow-2xl">
-                {featuredMovie.title}
-              </h1>
-
-              {/* Genres */}
-              <p className="text-xs font-semibold uppercase tracking-widest text-[#E50914]">
-                {featuredMovie.genres.join(' • ')}
-              </p>
-
-              {/* Description */}
-              <p className="text-sm sm:text-base text-muted-foreground line-clamp-3 leading-relaxed drop-shadow">
-                {featuredMovie.description}
-              </p>
-
-              {/* Buttons */}
-              <div className="flex flex-wrap items-center gap-3 pt-3">
-                <button
-                  onClick={() => navigate(`/booking/st-1?movieId=${featuredMovie.id}`)}
-                  className="flex items-center gap-2 px-6 py-3.5 rounded-xl bg-[#E50914] hover:bg-[#ff1f2d] text-white text-sm font-bold tracking-wider uppercase transition-all shadow-xl shadow-[#E50914]/40 hover:scale-105 active:scale-95"
-                >
-                  <Ticket className="w-4 h-4" />
-                  Book Tickets Now
-                </button>
-
-                {featuredMovie.trailerUrl && (
-                  <button
-                    onClick={() => handleWatchTrailer(featuredMovie.trailerUrl)}
-                    className="flex items-center gap-2 px-5 py-3.5 rounded-xl bg-white/10 hover:bg-white/20 border border-border text-white text-sm font-semibold backdrop-blur-md transition-all hover:scale-105 active:scale-95"
-                  >
-                    <Play className="w-4 h-4 text-[#E50914] fill-[#E50914]" />
-                    Watch Trailer
-                  </button>
-                )}
-              </div>
-              </div>
+              <motion.img
+                src={featuredMovie.backdropUrl}
+                alt=""
+                initial={{ scale: 1.1 }}
+                animate={{ scale: 1.03 }}
+                transition={{ duration: 8, ease: 'linear' }}
+                className="h-full w-full object-cover opacity-50 blur-sm"
+              />
             </motion.div>
           </AnimatePresence>
 
-          {featuredMovies.length > 1 && (
-            <div className="absolute bottom-7 right-4 sm:right-6 lg:right-8 z-20 flex items-center gap-2" aria-label="Choose featured movie">
-              {featuredMovies.map((movie, index) => (
-                <button
-                  key={movie.id}
-                  type="button"
-                  onClick={() => setActiveSlide(index)}
-                  aria-label={`Show featured movie ${index + 1}: ${movie.title}`}
-                  aria-current={index === activeSlide ? 'true' : undefined}
-                  className="group rounded-full p-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+          <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#101923]/85 via-[#16080a]/65 to-background" />
+          <div className="absolute inset-x-0 bottom-0 -z-10 h-56 bg-gradient-to-t from-background via-background/90 to-transparent" />
+
+          <div className="mx-auto max-w-7xl px-4 pb-10 pt-44 sm:px-6 sm:pb-12 sm:pt-48 lg:px-8 lg:pb-14 lg:pt-52">
+            <div className="mx-auto max-w-5xl">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.article
+                  key={featuredMovie.id}
+                  initial={{ opacity: 0, y: 18, scale: 0.985 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -16, scale: 0.985 }}
+                  transition={{ duration: 0.38, ease: 'easeOut' }}
+                  className="relative overflow-hidden rounded-[28px] border border-white/15 bg-[#071016]/90 shadow-2xl shadow-black/40"
+                  aria-live="polite"
                 >
-                  <span
-                    className={`block h-2 rounded-full transition-all duration-300 ${
-                      index === activeSlide ? 'w-8 bg-[#E50914]' : 'w-2 bg-white/50 group-hover:bg-white'
-                    }`}
-                  />
-                </button>
-              ))}
+                  <img src={featuredMovie.backdropUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-75" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-black/5" />
+
+                  <div className="relative grid min-h-[360px] items-end gap-6 p-6 sm:min-h-[470px] sm:p-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+                    <div className="max-w-xl space-y-5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="primary" size="md">
+                          {getMovieStatusLabel(featuredMovie.status)}
+                        </Badge>
+                        <Badge variant="secondary" size="md">
+                          PG-13
+                        </Badge>
+                        <button
+                          type="button"
+                          onClick={scrollToReviews}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-black/45 px-3 py-1 text-xs font-black text-amber-300 backdrop-blur transition hover:bg-amber-400/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
+                          aria-label={`View reviews for ${featuredMovie.title}`}
+                        >
+                          <Star className="h-3.5 w-3.5 fill-amber-300 text-amber-300" />
+                          {featuredMovie.rating.toFixed(1)}
+                        </button>
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-black/45 px-3 py-1 text-xs font-semibold text-slate-200 backdrop-blur">
+                          <Clock className="h-3.5 w-3.5 text-slate-300" />
+                          {formatDuration(featuredMovie.durationMinutes)}
+                        </span>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-black uppercase tracking-[0.35em] text-[#E50914]">
+                          Featured at Cinematique
+                        </p>
+                        <h1 className="mt-2 text-4xl font-black uppercase tracking-tight text-white drop-shadow-2xl sm:text-6xl">
+                          {featuredMovie.title}
+                        </h1>
+                      </div>
+
+                      <p className="max-w-lg text-sm font-medium leading-7 text-slate-100/90 sm:text-base">
+                        {featuredMovie.description}
+                      </p>
+
+                      <div className="flex flex-wrap items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => navigate(getBookingPath(featuredMovie.id))}
+                          className="inline-flex items-center gap-2 rounded-full bg-[#E50914] px-6 py-3 text-sm font-black uppercase tracking-wide text-white shadow-xl shadow-[#E50914]/35 transition hover:scale-[1.03] hover:bg-[#ff1f2d] focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#E50914]"
+                        >
+                          <Ticket className="h-4 w-4" />
+                          Book Now
+                        </button>
+
+                        {featuredMovie.trailerUrl && (
+                          <button
+                            type="button"
+                            onClick={() => handleWatchTrailer(featuredMovie.trailerUrl)}
+                            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/35 px-5 py-3 text-sm font-bold text-white backdrop-blur transition hover:bg-white/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                          >
+                            <Play className="h-4 w-4 fill-[#E50914] text-[#E50914]" />
+                            Watch Trailer
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="hidden justify-end lg:flex">
+                      <motion.img
+                        src={featuredMovie.posterUrl}
+                        alt={`${featuredMovie.title} poster`}
+                        initial={{ rotate: -2 }}
+                        animate={{ rotate: 0 }}
+                        transition={{ duration: 0.4 }}
+                        className="h-[360px] w-64 rounded-2xl border border-white/20 object-cover shadow-2xl shadow-black/60"
+                      />
+                    </div>
+                  </div>
+                </motion.article>
+              </AnimatePresence>
+
+              {featuredMovies.length > 1 && (
+                <div className="mt-4 flex justify-center gap-2" aria-label="Choose featured promotion">
+                  {featuredMovies.map((movie, index) => (
+                    <button
+                      key={movie.id}
+                      type="button"
+                      onClick={() => setActiveSlide(index)}
+                      aria-label={`Show ${movie.title}`}
+                      aria-current={index === activeSlide ? 'true' : undefined}
+                      className="group rounded-full p-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    >
+                      <span
+                        className={`block h-2 rounded-full transition-all duration-300 ${
+                          index === activeSlide ? 'w-8 bg-[#E50914]' : 'w-2 bg-white/35 group-hover:bg-white/75'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </section>
       )}
 
-      {/* Movies Catalog & Discovery Section */}
-      <section id="movies" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        {/* Header & Filter Controls */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border">
+      <section id="movies" className="mx-auto max-w-7xl space-y-8 px-4 pt-10 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-white tracking-wide">
-              EXPLORE MOVIES
-            </h2>
-            <p className="text-xs text-muted-foreground mt-1">
-              Select a movie to check showtimes and reserve your seats in seconds
+            <div className="flex items-center gap-4">
+              {(['NOW_SHOWING', 'COMING_SOON'] as const).map((tab, index) => (
+                <React.Fragment key={tab}>
+                  {index > 0 && <span className="hidden h-10 w-px bg-border sm:block" />}
+                  <button
+                    type="button"
+                    onClick={() => setActiveListingTab(tab)}
+                    className={`text-left text-3xl font-black tracking-tight transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914] sm:text-4xl ${
+                      activeListingTab === tab ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {tab === 'NOW_SHOWING' ? 'Now Showing' : 'Coming Soon'}
+                  </button>
+                </React.Fragment>
+              ))}
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Pick a date, choose your movie, then continue into the booking flow.
             </p>
           </div>
 
-          {/* Search bar */}
-          <div className="relative w-full md:w-72">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <label className="relative w-full max-w-md">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
-              type="text"
-              placeholder="Search by title or genre..."
+              type="search"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#18181b] border border-border text-white text-xs rounded-xl pl-10 pr-4 py-2.5 outline-none focus:border-[#E50914] transition-colors placeholder:text-muted-foreground"
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search movies..."
+              className="h-12 w-full rounded-2xl border border-border bg-card pl-11 pr-4 text-sm font-semibold text-foreground outline-none transition placeholder:text-muted-foreground focus:border-[#E50914] focus:ring-2 focus:ring-[#E50914]/20"
             />
-          </div>
+          </label>
         </div>
 
-        {/* Category Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-          {categories.map((cat) => {
-            const active = selectedCategory === cat.id;
+        <div className="flex gap-3 overflow-x-auto pb-2">
+          {dateCards.map((date, index) => {
+            const active = activeDateIndex === index;
+
             return (
-              <motion.button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className={`px-4 py-2 rounded-xl text-xs font-bold tracking-wider uppercase whitespace-nowrap transition-all ${
+              <button
+                key={date.id}
+                type="button"
+                onClick={() => setActiveDateIndex(index)}
+                className={`min-w-[132px] rounded-xl border px-5 py-3 text-center transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914] ${
                   active
-                    ? 'bg-[#E50914] text-white shadow-md shadow-[#E50914]/30'
-                    : 'bg-[#18181b] text-muted-foreground hover:text-white hover:bg-white/5 border border-border'
+                    ? 'border-[#E50914] bg-[#E50914] text-white shadow-lg shadow-[#E50914]/25'
+                    : 'border-border bg-card text-foreground hover:border-[#E50914]/50'
                 }`}
               >
-                {cat.name}
-              </motion.button>
+                <span className="block text-xs font-semibold uppercase tracking-wide opacity-80">{date.label}</span>
+                <span className="mt-1 block text-2xl font-black leading-none">{date.day}</span>
+                <span className="mt-1 block text-[11px] font-bold uppercase opacity-70">{date.month}</span>
+              </button>
             );
           })}
         </div>
 
-        {/* Movies Grid */}
         {filteredMovies.length > 0 ? (
-          <motion.div 
-            key={selectedCategory + searchQuery}
+          <motion.div
+            key={`${activeListingTab}-${searchQuery}`}
             variants={{
               hidden: { opacity: 0 },
               show: {
                 opacity: 1,
-                transition: { staggerChildren: 0.05 }
-              }
+                transition: { staggerChildren: 0.05 },
+              },
             }}
             initial="hidden"
             animate="show"
-            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
+            className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4"
           >
             {filteredMovies.map((movie) => (
               <MovieCard key={movie.id} movie={movie} />
             ))}
           </motion.div>
         ) : (
-          <div className="py-16 text-center bg-white/5 border border-border rounded-2xl p-8 space-y-3">
-            <Compass className="w-10 h-10 text-muted-foreground mx-auto animate-pulse" />
-            <h3 className="text-base font-bold text-white">No Movies Found</h3>
-            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-              We couldn't find any movie matching "{searchQuery}". Try changing your search query or filters.
+          <div className="rounded-2xl border border-border bg-card p-10 text-center">
+            <Compass className="mx-auto h-10 w-10 animate-pulse text-muted-foreground" />
+            <h3 className="mt-4 text-base font-black text-foreground">No Movies Found</h3>
+            <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">
+              No movies match your search for this tab. Try another keyword or switch the movie listing.
             </p>
             <button
-              onClick={() => {
-                setSearchQuery('');
-                setSelectedCategory('ALL');
-              }}
-              className="px-4 py-2 rounded-lg bg-white/10 text-white text-xs font-semibold hover:bg-white/20"
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="mt-5 rounded-full bg-[#E50914] px-5 py-2.5 text-xs font-black uppercase tracking-wide text-white transition hover:bg-[#ff1f2d] focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#E50914]"
             >
-              Reset Filters
+              Reset Search
             </button>
           </div>
         )}
       </section>
 
-      {/* Reviews anchor for the hero rating */}
-      <section id="reviews" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24">
+      <section id="reviews" className="mx-auto max-w-7xl scroll-mt-24 px-4 pt-8 sm:px-6 lg:px-8">
         <div className="rounded-2xl border border-border bg-card p-6 sm:p-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-[#E50914]">Audience ratings</p>
+              <p className="text-xs font-black uppercase tracking-widest text-[#E50914]">Audience ratings</p>
               <h2 className="mt-1 text-2xl font-black text-foreground">What moviegoers are watching</h2>
-              <p className="mt-2 text-sm text-muted-foreground">Tap a movie rating in the hero to jump back here.</p>
+              <p className="mt-2 text-sm text-muted-foreground">Tap a movie rating in the hero to jump here.</p>
             </div>
             {featuredMovie && (
               <div className="flex items-center gap-2 rounded-xl bg-muted px-4 py-3 text-amber-400">
@@ -309,68 +354,51 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Cinema Formats Showcase Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-        <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-r from-[#18181c] via-[#141417] to-[#1a1112] border border-border space-y-8 shadow-2xl relative overflow-hidden">
+      <section className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
+        <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-r from-[#18181c] via-[#141417] to-[#1a1112] p-8 shadow-2xl sm:p-12">
           <div className="max-w-2xl space-y-3">
-            <span className="text-xs font-bold text-[#E50914] tracking-widest uppercase">
-              EXPERIENCE THE BEST
-            </span>
-            <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-              WORLD-CLASS CINEMATIC TECHNOLOGY
+            <span className="text-xs font-black uppercase tracking-widest text-[#E50914]">Experience the best</span>
+            <h3 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
+              World-class cinematic technology
             </h3>
-            <p className="text-xs sm:text-sm text-muted-foreground">
-              Immerse yourself in crystal clear giant screens, precision sound systems, and ultra-plush seating.
+            <p className="text-sm text-slate-300">
+              Immersive screens, precision sound, and premium seating designed for a smoother night at the movies.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <motion.div 
-              whileHover={{ y: -4, borderColor: 'rgba(229, 9, 20, 0.4)' }}
-              className="p-5 rounded-2xl bg-white/5 border border-border space-y-2 transition-colors duration-200"
-            >
-              <span className="text-lg font-black text-[#E50914]">IMAX 3D Laser</span>
-              <p className="text-xs text-muted-foreground">
-                Next-generation 4K laser projection with breathtaking realism and dynamic range.
-              </p>
-            </motion.div>
-
-            <motion.div 
-              whileHover={{ y: -4, borderColor: 'rgba(250, 204, 21, 0.4)' }}
-              className="p-5 rounded-2xl bg-white/5 border border-border space-y-2 transition-colors duration-200"
-            >
-              <span className="text-lg font-black text-amber-400">Dolby Atmos Audio</span>
-              <p className="text-xs text-muted-foreground">
-                Multi-dimensional sound that moves all around you with unmatched clarity and depth.
-              </p>
-            </motion.div>
-
-            <motion.div 
-              whileHover={{ y: -4, borderColor: 'rgba(255, 255, 255, 0.2)' }}
-              className="p-5 rounded-2xl bg-white/5 border border-border space-y-2 transition-colors duration-200"
-            >
-              <span className="text-lg font-black text-white">VIP Suite Recliners</span>
-              <p className="text-xs text-muted-foreground">
-                Motorized leather recliners with in-seat food and beverage service on demand.
-              </p>
-            </motion.div>
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {[
+              ['IMAX 3D Laser', 'Next-generation projection with richer contrast and scale.', '#E50914'],
+              ['Dolby Atmos Audio', 'Multi-dimensional sound that moves around the room.', '#f59e0b'],
+              ['VIP Suite Recliners', 'Relaxed premium seating with extra comfort and service.', '#f8fafc'],
+            ].map(([title, description, color]) => (
+              <motion.div
+                key={title}
+                whileHover={{ y: -4 }}
+                className="rounded-2xl border border-white/10 bg-white/5 p-5 transition-colors hover:border-white/25"
+              >
+                <span className="text-lg font-black" style={{ color }}>
+                  {title}
+                </span>
+                <p className="mt-2 text-xs leading-5 text-slate-300">{description}</p>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Trailer Video Modal */}
       <Modal
         isOpen={trailerModalOpen}
         onClose={() => setTrailerModalOpen(false)}
         maxWidth="2xl"
         title="Movie Trailer"
       >
-        <div className="aspect-video w-full rounded-xl overflow-hidden bg-black">
+        <div className="aspect-video w-full overflow-hidden rounded-xl bg-black">
           {activeTrailerUrl && (
             <iframe
               src={activeTrailerUrl}
               title="YouTube video player"
-              className="w-full h-full border-0"
+              className="h-full w-full border-0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
             />

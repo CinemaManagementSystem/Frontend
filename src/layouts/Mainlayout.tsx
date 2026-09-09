@@ -4,7 +4,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { Navbar } from '@/components/common/Navbar/Navbar';
 import { Footer } from '@/components/common/Footer/Footer';
 
-export const Mainlayout: React.FC = () => {
+export const MainLayout: React.FC = () => {
   const { pathname } = useLocation();
   const shouldReduceMotion = useReducedMotion();
 

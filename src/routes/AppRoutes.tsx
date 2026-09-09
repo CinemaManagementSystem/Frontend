@@ -2,7 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
 // Layouts
-import { Mainlayout } from '@/layouts/Mainlayout';
+import { MainLayout } from '@/layouts/MainLayout';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { AuthLayout } from '@/layouts/AuthLayout';
 
@@ -47,7 +47,7 @@ export const AppRoutes: React.FC = () => {
   return (
     <Routes>
       {/* Public Site Layout & Routes */}
-      <Route element={<Mainlayout />}>
+      <Route element={<MainLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/movies" element={<PublicMoviesPage />} />
         <Route path="/showcase" element={<ShowcasePage />} />
@@ -55,7 +55,9 @@ export const AppRoutes: React.FC = () => {
         <Route path="/booking/:showtimeId" element={<BookingPage />} />
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/cinemas" element={<CinemasPage />} />
-        <Route path="/offers" element={<OffersPage />} />
+        <Route path="/promotion" element={<OffersPage />} />
+        <Route path="/fnb" element={<OffersPage />} />
+        <Route path="/offers" element={<Navigate to="/promotion" replace />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/premiere" element={<PremierePage />} />
         <Route path="/membership" element={<PremierePage />} />
@@ -98,7 +100,7 @@ export const AppRoutes: React.FC = () => {
       </Route>
 
       {/* 404 Page Not Found Fallback */}
-      <Route element={<Mainlayout />}>
+      <Route element={<MainLayout />}>
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

@@ -8,13 +8,18 @@ import {
   Check,
   CheckCircle2,
   ClipboardCheck,
+  Clock3,
+  Coffee,
+  Cookie,
   CreditCard,
   Copy,
   Download,
+  GlassWater,
   Home,
   LoaderCircle,
   Minus,
   Plus,
+  Popcorn,
   QrCode,
   ShieldCheck,
   ShoppingBag,
@@ -75,6 +80,16 @@ const SNACKS: SnackItem[] = [
 
 const SNACK_CATEGORIES = ['All', 'Popcorn', 'Drink', 'Combo', 'Snacks'] as const;
 
+type SnackCategoryId = (typeof SNACK_CATEGORIES)[number];
+
+const SNACK_CATEGORY_ICONS: Record<SnackCategoryId, typeof Popcorn> = {
+  All: Utensils,
+  Popcorn,
+  Drink: GlassWater,
+  Combo: Coffee,
+  Snacks: Cookie,
+};
+
 const PAYMENT_METHODS: { id: BookingPaymentMethod; name: string; description: string; icon: typeof CreditCard }[] = [
   { id: 'CREDIT_CARD', name: 'Credit / Debit Card', description: 'Visa, Mastercard, JCB', icon: CreditCard },
   { id: 'QR_CODE', name: 'QR Pay', description: 'Scan with your banking app', icon: QrCode },
@@ -113,11 +128,13 @@ export const BookingPage: React.FC = () => {
   const [checkoutPayment, setCheckoutPayment] = useState<CheckoutPayment | null>(null);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentError, setPaymentError] = useState('');
+  const [snacksLoading, setSnacksLoading] = useState(false);
   const backendOrderId = parsePositiveId(searchParams.get('orderId'));
 
   const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
   const seatsPerRow = 10;
-  const currentStepNumber = FLOW_STEPS.find((flowStep) => flowStep.id === step)?.number ?? 2;
+  const currentFlowStep = FLOW_STEPS.find((flowStep) => flowStep.id === step) ?? FLOW_STEPS[2];
+  const currentStepNumber = currentFlowStep.number;
 
   const getSeatType = (row: string): 'STANDARD' | 'VIP' | 'COUPLE' => {
     if (row === 'H') return 'COUPLE';
@@ -170,6 +187,10 @@ export const BookingPage: React.FC = () => {
 
   const goToStep = (nextStep: BookingStep) => {
     if (['snacks', 'review', 'payment'].includes(nextStep) && selectedSeats.length === 0) return;
+    if (nextStep === 'snacks') {
+      setSnacksLoading(true);
+      window.setTimeout(() => setSnacksLoading(false), 600);
+    }
     setStep(nextStep);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -302,37 +323,71 @@ export const BookingPage: React.FC = () => {
   };
 
   const renderStepHeader = () => (
-    <div className="mb-8 overflow-x-auto pb-2 scrollbar-none">
-      <div className="flex min-w-[720px] items-start justify-between gap-2">
-        {FLOW_STEPS.map((flowStep, index) => {
-          const isActive = flowStep.number === currentStepNumber;
-          const isComplete = flowStep.number < currentStepNumber;
-          const isMovieStep = flowStep.id === 'movie' || flowStep.id === 'showtime';
-          return (
-            <React.Fragment key={flowStep.id}>
-              <button
-                type="button"
-                onClick={() => {
-                  if (isMovieStep) navigate(movie ? `/movies/${movie.id}` : '/movies');
-                  else if (isComplete && flowStep.id !== 'success' && flowStep.id !== 'ticket' && flowStep.id !== 'movie' && flowStep.id !== 'showtime') goToStep(flowStep.id);
-                }}
-                disabled={!isMovieStep && !isComplete && !isActive}
-                className="group flex min-w-[104px] flex-col items-center gap-2 text-center disabled:cursor-default"
-              >
-                <span className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-black transition-all ${isActive || isComplete ? 'bg-[#E50914] text-white shadow-lg shadow-[#E50914]/30' : 'border border-border bg-muted text-muted-foreground'} ${isMovieStep && !isActive ? 'group-hover:ring-2 group-hover:ring-[#E50914]/30' : ''}`}>
-                  {isComplete ? <Check className="h-5 w-5" /> : flowStep.number}
-                </span>
-                <span className={`text-[11px] font-bold ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>{flowStep.label}</span>
-                <span className="text-[10px] text-muted-foreground">{flowStep.description}</span>
-              </button>
-              {index < FLOW_STEPS.length - 1 && <div className={`mt-5 h-px flex-1 ${isComplete ? 'bg-[#E50914]' : 'bg-border'}`} />}
-            </React.Fragment>
-          );
-        })}
+    <div className="mb-8 space-y-4">
+      <div className="overflow-hidden rounded-2xl border border-border bg-[#050506] shadow-2xl">
+        <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
+          <button
+            type="button"
+            onClick={() => navigate(movie ? `/movies/${movie.id}` : '/movies')}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition-colors hover:bg-white/10"
+            aria-label="Back to movie"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          </button>
+          <div className="text-center">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E50914]">Cinematique</p>
+            <h2 className="text-lg font-black uppercase text-white">Booking</h2>
+          </div>
+          <div className="flex items-center gap-1.5 rounded-full border border-[#E50914]/30 bg-[#E50914]/10 px-3 py-2 text-[11px] font-black text-white">
+            <Clock3 className="h-3.5 w-3.5 text-[#E50914]" aria-hidden="true" />
+            15:00
+          </div>
+        </div>
+        <div className="grid gap-3 px-4 py-4 sm:grid-cols-[1fr_auto] sm:items-center">
+          <div className="min-w-0">
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Step {currentStepNumber} of {FLOW_STEPS.length}</p>
+            <h1 className="mt-1 truncate text-2xl font-black uppercase text-white">{currentFlowStep.label}</h1>
+            <p className="mt-1 text-xs text-zinc-300">{currentFlowStep.description}</p>
+          </div>
+          <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] p-2">
+            <img src={movie?.posterUrl} alt={movie?.title || 'Movie poster'} className="h-14 w-10 rounded-lg object-cover" />
+            <div className="min-w-0 pr-2">
+              <p className="max-w-52 truncate text-xs font-black uppercase text-white">{movie?.title || 'Selected movie'}</p>
+              <p className="mt-1 max-w-52 truncate text-[11px] text-zinc-400">{showtime?.cinemaName || 'All Cinemas'} - {showtime?.time || 'Showtime'}</p>
+            </div>
+          </div>
+        </div>
       </div>
+      <nav className="overflow-x-auto pb-2 scrollbar-none" aria-label="Booking progress">
+        <div className="flex min-w-[560px] items-start justify-between gap-2">
+          {FLOW_STEPS.map((flowStep, index) => {
+            const isActive = flowStep.number === currentStepNumber;
+            const isComplete = flowStep.number < currentStepNumber;
+            const isMovieStep = flowStep.id === 'movie' || flowStep.id === 'showtime';
+            return (
+              <React.Fragment key={flowStep.id}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isMovieStep) navigate(movie ? `/movies/${movie.id}` : '/movies');
+                    else if (isComplete && flowStep.id !== 'success' && flowStep.id !== 'ticket' && flowStep.id !== 'movie' && flowStep.id !== 'showtime') goToStep(flowStep.id);
+                  }}
+                  disabled={!isMovieStep && !isComplete && !isActive}
+                  className={`group flex min-h-[4.5rem] shrink-0 flex-col items-center justify-start gap-2 rounded-xl border px-3 py-2 text-center transition-all disabled:cursor-default ${isActive ? 'border-[#E50914] bg-[#E50914]/10' : 'border-border bg-card hover:border-[#E50914]/30'}`}
+                >
+                  <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-xs font-black transition-all ${isActive || isComplete ? 'bg-[#E50914] text-white shadow-lg shadow-[#E50914]/30' : 'bg-muted text-muted-foreground'} ${isMovieStep && !isActive ? 'group-hover:ring-2 group-hover:ring-[#E50914]/30' : ''}`}>
+                    {isComplete ? <Check className="h-4 w-4" /> : flowStep.number}
+                  </span>
+                  <span className={`whitespace-nowrap text-[11px] font-bold ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>{flowStep.label}</span>
+                </button>
+                {index < FLOW_STEPS.length - 1 && <div className={`mt-8 h-px flex-1 ${isComplete ? 'bg-[#E50914]' : 'bg-border'}`} />}
+              </React.Fragment>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
-
   const renderMovieSummary = () => (
     <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/60 p-3">
       <img src={movie?.posterUrl} alt={movie?.title || 'Movie poster'} className="h-20 w-14 rounded-lg object-cover" />
@@ -393,20 +448,189 @@ export const BookingPage: React.FC = () => {
     </div>
   );
 
-  const renderSnackSelection = () => (
-    <div className="space-y-6">
-      <div className="flex flex-wrap gap-2">{SNACK_CATEGORIES.map((category) => <button key={category} type="button" onClick={() => setSnackCategory(category)} className={`rounded-lg border px-4 py-2 text-xs font-bold transition-all ${snackCategory === category ? 'border-[#E50914] bg-[#E50914] text-white' : 'border-border bg-card text-muted-foreground hover:text-foreground'}`}>{category}</button>)}</div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {filteredSnacks.map((snack) => {
-          const quantity = snackQuantities[snack.id] ?? 0;
-          return <article key={snack.id} className="overflow-hidden rounded-xl border border-border bg-card transition-all hover:-translate-y-1 hover:border-[#E50914]/40"><div className="aspect-[1.15] overflow-hidden bg-muted"><SnackImage name={snack.name} category={snack.category} src={snack.imageUrl} /></div><div className="space-y-3 p-3"><div><h3 className="text-xs font-bold text-foreground">{snack.name}</h3><p className="mt-1 text-xs font-bold text-[#E50914]">{formatCurrency(snack.price)}</p></div><div className="flex items-center justify-between rounded-lg border border-border bg-muted p-1"><button type="button" onClick={() => updateSnackQuantity(snack.id, -1)} className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground" aria-label={`Remove one ${snack.name}`}><Minus className="h-3.5 w-3.5" /></button><span className="text-xs font-bold text-foreground">{quantity}</span><button type="button" onClick={() => updateSnackQuantity(snack.id, 1)} className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground" aria-label={`Add one ${snack.name}`}><Plus className="h-3.5 w-3.5" /></button></div></div></article>;
-        })}
+  const renderSnackSelection = () => {
+    const categoryCount = (category: SnackCategoryId) =>
+      category === 'All' ? SNACKS.length : SNACKS.filter((s) => s.category === category).length;
+
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Filter snacks by category">
+          {SNACK_CATEGORIES.map((category) => {
+            const Icon = SNACK_CATEGORY_ICONS[category];
+            const active = snackCategory === category;
+            return (
+              <button
+                key={category}
+                type="button"
+                onClick={() => setSnackCategory(category)}
+                aria-pressed={active}
+                className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2 text-xs font-bold transition-all ${active ? 'border-[#E50914] bg-[#E50914] text-white shadow-md shadow-[#E50914]/25' : 'border-border bg-card text-muted-foreground hover:border-[#E50914]/40 hover:text-foreground'}`}
+              >
+                <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                {category}
+                <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-black tabular-nums ${active ? 'bg-white/20 text-white' : 'bg-muted text-muted-foreground'}`}>
+                  {categoryCount(category)}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        {snacksLoading ? (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3" aria-busy="true" aria-label="Loading snacks">
+            {Array.from({ length: 6 }, (_, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="overflow-hidden rounded-xl border border-border bg-card"
+              >
+                <div className="aspect-[1.15] animate-pulse bg-muted" />
+                <div className="space-y-3 p-3">
+                  <div className="h-3 w-2/3 animate-pulse rounded bg-muted" />
+                  <div className="h-3 w-1/3 animate-pulse rounded bg-muted" />
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {filteredSnacks.map((snack) => {
+            const quantity = snackQuantities[snack.id] ?? 0;
+            return (
+              <motion.article
+                key={snack.id}
+                whileHover={{ y: -4, scale: 1.015 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+                className="group overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-shadow duration-300 hover:shadow-lg hover:shadow-[#E50914]/15 hover:ring-1 hover:ring-[#E50914]/40"
+              >
+                <div className="aspect-[1.15] overflow-hidden bg-muted">
+                  <SnackImage name={snack.name} category={snack.category} src={snack.imageUrl} />
+                </div>
+                <div className="space-y-3 p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="text-xs font-bold text-foreground">{snack.name}</h3>
+                    <span className="inline-flex shrink-0 items-center rounded-full bg-[#E50914]/10 px-2 py-0.5 text-[11px] font-black text-[#E50914]">
+                      {formatCurrency(snack.price)}
+                    </span>
+                  </div>
+                  <div>
+                    {quantity === 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => updateSnackQuantity(snack.id, 1)}
+                        className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#E50914]/40 bg-[#E50914]/10 px-3 py-2 text-xs font-bold text-[#E50914] transition-colors hover:bg-[#E50914] hover:text-white"
+                        aria-label={`Add ${snack.name}`}
+                      >
+                        <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                        Add
+                      </button>
+                    ) : (
+                      <motion.div
+                        key={`qty-${quantity}`}
+                        initial={{ scale: 0.94 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                        className="flex w-full items-center justify-between rounded-lg bg-[#E50914] p-1"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => updateSnackQuantity(snack.id, -1)}
+                          className="flex h-7 w-9 items-center justify-center rounded-md text-white hover:bg-white/20"
+                          aria-label={`Remove one ${snack.name}`}
+                        >
+                          <Minus className="h-3.5 w-3.5" aria-hidden="true" />
+                        </button>
+                        <motion.span
+                          key={`count-${quantity}`}
+                          initial={{ scale: 1.25 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 18 }}
+                          className="min-w-[1.5rem] text-center text-sm font-black text-white tabular-nums"
+                        >
+                          {quantity}
+                        </motion.span>
+                        <button
+                          type="button"
+                          onClick={() => updateSnackQuantity(snack.id, 1)}
+                          className="flex h-7 w-9 items-center justify-center rounded-md text-white hover:bg-white/20"
+                          aria-label={`Add one ${snack.name}`}
+                        >
+                          <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                        </button>
+                      </motion.div>
+                    )}
+                  </div>
+                </div>
+              </motion.article>
+            );
+          })}
+          </div>
+        )}
       </div>
-      <div className="flex flex-col-reverse justify-between gap-3 border-t border-border pt-5 sm:flex-row"><button type="button" onClick={() => goToStep('seats')} className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-5 py-3 text-xs font-bold text-muted-foreground transition-colors hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Back</button><button type="button" onClick={() => goToStep('review')} className="flex items-center justify-center gap-2 rounded-xl bg-[#E50914] px-5 py-3 text-xs font-bold text-white transition-colors hover:bg-[#ff1f2d]">Continue to Review <ArrowRight className="h-4 w-4" /></button></div>
-    </div>
-  );
+    );
+  };
 
   const renderOrderLines = () => <div className="space-y-3"><div className="flex items-center justify-between border-b border-border pb-3"><span className="text-xs font-bold text-foreground">Tickets ({selectedSeats.length})</span><span className="text-xs font-bold text-foreground">{formatCurrency(ticketSubtotal)}</span></div>{selectedSeats.map((seatId) => <div key={seatId} className="flex items-center justify-between text-xs text-muted-foreground"><span>Seat {seatId} · {getSeatType(seatId[0])}</span><span>{formatCurrency(getSeatPrice(seatId[0]))}</span></div>)}{selectedSnackItems.length > 0 && <div className="border-t border-border pt-3"><div className="mb-2 flex items-center justify-between text-xs font-bold text-foreground"><span>Snacks & Drinks</span><span>{formatCurrency(snacksSubtotal)}</span></div>{selectedSnackItems.map((snack) => <div key={snack.id} className="flex items-center justify-between text-xs text-muted-foreground"><span>{snack.name} × {snackQuantities[snack.id]}</span><span>{formatCurrency(snack.price * snackQuantities[snack.id])}</span></div>)}</div>}</div>;
+
+  const snackItemCount = Object.values(snackQuantities).reduce((sum, qty) => sum + qty, 0);
+
+  const renderSnackSummaryBar = () => (
+    <motion.div
+      initial={{ y: 80, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: 80, opacity: 0 }}
+      transition={{ type: 'spring', stiffness: 260, damping: 26 }}
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E50914]/30 bg-card/95 backdrop-blur-md"
+    >
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => goToStep('seats')}
+            className="hidden items-center justify-center gap-1.5 rounded-lg border border-border bg-muted px-3 py-2 text-xs font-bold text-muted-foreground transition-colors hover:text-foreground md:inline-flex"
+            aria-label="Back to seat selection"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+            Seats
+          </button>
+          <span className="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#E50914]/30 bg-[#E50914]/10 text-[#E50914]">
+            <ShoppingBag className="h-5 w-5" aria-hidden="true" />
+            {snackItemCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#E50914] px-1 text-[10px] font-black text-white">
+                {snackItemCount}
+              </span>
+            )}
+          </span>
+          <div className="hidden min-w-0 sm:block">
+            <p className="truncate text-xs font-bold text-foreground">
+              {snackItemCount === 0 ? 'No snacks selected' : `${snackItemCount} ${snackItemCount === 1 ? 'item' : 'items'} selected`}
+            </p>
+            <p className="text-[11px] text-muted-foreground">Snacks & Drinks subtotal</p>
+          </div>
+        </div>
+        <div className="flex flex-1 items-center justify-end gap-2 sm:gap-4">
+          <button
+            type="button"
+            onClick={() => goToStep('review')}
+            className="text-xs font-semibold text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline"
+          >
+            Skip snacks &amp; drinks
+          </button>
+          <button
+            type="button"
+            onClick={() => goToStep('review')}
+            className="flex items-center justify-center gap-2 rounded-xl bg-[#E50914] px-4 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-[#E50914]/30 transition-colors hover:bg-[#ff1f2d] sm:px-6"
+          >
+            Continue to Review
+            <span className="hidden text-sm font-black sm:inline">· {formatCurrency(grandTotal)}</span>
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+
 
   const renderTotals = () => <div className="space-y-3 border-t border-border pt-4 text-xs"><div className="flex justify-between text-muted-foreground"><span>Tickets</span><span>{formatCurrency(ticketSubtotal)}</span></div><div className="flex justify-between text-muted-foreground"><span>Snacks</span><span>{formatCurrency(snacksSubtotal)}</span></div><div className="flex justify-between text-muted-foreground"><span>Convenience Fee</span><span>{formatCurrency(serviceFee)}</span></div><div className="flex justify-between border-t border-border pt-3 text-base font-black text-foreground"><span>Total Amount</span><span className="text-[#E50914]">{formatCurrency(grandTotal)}</span></div></div>;
 
@@ -414,7 +638,7 @@ export const BookingPage: React.FC = () => {
 
   const renderPayment = () => <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]"><div className="space-y-5 rounded-2xl border border-border bg-card p-5 shadow-2xl sm:p-8"><div className="flex items-center gap-2 border-b border-border pb-4"><CreditCard className="h-5 w-5 text-[#E50914]" /><div><h2 className="text-lg font-black uppercase text-foreground">Payment Method</h2><p className="text-xs text-muted-foreground">Choose how you want to pay</p></div></div><div className="space-y-3">{PAYMENT_METHODS.map((method) => { const Icon = method.icon; const active = paymentMethod === method.id; return <button key={method.id} type="button" onClick={() => { setPaymentMethod(method.id); setPaymentError(''); }} className={`flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-all ${active ? 'border-[#E50914] bg-[#E50914]/10 shadow-lg shadow-[#E50914]/10' : 'border-border bg-muted/50 hover:bg-muted'}`}><div className={`flex h-11 w-11 items-center justify-center rounded-lg ${active ? 'bg-[#E50914] text-white' : 'bg-secondary text-muted-foreground'}`}><Icon className="h-5 w-5" /></div><div className="flex-1"><p className="text-sm font-bold text-foreground">{method.name}</p><p className="mt-1 text-xs text-muted-foreground">{method.description}</p></div><span className={`flex h-5 w-5 items-center justify-center rounded-full border ${active ? 'border-[#E50914] bg-[#E50914]' : 'border-muted-foreground/50'}`}>{active && <Check className="h-3 w-3 text-white" />}</span></button>; })}</div>{paymentError && <div className="flex items-start gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-700 dark:text-rose-300"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /> <span>{paymentError}</span></div>}<div className="flex items-center gap-2 rounded-xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground"><ShieldCheck className="h-4 w-4 shrink-0 text-emerald-500" /> Secure checkout. Your payment details are protected.</div></div><aside className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-2xl lg:sticky lg:top-24"><h2 className="text-sm font-black uppercase tracking-wider text-foreground">Total Amount</h2>{renderMovieSummary()}{renderTotals()}<button type="button" disabled={paymentLoading} onClick={() => void startBackendPayment()} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#E50914] px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-white shadow-xl shadow-[#E50914]/20 transition-all hover:bg-[#ff1f2d] hover:shadow-[#E50914]/40 disabled:cursor-not-allowed disabled:opacity-60">{paymentLoading ? <><LoaderCircle className="h-4 w-4 animate-spin" /> Generating KHQR</> : <>Continue to Payment <span className="ml-1">{formatCurrency(grandTotal)}</span></>}</button><p className="text-center text-[10px] text-muted-foreground">By proceeding, you agree to our Terms & Conditions and Privacy Policy.</p></aside></div>;
 
-  const renderQrPayment = () => <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]"><div className="space-y-5 rounded-2xl border border-border bg-card p-5 text-center shadow-2xl sm:p-8"><div className="flex items-center gap-2 border-b border-border pb-4 text-left"><QrCode className="h-5 w-5 text-[#E50914]" /><div><h2 className="text-lg font-black uppercase text-foreground">{paymentMethod === 'QR_CODE' ? 'KHQR Payment' : 'Complete Payment'}</h2><p className="text-xs text-muted-foreground">Follow the payment instructions to finish your order</p></div></div>{paymentMethod === 'QR_CODE' ? <><div className="mx-auto mt-3 w-fit rounded-2xl bg-white p-4 shadow-xl"><img src={paymentQrUrl} alt="KHQR payment code" className="h-56 w-56" /></div><p className="text-sm font-semibold text-foreground">Scan this QR code with your banking app</p><p className="text-xs text-muted-foreground">ABA, ACLEDA, Wing, Bakong, and other supported apps</p>{checkoutPayment && checkoutPayment.display.qrPayload === checkoutPayment.payment.transactionId && <p className="mx-auto max-w-md rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300">Backend did not return a KHQR payload, so this QR uses the payment transaction reference.</p>}</> : <div className="rounded-xl border border-border bg-muted/50 p-8"><CreditCard className="mx-auto h-10 w-10 text-[#E50914]" /><p className="mt-3 text-sm font-bold text-foreground">Your card payment is ready</p><p className="mt-1 text-xs text-muted-foreground">Complete the payment below to confirm your booking.</p></div>}{paymentError && <div className="flex items-start gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-left text-xs text-rose-700 dark:text-rose-300"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /> <span>{paymentError}</span></div>}<div className="grid gap-3 text-left sm:grid-cols-2"><div className="rounded-xl border border-border bg-muted/50 p-3"><p className="text-[11px] text-muted-foreground">Amount</p><p className="mt-1 text-lg font-black text-foreground">{formatCurrency(grandTotal)}</p></div><div className="rounded-xl border border-border bg-muted/50 p-3"><p className="text-[11px] text-muted-foreground">Reference</p><p className="mt-1 truncate font-mono text-sm font-bold text-foreground">{paymentReference}</p></div></div>{checkoutPayment && <div className="grid gap-3 text-left sm:grid-cols-2"><div className="rounded-xl border border-border bg-muted/50 p-3"><p className="text-[11px] text-muted-foreground">Payment ID</p><p className="mt-1 font-mono text-sm font-bold text-foreground">#{checkoutPayment.payment.id}</p></div><div className="rounded-xl border border-border bg-muted/50 p-3"><p className="text-[11px] text-muted-foreground">Status</p><p className="mt-1 text-sm font-bold text-foreground">{checkoutPayment.payment.status}</p></div></div>}<div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-3 text-left text-xs text-blue-700 dark:text-blue-200">Payment will be confirmed after the backend reports PAID. Your reservation is held for 15 minutes.</div></div><aside className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-2xl lg:sticky lg:top-24"><h2 className="text-sm font-black uppercase tracking-wider text-foreground">Order Summary</h2>{renderMovieSummary()}{renderTotals()}<button type="button" disabled={paymentLoading} onClick={() => void handleConfirmBooking()} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#E50914] px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-white shadow-xl shadow-[#E50914]/20 transition-all hover:bg-[#ff1f2d] disabled:cursor-not-allowed disabled:opacity-60">{paymentLoading ? <><LoaderCircle className="h-4 w-4 animate-spin" /> Checking Payment</> : 'I Have Completed Payment'}</button></aside></div>;
+  const renderQrPayment = () => <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]"><div className="space-y-5 rounded-2xl border border-border bg-card p-5 text-center shadow-2xl sm:p-8"><div className="flex items-center gap-2 border-b border-border pb-4 text-left"><QrCode className="h-5 w-5 text-[#E50914]" /><div><h2 className="text-lg font-black uppercase text-foreground">{paymentMethod === 'QR_CODE' ? 'KHQR Payment' : 'Complete Payment'}</h2><p className="text-xs text-muted-foreground">Follow the payment instructions to finish your order</p></div></div>{paymentMethod === 'QR_CODE' ? <><div className="mx-auto mt-3 w-fit rounded-2xl bg-white p-4 shadow-xl"><img src={paymentQrUrl} alt="KHQR payment code" className="h-56 w-56" /></div><p className="text-sm font-semibold text-foreground">Scan this QR code with your banking app</p><p className="text-xs text-muted-foreground">ABA, ACLEDA, Wing, Bakong, and other supported apps</p>{checkoutPayment && checkoutPayment.display.qrPayload === checkoutPayment.payment.transactionId && <p className="mx-auto max-w-md rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300">Backend did not return a KHQR payload, so this QR uses the payment transaction reference.</p>}</> : <div className="rounded-xl border border-border bg-muted/50 p-8"><CreditCard className="mx-auto h-10 w-10 text-[#E50914]" /><p className="mt-3 text-sm font-bold text-foreground">Your card payment is ready</p><p className="mt-1 text-xs text-muted-foreground">Complete the payment below to confirm your booking.</p></div>}{paymentError && <div className="flex items-start gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-left text-xs text-rose-700 dark:text-rose-300"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /> <span>{paymentError}</span></div>}<div className="grid gap-3 text-left sm:grid-cols-2"><div className="rounded-xl border border-border bg-muted/50 p-3"><p className="text-[11px] text-muted-foreground">Amount</p><p className="mt-1 text-lg font-black text-foreground">{formatCurrency(grandTotal)}</p></div><div className="rounded-xl border border-border bg-muted/50 p-3"><p className="text-[11px] text-muted-foreground">Reference</p><p className="mt-1 truncate font-mono text-sm font-bold text-foreground">{paymentReference}</p></div></div>{checkoutPayment && <div className="grid gap-3 text-left sm:grid-cols-2"><div className="rounded-xl border border-border bg-muted/50 p-3"><p className="text-[11px] text-muted-foreground">Payment ID</p><p className="mt-1 font-mono text-sm font-bold text-foreground">#{checkoutPayment.payment.id}</p></div><div className="rounded-xl border border-border bg-muted/50 p-3"><p className="text-[11px] text-muted-foreground">Status</p><p className="mt-1 text-sm font-bold text-foreground">{checkoutPayment.payment.status}</p></div></div>}<div className="rounded-xl border border-blue-400/40 bg-blue-500/15 p-3 text-left text-xs text-blue-200">Payment will be confirmed after the backend reports PAID. Your reservation is held for 15 minutes.</div></div><aside className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-2xl lg:sticky lg:top-24"><h2 className="text-sm font-black uppercase tracking-wider text-foreground">Order Summary</h2>{renderMovieSummary()}{renderTotals()}<button type="button" disabled={paymentLoading} onClick={() => void handleConfirmBooking()} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#E50914] px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-white shadow-xl shadow-[#E50914]/20 transition-all hover:bg-[#ff1f2d] disabled:cursor-not-allowed disabled:opacity-60">{paymentLoading ? <><LoaderCircle className="h-4 w-4 animate-spin" /> Checking Payment</> : 'I Have Completed Payment'}</button></aside></div>;
 
   const renderSuccess = () => <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-2xl rounded-2xl border border-border bg-card p-6 text-center shadow-2xl sm:p-10"><div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border-4 border-emerald-400/30 bg-emerald-500/15 text-emerald-400 shadow-lg shadow-emerald-500/20"><CheckCircle2 className="h-12 w-12" /></div><p className="mt-6 text-xs font-bold uppercase tracking-widest text-emerald-400">Payment complete</p><h2 className="mt-2 text-3xl font-black text-foreground">Payment Successful!</h2><p className="mt-2 text-sm text-muted-foreground">Your booking has been confirmed. Enjoy the movie!</p><div className="mx-auto mt-7 max-w-md rounded-xl border border-border bg-muted/50 p-4"><p className="text-xs text-muted-foreground">Booking Reference</p><div className="mt-2 flex items-center justify-center gap-2"><span className="font-mono text-lg font-black text-foreground">{confirmedBookingId}</span><button type="button" className="text-muted-foreground hover:text-foreground" title="Copy booking reference" onClick={() => void navigator.clipboard?.writeText(confirmedBookingId)}><Copy className="h-4 w-4" /></button></div></div><div className="mt-5 space-y-2 text-sm text-muted-foreground"><p className="font-bold text-foreground">{movie?.title}</p><p>{showtime?.cinemaName} · {showtime?.hallName}</p><p>{formatDate(showtime?.date || '')} at {showtime?.time} · Seats {selectedSeats.join(', ')}</p></div><div className="mt-8 grid gap-3 sm:grid-cols-2"><button type="button" onClick={() => setStep('ticket')} className="flex items-center justify-center gap-2 rounded-xl bg-[#E50914] px-4 py-3 text-xs font-bold text-white hover:bg-[#ff1f2d]"><Ticket className="h-4 w-4" /> View My Tickets</button><button type="button" onClick={() => navigate('/')} className="flex items-center justify-center gap-2 rounded-xl border border-border bg-muted px-4 py-3 text-xs font-bold text-foreground hover:bg-secondary"><Home className="h-4 w-4" /> Back to Home</button></div></motion.section>;
 
@@ -444,5 +668,5 @@ export const BookingPage: React.FC = () => {
               ? 'Your E-Ticket'
               : 'Booking Success';
 
-  return <div className="min-h-screen bg-background pb-20"><div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{renderStepHeader()}{step !== 'success' && <div className="mb-6 flex flex-col gap-3 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between"><div><Link to={movie ? `/movies/${movie.id}` : '/movies'} className="mb-2 inline-flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"><ArrowLeft className="h-3.5 w-3.5" /> Back to Movie</Link><h1 className="text-2xl font-black uppercase tracking-tight text-foreground sm:text-3xl">{pageTitle}</h1><div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground"><span className="font-bold text-[#E50914]">{showtime?.cinemaName}</span><span>·</span><span>{showtime?.hallName}</span><span>·</span><Badge variant="primary" size="sm">{showtime?.format}</Badge><span>·</span><span className="font-medium text-foreground">{formatDate(showtime?.date || '')} at {showtime?.time}</span></div></div>{step === 'seats' && <div className="flex flex-wrap gap-3 text-xs text-muted-foreground"><span className="flex items-center gap-1.5"><span className="h-3.5 w-3.5 rounded border border-border bg-muted" /> Available</span><span className="flex items-center gap-1.5 font-semibold text-foreground"><span className="h-3.5 w-3.5 rounded bg-[#E50914]" /> Selected</span><span className="flex items-center gap-1.5"><span className="h-3.5 w-3.5 rounded bg-zinc-900 opacity-40" /> Occupied</span><span className="flex items-center gap-1.5 text-amber-400"><span className="h-3.5 w-3.5 rounded border border-amber-500 bg-amber-500/10" /> VIP</span></div>}</div>}{step === 'success' ? renderSuccess() : <AnimatePresence mode="wait" initial={false}><motion.div key={step} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.25 }}>{renderCurrentStep()}</motion.div></AnimatePresence>}{step !== 'success' && step !== 'seats' && step !== 'snacks' && step !== 'ticket' && <div className="mt-5 flex justify-start"><button type="button" onClick={() => goToStep(step === 'payment' ? 'review' : step === 'qr-payment' ? 'payment' : 'snacks')} className="flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Back to previous step</button></div>}{step === 'snacks' && <div className="mt-5 flex items-center gap-2 text-xs text-muted-foreground"><Utensils className="h-4 w-4 text-[#E50914]" /> Snacks are optional—you can continue without adding anything.</div>}{step === 'success' && <div className="mt-8 flex items-center justify-center gap-2 text-sm text-muted-foreground">Thank you for choosing Cinematique <Star className="h-4 w-4 fill-[#E50914] text-[#E50914]" /> See you at the movies!</div>}</div></div>;
+  return <div className="min-h-screen bg-background pb-20"><div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{renderStepHeader()}{step !== 'success' && <div className="mb-6 flex flex-col gap-3 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between"><div><Link to={movie ? `/movies/${movie.id}` : '/movies'} className="mb-2 inline-flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"><ArrowLeft className="h-3.5 w-3.5" /> Back to Movie</Link><h1 className="text-2xl font-black uppercase tracking-tight text-foreground sm:text-3xl">{pageTitle}</h1><div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground"><span className="font-bold text-[#E50914]">{showtime?.cinemaName}</span><span>·</span><span>{showtime?.hallName}</span><span>·</span><Badge variant="primary" size="sm">{showtime?.format}</Badge><span>·</span><span className="font-medium text-foreground">{formatDate(showtime?.date || '')} at {showtime?.time}</span></div></div>{step === 'seats' && <div className="flex flex-wrap gap-3 text-xs text-muted-foreground"><span className="flex items-center gap-1.5"><span className="h-3.5 w-3.5 rounded border border-border bg-muted" /> Available</span><span className="flex items-center gap-1.5 font-semibold text-foreground"><span className="h-3.5 w-3.5 rounded bg-[#E50914]" /> Selected</span><span className="flex items-center gap-1.5"><span className="h-3.5 w-3.5 rounded bg-zinc-900 opacity-40" /> Occupied</span><span className="flex items-center gap-1.5 text-amber-400"><span className="h-3.5 w-3.5 rounded border border-amber-500 bg-amber-500/10" /> VIP</span></div>}</div>}{step === 'success' ? renderSuccess() : <AnimatePresence mode="wait" initial={false}><motion.div key={step} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.25 }}>{renderCurrentStep()}</motion.div></AnimatePresence>}{step !== 'success' && step !== 'seats' && step !== 'snacks' && step !== 'ticket' && <div className="mt-5 flex justify-start"><button type="button" onClick={() => goToStep(step === 'payment' ? 'review' : step === 'qr-payment' ? 'payment' : 'snacks')} className="flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Back to previous step</button></div>}{step === 'snacks' && <div className="mt-5 flex items-center gap-2 text-xs text-muted-foreground"><Utensils className="h-4 w-4 text-[#E50914]" /> Snacks are optional—you can continue without adding anything.</div>}{step === 'success' && <div className="mt-8 flex items-center justify-center gap-2 text-sm text-muted-foreground">Thank you for choosing Cinematique <Star className="h-4 w-4 fill-[#E50914] text-[#E50914]" /> See you at the movies!</div>}</div><AnimatePresence>{step === 'snacks' && renderSnackSummaryBar()}</AnimatePresence></div>;
 };

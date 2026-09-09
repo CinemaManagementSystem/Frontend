@@ -7,13 +7,28 @@ interface LocationState {
   locations: Location[];
   loading: boolean;
   error: string | null;
+  selectedLocationId: number | null;
   fetchAll: () => Promise<void>;
+  selectLocation: (id: number | null) => void;
   create: (payload: LocationInput) => Promise<void>;
   update: (id: number, payload: LocationInput) => Promise<void>;
   remove: (id: number) => Promise<void>;
 }
 
 let inFlightFetch: Promise<void> | null = null;
+
+const SELECTED_LOCATION_KEY = 'cinematique_selected_location_id';
+
+function loadSelectedLocationId(): number | null {
+  try {
+    const raw = localStorage.getItem(SELECTED_LOCATION_KEY);
+    if (!raw) return null;
+    const value = Number(raw);
+    return Number.isFinite(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
 
 function getLocationErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
@@ -33,6 +48,7 @@ export const useLocationStore = create<LocationState>((set, get) => ({
   locations: [],
   loading: false,
   error: null,
+  selectedLocationId: loadSelectedLocationId(),
 
   fetchAll: async () => {
     if (inFlightFetch) return inFlightFetch;
@@ -55,6 +71,19 @@ export const useLocationStore = create<LocationState>((set, get) => ({
     } finally {
       if (inFlightFetch === request) inFlightFetch = null;
     }
+  },
+
+  selectLocation: (id) => {
+    try {
+      if (id === null) {
+        localStorage.removeItem(SELECTED_LOCATION_KEY);
+      } else {
+        localStorage.setItem(SELECTED_LOCATION_KEY, String(id));
+      }
+    } catch {
+      // ignore persistence errors
+    }
+    set({ selectedLocationId: id });
   },
 
   create: async (payload) => {

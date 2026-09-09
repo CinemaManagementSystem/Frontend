@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Search, Clock, Star, Play, Plus, Check, ChevronDown, SlidersHorizontal, Sparkles, Film, X } from 'lucide-react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { useMovieStore } from '@/store/movieStore';
@@ -33,6 +33,14 @@ export const MoviesPage: React.FC = () => {
   const navigate = useNavigate();
   const shouldReduceMotion = useReducedMotion();
   const { movies, searchQuery, setSearchQuery } = useMovieStore();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const query = searchParams.get('search');
+    if (query) {
+      setSearchQuery(query);
+    }
+  }, [searchParams, setSearchQuery]);
 
   // Filters State
   const [selectedGenre, setSelectedGenre] = useState<string>('ALL');
