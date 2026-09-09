@@ -17,18 +17,6 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut' as const } }
 };
 
-const MOVIE_LANGUAGE_BY_ID: Record<string, string> = {
-  'm-1': 'English',
-  'm-2': 'English',
-  'm-3': 'English',
-  'm-4': 'English',
-  'm-5': 'English',
-  'm-6': 'English',
-  'm-7': 'French',
-  'm-8': 'Japanese',
-  'm-9': 'English',
-};
-
 export const MoviesPage: React.FC = () => {
   const navigate = useNavigate();
   const shouldReduceMotion = useReducedMotion();
@@ -44,25 +32,18 @@ export const MoviesPage: React.FC = () => {
 
   // Filters State
   const [selectedGenre, setSelectedGenre] = useState<string>('ALL');
-  const [selectedLanguage, setSelectedLanguage] = useState<string>('ALL');
   const [sortBy, setSortBy] = useState<string>('POPULARITY');
   const [watchlist, setWatchlist] = useState<string[]>([]);
   const [activeTrailerUrl, setActiveTrailerUrl] = useState<string | null>(null);
 
   // Dropdown UI States
   const [genreOpen, setGenreOpen] = useState(false);
-  const [langOpen, setLangOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
 
   const genres = useMemo(
     () => ['ALL', ...Array.from(new Set(movies.flatMap((movie) => movie.genres))).sort()],
     [movies],
   );
-  const languages = useMemo(
-    () => ['ALL', ...Array.from(new Set(movies.map((movie) => MOVIE_LANGUAGE_BY_ID[movie.id] ?? 'English'))).sort()],
-    [movies],
-  );
-  const getMovieLanguage = (movieId: string) => MOVIE_LANGUAGE_BY_ID[movieId] ?? 'English';
 
   // Load Watchlist from LocalStorage
   useEffect(() => {
@@ -98,10 +79,7 @@ export const MoviesPage: React.FC = () => {
 
       const matchesGenre = selectedGenre === 'ALL' || movie.genres.includes(selectedGenre);
 
-      const matchesLanguage =
-        selectedLanguage === 'ALL' || getMovieLanguage(movie.id) === selectedLanguage;
-
-      return matchesSearch && matchesGenre && matchesLanguage;
+      return matchesSearch && matchesGenre;
     })
     .sort((a, b) => {
       if (sortBy === 'RATING') {
@@ -156,7 +134,6 @@ export const MoviesPage: React.FC = () => {
                 <button
                   onClick={() => {
                     setGenreOpen(!genreOpen);
-                    setLangOpen(false);
                     setSortOpen(false);
                   }}
                   className="flex items-center gap-2 bg-input border border-border text-muted-foreground text-xs rounded-xl px-4 py-2.5 hover:border-border transition-all focus:outline-none"
@@ -197,59 +174,12 @@ export const MoviesPage: React.FC = () => {
                 </AnimatePresence>
               </div>
 
-              {/* Language Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() => {
-                    setLangOpen(!langOpen);
-                    setGenreOpen(false);
-                    setSortOpen(false);
-                  }}
-                  className="flex items-center gap-2 bg-input border border-border text-muted-foreground text-xs rounded-xl px-4 py-2.5 hover:border-border transition-all focus:outline-none"
-                >
-                  <span className="font-semibold">
-                    {selectedLanguage === 'ALL' ? 'Language' : selectedLanguage}
-                  </span>
-                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                </button>
-                <AnimatePresence>
-                  {langOpen && (
-                    <>
-                      <div className="fixed inset-0 z-10" onClick={() => setLangOpen(false)} />
-                      <motion.div
-                        initial={{ opacity: 0, y: -6, scale: 0.98 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -6, scale: 0.98 }}
-                        transition={{ duration: 0.12 }}
-                        className="absolute right-0 mt-2 w-40 rounded-xl bg-popover border border-border p-1 shadow-2xl z-20 origin-top-right"
-                      >
-                        {languages.map((l) => (
-                          <button
-                            key={l}
-                            onClick={() => {
-                              setSelectedLanguage(l);
-                              setLangOpen(false);
-                            }}
-                            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold hover:bg-muted ${
-                              selectedLanguage === l ? 'text-[#E50914] bg-[#E50914]/5' : 'text-muted-foreground'
-                            }`}
-                          >
-                            {l === 'ALL' ? 'Language' : l}
-                          </button>
-                        ))}
-                      </motion.div>
-                    </>
-                  )}
-                </AnimatePresence>
-              </div>
-
               {/* Sort Dropdown */}
               <div className="relative">
                 <button
                   onClick={() => {
                     setSortOpen(!sortOpen);
                     setGenreOpen(false);
-                    setLangOpen(false);
                   }}
                   className="flex items-center gap-2 bg-input border border-border text-muted-foreground text-xs rounded-xl px-4 py-2.5 hover:border-border transition-all focus:outline-none"
                 >
@@ -300,7 +230,7 @@ export const MoviesPage: React.FC = () => {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 relative z-10">
         {filteredMovies.length > 0 ? (
           <motion.div 
-            key={selectedGenre + selectedLanguage + sortBy + searchQuery}
+            key={selectedGenre + sortBy + searchQuery}
             variants={containerVariants}
             initial="hidden"
             animate="show"
@@ -450,7 +380,6 @@ export const MoviesPage: React.FC = () => {
               onClick={() => {
                 setSearchQuery('');
                 setSelectedGenre('ALL');
-                setSelectedLanguage('ALL');
               }}
               className="px-5 py-2.5 rounded-xl bg-secondary text-secondary-foreground text-xs font-bold uppercase tracking-wider hover:bg-muted transition-all"
             >

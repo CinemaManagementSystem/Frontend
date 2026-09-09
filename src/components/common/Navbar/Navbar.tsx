@@ -372,14 +372,6 @@ export const Navbar: React.FC = () => {
               </>
             )}
 
-            <button
-              type="button"
-              className="inline-flex h-12 items-center gap-2 rounded-full border border-white/15 bg-[#211a1b]/80 px-4 text-sm font-bold text-white backdrop-blur-md transition hover:border-[#E50914]/60 hover:bg-[#E50914]/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914]"
-              aria-label="Language"
-            >
-              EN
-              <ChevronDown className="h-4 w-4" />
-            </button>
           </div>
         </div>
 
@@ -781,17 +773,6 @@ export const Navbar: React.FC = () => {
               )}
             </div>
 
-            {/* Language */}
-            <div className="mt-4 flex items-center justify-between gap-3 border-t border-white/10 pt-4">
-              <span className="text-sm font-bold text-slate-300">Language</span>
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-[#211a1b]/80 px-4 py-2 text-sm font-bold text-white"
-              >
-                EN
-                <ChevronDown className="h-4 w-4" />
-              </button>
-            </div>
           </motion.div>
         )}
       </AnimatePresence>

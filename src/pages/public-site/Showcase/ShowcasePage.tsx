@@ -9,7 +9,6 @@ import {
   Sparkles,
   Ticket,
   X,
-  Globe,
 } from 'lucide-react';
 import { useMovieAdminStore } from '@/store/movieAdminStore';
 import { useCategoryStore } from '@/store/categoryStore';
@@ -52,8 +51,7 @@ export const ShowcasePage: React.FC = () => {
       const matchesSearch =
         !q ||
         m.title.toLowerCase().includes(q) ||
-        m.genre.toLowerCase().includes(q) ||
-        m.language.toLowerCase().includes(q);
+        m.genre.toLowerCase().includes(q);
       const matchesStatus = statusFilter === 'ALL' || m.status === statusFilter;
       const matchesCategory = categoryFilter === 'ALL' || m.categoryId === categoryFilter;
       return matchesSearch && matchesStatus && matchesCategory;
@@ -99,7 +97,7 @@ export const ShowcasePage: React.FC = () => {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search title, genre or language..."
+              placeholder="Search title or genre..."
               className="w-full bg-[#18181b] border border-white/10 text-white text-xs rounded-xl pl-10 pr-4 py-2.5 outline-none focus:border-[#E50914] transition-colors placeholder:text-gray-500"
             />
           </div>
@@ -188,12 +186,6 @@ export const ShowcasePage: React.FC = () => {
                         {movie.status.replace('_', ' ')}
                       </Badge>
                     </div>
-
-                    <div className="absolute top-3 right-3">
-                      <span className="px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-md border border-white/10 text-[10px] font-bold text-gray-300">
-                        {movie.language}
-                      </span>
-                    </div>
                   </div>
 
                   <div className="p-5 flex flex-col flex-1">
@@ -202,7 +194,6 @@ export const ShowcasePage: React.FC = () => {
                         {movie.title}
                       </h3>
                       <span className="text-[10px] font-bold text-gray-500 shrink-0 flex items-center gap-1">
-                        <Globe className="w-3 h-3" />
                         {categoryName(movie.categoryId)}
                       </span>
                     </div>
