@@ -235,10 +235,10 @@ export const Navbar: React.FC = () => {
   return (
     <header
       className={cn(
-        'top-0 z-40 isolate w-full overflow-visible border-b border-white/10 text-white backdrop-blur-xl',
+        'fixed left-0 right-0 top-0 z-40 isolate w-full overflow-visible border-b border-white/10 text-white backdrop-blur-xl',
         isHomePage
-          ? 'absolute bg-black/25 shadow-none'
-          : 'sticky bg-[#0b0809]/95 shadow-2xl shadow-black/40',
+          ? 'bg-black/25 shadow-none'
+          : 'bg-[#0b0809]/95 shadow-2xl shadow-black/40',
       )}
     >
       <div

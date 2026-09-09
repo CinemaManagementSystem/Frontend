@@ -2,7 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
 // Layouts
-import { MainLayout } from '@/layouts/MainLayout';
+import { MainLayout } from '@/layouts/Mainlayout';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { AuthLayout } from '@/layouts/AuthLayout';
 
@@ -42,12 +42,30 @@ import { PaymentTransactionsPage } from '@/pages/admin/PaymentTransactions/Payme
 import { UsersPage } from '@/pages/admin/Users/UsersPage';
 import { AuditLogsPage } from '@/pages/admin/AuditLogs/AuditLogsPage';
 import { ShowcasePage } from '@/pages/public-site/Showcase/ShowcasePage';
+import { useAuthStore } from '@/store/authStore';
+import { canAccessAdmin } from '@/lib/authRole';
+
+const CustomerOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, isAuthenticated } = useAuthStore();
+
+  if (isAuthenticated && canAccessAdmin(user?.role)) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+};
 
 export const AppRoutes: React.FC = () => {
   return (
     <Routes>
       {/* Public Site Layout & Routes */}
-      <Route element={<MainLayout />}>
+      <Route
+        element={
+          <CustomerOnlyRoute>
+            <MainLayout />
+          </CustomerOnlyRoute>
+        }
+      >
         <Route path="/" element={<HomePage />} />
         <Route path="/movies" element={<PublicMoviesPage />} />
         <Route path="/showcase" element={<ShowcasePage />} />
@@ -100,7 +118,13 @@ export const AppRoutes: React.FC = () => {
       </Route>
 
       {/* 404 Page Not Found Fallback */}
-      <Route element={<MainLayout />}>
+      <Route
+        element={
+          <CustomerOnlyRoute>
+            <MainLayout />
+          </CustomerOnlyRoute>
+        }
+      >
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

@@ -7,6 +7,7 @@ import { Footer } from '@/components/common/Footer/Footer';
 export const MainLayout: React.FC = () => {
   const { pathname } = useLocation();
   const shouldReduceMotion = useReducedMotion();
+  const navbarOverlaysPage = pathname === '/';
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -30,7 +31,7 @@ export const MainLayout: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground selection:bg-[#E50914] selection:text-white">
       <Navbar />
-      <main className="flex-1 relative overflow-hidden">
+      <main className={`flex-1 relative overflow-hidden ${navbarOverlaysPage ? '' : 'pt-20 lg:pt-40'}`}>
         <AnimatePresence mode="wait">
           <motion.div
             key={pathname}
