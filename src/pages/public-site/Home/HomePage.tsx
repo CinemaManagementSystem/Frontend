@@ -355,32 +355,32 @@ export const HomePage: React.FC = () => {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-r from-[#18181c] via-[#141417] to-[#1a1112] p-8 shadow-2xl sm:p-12">
+        <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-r from-muted via-card to-muted p-8 shadow-xl dark:from-[#1a1a1e] dark:via-[#141416] dark:to-[#1a1112] dark:shadow-black/40 sm:p-12">
           <div className="max-w-2xl space-y-3">
             <span className="text-xs font-black uppercase tracking-widest text-[#E50914]">Experience the best</span>
-            <h3 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
+            <h3 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
               World-class cinematic technology
             </h3>
-            <p className="text-sm text-slate-300">
+            <p className="text-sm text-muted-foreground">
               Immersive screens, precision sound, and premium seating designed for a smoother night at the movies.
             </p>
           </div>
 
           <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
             {[
-              ['IMAX 3D Laser', 'Next-generation projection with richer contrast and scale.', '#E50914'],
-              ['Dolby Atmos Audio', 'Multi-dimensional sound that moves around the room.', '#f59e0b'],
-              ['VIP Suite Recliners', 'Relaxed premium seating with extra comfort and service.', '#f8fafc'],
-            ].map(([title, description, color]) => (
+              ['IMAX 3D Laser', 'Next-generation projection with richer contrast and scale.', 'text-[#E50914]'],
+              ['Dolby Atmos Audio', 'Multi-dimensional sound that moves around the room.', 'text-amber-500 dark:text-amber-400'],
+              ['VIP Suite Recliners', 'Relaxed premium seating with extra comfort and service.', 'text-slate-900 dark:text-slate-100'],
+            ].map(([title, description, colorClass]) => (
               <motion.div
                 key={title}
                 whileHover={{ y: -4 }}
-                className="rounded-2xl border border-white/10 bg-white/5 p-5 transition-colors hover:border-white/25"
+                className="rounded-2xl border border-border bg-card p-5 shadow-sm transition-all duration-300 hover:border-[#E50914]/40 hover:shadow-lg hover:shadow-[#E50914]/10"
               >
-                <span className="text-lg font-black" style={{ color }}>
+                <span className={`block text-lg font-black ${colorClass}`}>
                   {title}
                 </span>
-                <p className="mt-2 text-xs leading-5 text-slate-300">{description}</p>
+                <p className="mt-2 text-xs leading-5 text-muted-foreground">{description}</p>
               </motion.div>
             ))}
           </div>

@@ -90,7 +90,7 @@ export const PremierePage: React.FC = () => {
 
           {/* Heading */}
           <h1 className="text-4xl sm:text-6xl md:text-7xl font-black uppercase tracking-tight text-foreground leading-none">
-            Join the <span className="bg-gradient-to-r from-yellow-300 via-yellow-400 to-amber-500 bg-clip-text text-transparent">Premiere Circle</span>
+            Join the <span className="bg-gradient-to-r from-yellow-600 via-amber-600 to-orange-600 dark:from-yellow-300 dark:via-yellow-400 dark:to-amber-500 bg-clip-text text-transparent">Premiere Circle</span>
           </h1>
 
           {/* Subtitle */}
@@ -108,7 +108,7 @@ export const PremierePage: React.FC = () => {
             </button>
             <button
               onClick={() => scrollToSection('benefits')}
-              className="py-3.5 px-8 rounded-xl bg-muted hover:bg-accent border border-border text-muted-foreground hover:text-foreground text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
+              className="py-3.5 px-8 rounded-xl bg-muted hover:bg-[#E50914]/10 border border-border text-muted-foreground hover:text-[#E50914] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
             >
               Learn More
             </button>
