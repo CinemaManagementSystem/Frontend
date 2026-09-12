@@ -26,10 +26,10 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie, className = '' }) =
       whileHover={shouldReduceMotion ? {} : { y: -4 }}
       whileTap={{ scale: 0.98 }}
       onClick={() => navigate(`/movies/${movie.id}`)}
-      className={`group relative flex flex-col rounded-xl overflow-hidden bg-[#161619] border border-border hover:border-[#E50914]/50 transition-all duration-300 hover:shadow-xl hover:shadow-[#E50914]/10 cursor-pointer ${className}`}
+      className={`group relative flex flex-col rounded-xl overflow-hidden bg-card border border-border hover:border-[#E50914]/50 transition-all duration-300 hover:shadow-xl hover:shadow-[#E50914]/10 cursor-pointer ${className}`}
     >
       {/* Poster Image & Badges */}
-      <div className="relative aspect-[2/3] w-full overflow-hidden bg-zinc-900">
+      <div className="relative aspect-[2/3] w-full overflow-hidden bg-card">
         <img
           src={movie.posterUrl}
           alt={movie.title}
@@ -38,7 +38,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie, className = '' }) =
         />
 
         {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#161619] via-transparent to-transparent opacity-80" />
+        <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent opacity-80" />
 
         {/* Rating Badge */}
         <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-md border border-border text-xs font-bold text-amber-400">
@@ -82,7 +82,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie, className = '' }) =
 
       {/* Movie Details */}
       <div className="flex flex-col flex-1 p-4">
-        <h3 className="font-bold text-white text-base line-clamp-1 group-hover:text-[#E50914] transition-colors">
+        <h3 className="font-bold text-foreground text-base line-clamp-1 group-hover:text-[#E50914] transition-colors">
           {movie.title}
         </h3>
 
@@ -96,7 +96,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie, className = '' }) =
             <Clock className="w-3.5 h-3.5 text-muted-foreground" />
             <span>{formatDuration(movie.durationMinutes)}</span>
           </div>
-          <span className="font-semibold text-white">
+          <span className="font-semibold text-foreground">
             From {formatCurrency(movie.price)}
           </span>
         </div>

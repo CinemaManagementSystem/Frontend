@@ -273,22 +273,22 @@ export const MoviesPage: React.FC = () => {
                     )}
 
                     {/* High-Fidelity Hover Information Panel */}
-                    <div className="absolute inset-0 bg-zinc-950/95 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-5 z-10">
+                    <div className="absolute inset-0 bg-card/95 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-5 z-10">
                       <div>
                         <div className="flex items-center justify-between gap-2">
-                          <h4 className="text-base font-black text-white uppercase tracking-tight leading-snug">
+                          <h4 className="text-base font-black text-foreground uppercase tracking-tight leading-snug">
                             {movie.title}
                           </h4>
-                          <span className="text-[10px] font-black text-[#fbbf24] shrink-0">
+                          <span className="text-[10px] font-black text-amber-400 shrink-0">
                             ★ {movie.rating.toFixed(1)}
                           </span>
                         </div>
                         
-                        <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider mt-1.5">
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-1.5">
                           2024 • {movie.genres.join('/')} • {Math.floor(movie.durationMinutes / 60)}h {movie.durationMinutes % 60}m
                         </p>
 
-                        <p className="text-[11px] text-zinc-400 mt-4 leading-relaxed line-clamp-4">
+                        <p className="text-[11px] text-muted-foreground mt-4 leading-relaxed line-clamp-4">
                           {movie.description || 'No description available for this title. Check showtimes or view full movie details.'}
                         </p>
                       </div>
@@ -314,13 +314,13 @@ export const MoviesPage: React.FC = () => {
                           onClick={(e) => toggleWatchlist(e, movie.id)}
                           className={`w-full py-2.5 px-4 rounded-xl border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
                             inWatchlist
-                              ? 'border-emerald-500/30 bg-emerald-500/10 text-[#34d399]'
-                              : 'border-zinc-700 hover:bg-white/10 text-zinc-300 hover:text-white'
+                              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                              : 'border-border text-muted-foreground hover:bg-muted hover:text-[#E50914]'
                           }`}
                         >
                           {inWatchlist ? (
                             <>
-                              <Check className="w-3.5 h-3.5 text-[#34d399]" />
+                              <Check className="w-3.5 h-3.5" />
                               <span>Added</span>
                             </>
                           ) : (
@@ -338,7 +338,7 @@ export const MoviesPage: React.FC = () => {
                               e.stopPropagation();
                               navigate(`/movies/${movie.id}`);
                             }}
-                            className="text-[10px] font-black text-zinc-400 hover:text-[#E50914] uppercase tracking-widest transition-colors"
+                            className="text-[10px] font-black text-muted-foreground hover:text-[#E50914] uppercase tracking-widest transition-colors"
                           >
                             Movie Details
                           </button>
@@ -409,7 +409,7 @@ export const MoviesPage: React.FC = () => {
               {/* Close Button */}
               <button
                 onClick={() => setActiveTrailerUrl(null)}
-                className="absolute top-4 right-4 p-2 rounded-full bg-black/60 border border-border text-white hover:bg-white/10 transition-colors z-10"
+                className="absolute top-4 right-4 p-2 rounded-full bg-black/70 border border-white/20 text-white hover:bg-[#E50914] transition-colors z-10"
               >
                 <X className="w-5 h-5" />
               </button>
