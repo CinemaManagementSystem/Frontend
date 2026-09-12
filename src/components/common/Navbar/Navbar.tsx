@@ -13,16 +13,19 @@ import {
   LogOut,
   MapPin,
   Menu,
+  Moon,
   Play,
   Search,
   Settings,
   Shield,
   ShoppingBag,
   Sparkles,
+  Sun,
   Ticket,
   User as UserIcon,
   X,
 } from 'lucide-react';
+import { useTheme } from '@/context/ThemeContext';
 import { AnimatePresence, motion } from 'motion/react';
 import { useAuthStore } from '@/store/authStore';
 import { useLocationStore } from '@/store/locationStore';
@@ -183,6 +186,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ user, compact = false }) => {
 export const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
   const { user, isAuthenticated } = useAuthStore();
   const { searchQuery, setSearchQuery } = useMovieStore();
   const { locations, loading: locationsLoading, selectedLocationId, selectLocation } = useLocationStore();
@@ -235,7 +239,7 @@ export const Navbar: React.FC = () => {
   return (
     <header
       className={cn(
-        'fixed left-0 right-0 top-0 z-40 isolate w-full overflow-visible border-b border-white/10 text-white backdrop-blur-xl',
+        'nav-shell fixed left-0 right-0 top-0 z-40 isolate w-full overflow-visible border-b border-white/10 text-white backdrop-blur-xl',
         isHomePage
           ? 'bg-black/25 shadow-none'
           : 'bg-[#0b0809]/95 shadow-2xl shadow-black/40',
@@ -280,6 +284,15 @@ export const Navbar: React.FC = () => {
             </Link>
 
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={toggleTheme}
+                title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-[#211a1b]/80 text-white transition hover:border-[#E50914]/60 hover:bg-[#E50914]/15"
+              >
+                {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              </button>
               <button
                 type="button"
                 onClick={() => {
@@ -334,6 +347,15 @@ export const Navbar: React.FC = () => {
 
           {/* Desktop account actions */}
           <div className="hidden items-center justify-end gap-2 lg:flex">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/15 bg-[#211a1b]/80 text-white backdrop-blur-md transition hover:border-[#E50914]/60 hover:bg-[#E50914]/15 hover:text-[#ff6a73] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914]"
+            >
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
             <button
               type="button"
               onClick={handleTicketClick}

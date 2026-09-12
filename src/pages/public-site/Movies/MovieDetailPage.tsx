@@ -84,7 +84,7 @@ export const MovieDetailPage: React.FC = () => {
             {movie.trailerUrl && (
               <button
                 onClick={() => setTrailerOpen(true)}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-muted hover:bg-accent border border-border text-foreground text-xs font-bold uppercase tracking-wider transition-colors"
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-muted hover:bg-[#E50914]/10 border border-border text-foreground hover:text-[#E50914] text-xs font-bold uppercase tracking-wider transition-colors"
               >
                 <Play className="w-4 h-4 text-[#E50914] fill-[#E50914]" />
                 Watch Trailer

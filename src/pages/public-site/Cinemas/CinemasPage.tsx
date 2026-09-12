@@ -249,7 +249,7 @@ className="absolute left-0 mt-3 w-80 rounded-2xl bg-popover border border-border
               onClick={() => setTimeframe('TODAY')}
               className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all relative z-10 ${
                 timeframe === 'TODAY'
-                  ? 'text-white'
+                  ? ''
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -260,13 +260,13 @@ className="absolute left-0 mt-3 w-80 rounded-2xl bg-popover border border-border
                   transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                 />
               )}
-              <span className="relative z-10">Today</span>
+              <span className={`relative z-10 ${timeframe === 'TODAY' ? 'text-white' : ''}`}>Today</span>
             </button>
             <button
               onClick={() => setTimeframe('THIS_WEEK')}
               className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all relative z-10 ${
                 timeframe === 'THIS_WEEK'
-                  ? 'text-white'
+                  ? ''
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -277,14 +277,14 @@ className="absolute left-0 mt-3 w-80 rounded-2xl bg-popover border border-border
                   transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                 />
               )}
-              <span className="relative z-10">This Week</span>
+              <span className={`relative z-10 ${timeframe === 'THIS_WEEK' ? 'text-white' : ''}`}>This Week</span>
             </button>
           </div>
         </div>
       </section>
 
       {/* Date Picker Bar */}
-      <section className="bg-card border-b border-border py-4 sticky top-18 z-20 shadow-md">
+      <section className="bg-card border-b border-border py-4 sticky top-20 lg:top-40 z-20 shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 overflow-x-auto scrollbar-none pb-1">
             <div className="flex items-center gap-2 shrink-0 border-r border-border pr-4 text-xs font-bold text-muted-foreground uppercase tracking-widest">

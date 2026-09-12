@@ -203,18 +203,39 @@ html.light .text-white {
 }
 html.light .bg-\[\#E50914\].text-white,
 html.light .bg-\[\#E50914\] .text-white,
+html.light .bg-\[\#E50914\] + .text-white,
 html.light .hover\:bg-\[\#ff1f2d\].text-white,
 html.light .hover\:bg-\[\#ff1f2d\] .text-white,
 html.light .bg-yellow-500\.text-white,
 html.light .bg-yellow-500 .text-white,
-html.light [class*="bg-"][class*="text-white"]:where(.bg-\[\#E50914\], [class*="bg-red"], [class*="bg-yellow"]) {
+html.light [class*="bg-"][class*="text-white"]:where(.bg-\[\#E50914\], [class*="bg-red"], [class*="bg-yellow"], [class*="bg-emerald"]) {
     color: #fff !important;
 }
 
 /* 2. Keep white text inside hero / dark sections that stay dark */
 html.light .bg-black.text-white,
-html.light .bg-black .text-white {
+html.light .bg-black .text-white,
+html.light [class*="bg-black/"].text-white,
+html.light [class*="bg-black/"] .text-white {
     color: #fff !important;
+}
+
+/* Keep white text + chips readable in the home hero carousel (always dark) */
+html.light .bg-\[\#06080b\] .text-white {
+    color: #fff !important;
+}
+
+html.light .bg-\[\#06080b\] .bg-black\/35.text-white,
+html.light .bg-\[\#06080b\] .bg-black\/35 .text-white {
+    color: #fff !important;
+}
+
+html.light .bg-\[\#06080b\] .bg-white\/35 {
+    background-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+html.light .bg-\[\#06080b\] .group-hover\:bg-white\/75:hover {
+    background-color: rgba(255, 255, 255, 0.75) !important;
 }
 
 /* 3. Dark inputs → light inputs */
