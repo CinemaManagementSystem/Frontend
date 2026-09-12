@@ -23,6 +23,11 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8081',
         changeOrigin: true,
+        // The backend currently allows localhost:5173 but not the LAN host
+        // used to open this Vite dev server from another device.
+        headers: {
+          origin: 'http://localhost:5173',
+        },
       },
     },
   },
