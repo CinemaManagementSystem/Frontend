@@ -33,3 +33,20 @@ apiClient.interceptors.request.use((config) => {
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401 && typeof window !== 'undefined') {
+      localStorage.removeItem('token')
+      localStorage.removeItem('auth_user')
+
+      if (!window.location.pathname.startsWith('/login')) {
+        const returnTo = `${window.location.pathname}${window.location.search}`
+        window.location.assign(`/login?redirect=${encodeURIComponent(returnTo)}`)
+      }
+    }
+
+    return Promise.reject(error)
+  },
+)
