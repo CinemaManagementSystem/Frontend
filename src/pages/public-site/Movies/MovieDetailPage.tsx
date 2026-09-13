@@ -51,9 +51,9 @@ export const MovieDetailPage: React.FC = () => {
           <img
             src={movie.backdropUrl}
             alt={movie.title}
-            className="w-full h-full object-cover opacity-40 filter contrast-125"
+            className="w-full h-full object-cover opacity-55 filter contrast-125"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-card via-card/80 to-transparent dark:from-[#0f0f10] dark:via-[#0f0f10]/80 dark:to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-white via-white/40 to-transparent dark:from-[#0f0f10] dark:via-[#0f0f10]/80 dark:to-transparent" />
         </div>
 
         {/* Back link & breadcrumbs */}
@@ -102,8 +102,8 @@ export const MovieDetailPage: React.FC = () => {
                 <Badge variant="secondary" size="md">
                   PG-13
                 </Badge>
-                <div className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-md border border-border text-xs font-bold text-amber-400">
-                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                <div className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-white/80 backdrop-blur-sm border border-amber-200 text-xs font-bold text-slate-900 dark:bg-black/60 dark:border-border dark:text-amber-400">
+                  <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500 dark:fill-amber-400 dark:text-amber-400" />
                   <span>{movie.rating.toFixed(1)} / 10 ({movie.voteCount} votes)</span>
                 </div>
               </div>

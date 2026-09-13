@@ -60,13 +60,13 @@ const navActiveClass =
 const navIdleClass =
   'text-slate-600 hover:bg-red-50 hover:text-[#E50914] dark:text-zinc-300 dark:hover:bg-white/10 dark:hover:text-white';
 const navIconClass = (isActive: boolean) =>
-  cn('h-4 w-4 transition', isActive ? 'text-[#E50914]' : 'text-slate-400 group-hover:text-[#E50914]');
+  cn('h-4 w-4 transition', isActive ? 'text-[#E50914]' : 'text-slate-600 group-hover:text-[#E50914] dark:text-slate-400');
 
 const dropdownItemClass =
-  'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-600 transition hover:bg-red-50 hover:text-[#E50914] dark:text-zinc-200 dark:hover:bg-white/10 dark:hover:text-white';
+  'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 dark:text-zinc-200 dark:hover:bg-white/10 dark:hover:text-white';
 
 const menuItemClass =
-  'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-600 transition hover:bg-red-50 hover:text-[#E50914] dark:text-zinc-300 dark:hover:bg-white/10 dark:hover:text-white';
+  'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 dark:text-zinc-300 dark:hover:bg-white/10 dark:hover:text-white';
 
 const roundIconClass =
   'inline-flex items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 backdrop-blur-md transition hover:border-[#E50914]/50 hover:bg-[#E50914]/10 hover:text-[#E50914] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914] dark:border-white/15 dark:bg-[#211a1b]/80 dark:text-white dark:hover:bg-[#E50914]/15 dark:hover:text-[#ff6a73]';
