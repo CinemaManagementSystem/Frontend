@@ -41,6 +41,7 @@ import { PaymentsPage } from '@/pages/admin/Payments/PaymentsPage';
 import { PaymentTransactionsPage } from '@/pages/admin/PaymentTransactions/PaymentTransactionsPage';
 import { UsersPage } from '@/pages/admin/Users/UsersPage';
 import { AuditLogsPage } from '@/pages/admin/AuditLogs/AuditLogsPage';
+import { SettingsPage as AdminSettingsPage } from '@/pages/admin/Settings';
 import { ShowcasePage } from '@/pages/public-site/Showcase/ShowcasePage';
 import { useAuthStore } from '@/store/authStore';
 import { canAccessAdmin } from '@/lib/authRole';
@@ -114,6 +115,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="payment-transactions" element={<PaymentTransactionsPage />} />
         <Route path="users" element={<UsersPage />} />
         <Route path="audit-logs" element={<AuditLogsPage />} />
+        <Route path="settings" element={<AdminSettingsPage />} />
         <Route path="security" element={<Navigate to="/admin/audit-logs" replace />} />
       </Route>
 
