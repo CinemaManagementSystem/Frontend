@@ -149,6 +149,13 @@ export const CinemasPage: React.FC = () => {
     }
   };
 
+  const handleTimeframeChange = (nextTimeframe: 'TODAY' | 'THIS_WEEK') => {
+    setTimeframe(nextTimeframe);
+    if (nextTimeframe === 'TODAY' && dateList[0]) {
+      setSelectedDate(dateList[0].dateStr);
+    }
+  };
+
   // Filter showtimes
   const filteredShowtimes = showtimes.filter((st) => {
     // 1. Matches selected cinema
@@ -206,7 +213,7 @@ export const CinemasPage: React.FC = () => {
   return (
     <div className="pb-24 bg-background min-h-screen text-foreground selection:bg-[#E50914]">
       {/* Dynamic Design Header - Glassmorphic Hero */}
-      <section className="relative w-full py-16 md:py-24 overflow-hidden border-b border-border bg-gradient-to-b from-muted/70 to-transparent dark:from-zinc-900 dark:to-transparent">
+      <section className="relative w-full py-12 md:py-16 overflow-hidden border-b border-border bg-gradient-to-b from-muted/70 to-transparent dark:from-zinc-900 dark:to-transparent">
         <div className="absolute inset-0 z-0">
           <img
             src="https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80"
@@ -216,7 +223,7 @@ export const CinemasPage: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent dark:from-[#0f0f10] dark:via-[#0f0f10]/80 dark:to-transparent" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="relative z-10 max-w-[1080px] mx-auto px-4 sm:px-6 lg:px-0 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <span className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#E50914]/15 border border-[#E50914]/30 text-[#E50914] text-[10px] font-black uppercase tracking-widest shadow-sm">
@@ -337,7 +344,7 @@ export const CinemasPage: React.FC = () => {
 
       {/* Date Picker Bar */}
       <section className="bg-card border-b border-border py-4 sticky top-20 lg:top-40 z-20 shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1080px] mx-auto px-4 sm:px-6 lg:px-0">
           <div className="flex items-center gap-3 overflow-x-auto scrollbar-none pb-1">
             <div className="flex items-center gap-2 shrink-0 border-r border-border pr-4 text-xs font-bold text-muted-foreground uppercase tracking-widest">
               <Calendar className="w-4 h-4 text-[#E50914]" />
@@ -377,9 +384,9 @@ export const CinemasPage: React.FC = () => {
       </section>
 
       {/* Filters Showcase */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+      <section className="max-w-[1080px] mx-auto px-4 sm:px-6 lg:px-0 mt-7 grid grid-cols-1 lg:grid-cols-4 gap-5 items-start">
         {/* Left Side: Filter Panels */}
-        <div className="lg:col-span-1 bg-card border border-border rounded-3xl p-6 space-y-8 shadow-2xl">
+        <div className="lg:col-span-1 bg-card border border-border rounded-2xl p-5 space-y-7 shadow-xl">
           <div className="flex items-center justify-between pb-4 border-b border-border">
             <h3 className="text-sm font-black uppercase tracking-wider text-foreground flex items-center gap-2">
               <Filter className="w-4 h-4 text-[#E50914]" />

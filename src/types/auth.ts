@@ -5,6 +5,7 @@ export interface User {
   username: string;
   email: string;
   role: UserRole;
+  name?: string;
   avatar?: string;
   phone?: string;
 }
@@ -25,5 +26,6 @@ export interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isAuthLoading: boolean;
+  isLoggingOut: boolean;
   token: string | null;
 }

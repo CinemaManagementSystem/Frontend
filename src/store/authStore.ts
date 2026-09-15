@@ -2,21 +2,21 @@ import { create } from 'zustand';
 import { User, AuthState } from '@/types/auth';
 import { authService } from '@/services/authService';
 import { normalizeUserRole } from '@/lib/authRole';
+import { normalizeAvatar } from '@/lib/avatar';
 
 interface AuthStore extends AuthState {
   login: (principal: string, password: string) => Promise<User>;
   register: (username: string, email: string, password: string) => Promise<User>;
   logout: () => void;
+  logoutAsync: () => Promise<void>;
+  updateProfile: (name: string, email: string, avatar?: string | null) => void;
 }
 
 const TOKEN_KEY = 'token';
 const USER_KEY = 'auth_user';
 
-const DEFAULT_AVATAR =
-  'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80';
-
 function mapUser(user: User): User {
-  return { ...user, role: normalizeUserRole(user.role), avatar: user.avatar || DEFAULT_AVATAR };
+  return { ...user, role: normalizeUserRole(user.role), avatar: normalizeAvatar(user.avatar) };
 }
 
 function loadPersisted(): { user: User | null; token: string | null } {
@@ -36,6 +36,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
   user: persisted.user,
   isAuthenticated: Boolean(persisted.token),
   isAuthLoading: false,
+  isLoggingOut: false,
   token: persisted.token,
 
   login: async (principal, password) => {
@@ -71,5 +72,28 @@ export const useAuthStore = create<AuthStore>((set) => ({
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     set({ user: null, token: null, isAuthenticated: false });
+  },
+
+  logoutAsync: async () => {
+    set({ isLoggingOut: true });
+    try {
+      await authService.logout();
+    } catch {
+      // Never let a failed server call block the local sign-out.
+    } finally {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+      set({ user: null, token: null, isAuthenticated: false, isLoggingOut: false });
+    }
+  },
+
+  updateProfile: (name, email, avatar) => {
+    set((state) => {
+      if (!state.user) return state;
+      const updated: User = { ...state.user, name, email };
+      if (avatar !== undefined) updated.avatar = avatar ?? undefined;
+      localStorage.setItem(USER_KEY, JSON.stringify(updated));
+      return { user: updated };
+    });
   },
 }));

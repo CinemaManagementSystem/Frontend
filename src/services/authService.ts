@@ -23,4 +23,12 @@ export const authService = {
     const { data } = await apiClient.post<RegisterResponse>('/auth/register', payload);
     return data;
   },
+
+  async logout(): Promise<void> {
+    // Best-effort server-side token revocation; the local session is always
+    // cleared afterwards by authStore.logout/logoutAsync regardless of outcome.
+    await apiClient
+      .post('/auth/logout')
+      .catch(() => undefined);
+  },
 };

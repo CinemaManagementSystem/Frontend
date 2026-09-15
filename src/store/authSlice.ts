@@ -2,15 +2,13 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { authService } from '@/services/authService';
 import type { AuthResponse, AuthState, User, RegisterResponse } from '@/types/auth';
 import { normalizeUserRole } from '@/lib/authRole';
+import { normalizeAvatar } from '@/lib/avatar';
 
 const TOKEN_KEY = 'token';
 const USER_KEY = 'auth_user';
 
-const DEFAULT_AVATAR =
-  'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80';
-
 function mapUser(user: User): User {
-  return { ...user, role: normalizeUserRole(user.role), avatar: user.avatar || DEFAULT_AVATAR };
+  return { ...user, role: normalizeUserRole(user.role), avatar: normalizeAvatar(user.avatar) };
 }
 
 function loadPersisted(): { user: User | null; token: string | null } {
@@ -30,6 +28,7 @@ const initialState: AuthState = {
   user: persisted.user,
   isAuthenticated: Boolean(persisted.token),
   isAuthLoading: false,
+  isLoggingOut: false,
   token: persisted.token,
 };
 
