@@ -1,4 +1,4 @@
-export type PaymentMethod = 'CASH' | 'KHQR';
+soexport type PaymentMethod = 'CASH' | 'KHQR';
 export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED';
 
 export interface Payment {
