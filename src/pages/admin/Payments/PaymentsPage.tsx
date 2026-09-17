@@ -140,6 +140,7 @@ export const PaymentsPage: React.FC = () => {
       columnContext={{ codes, nos }}
       extraActions={extraActions}
       createLabel="Add Payment"
+      createUrl="/admin/payments/create"
       getId={(row) => row.id}
       getDisplayName={(row) => `#${row.id}`}
       onSave={async (values, id) => {

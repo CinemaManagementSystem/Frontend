@@ -112,6 +112,7 @@ export const PaymentTransactionsPage: React.FC = () => {
       searchKeys={['reference', 'transactionType', 'status']}
       columnContext={{ paymentIds }}
       createLabel="Add Transaction"
+      createUrl="/admin/payment-transactions/create"
       getId={(row) => row.id}
       getDisplayName={(row) => `#${row.id}`}
       onSave={async (values, id) => {

@@ -146,6 +146,7 @@ export const ScreensPage: React.FC = () => {
       searchKeys={['name', 'screenType']}
       columnContext={{ names }}
       createLabel="Add Screen"
+      createUrl="/admin/screens/create"
       getId={(row) => row.id}
       getDisplayName={(row) => row.name}
       onSave={async (values, id) => {

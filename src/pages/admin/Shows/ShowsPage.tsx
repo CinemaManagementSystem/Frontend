@@ -166,6 +166,7 @@ export const ShowsPage: React.FC = () => {
       searchText={(show) => `${movieNames[show.movieId] ?? ''} ${screenNames[show.screenId] ?? ''} ${show.status}`}
       columnContext={{ movies: movieNames, screens: screenNames }}
       createLabel="Add Show"
+      createUrl="/admin/shows/create"
       getId={(row) => row.id}
       getDisplayName={(row) => `#${row.id} · ${movieNames[row.movieId] ?? row.movieId}`}
       onSave={async (values, id) => {

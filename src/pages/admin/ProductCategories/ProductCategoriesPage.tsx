@@ -50,6 +50,7 @@ export const ProductCategoriesPage: React.FC = () => {
       fields={fields}
       searchKeys={['name', 'description']}
       createLabel="Add Category"
+      createUrl="/admin/product-categories/create"
       getId={(row) => row.id}
       getDisplayName={(row) => row.name}
       onSave={async (values, id) => {

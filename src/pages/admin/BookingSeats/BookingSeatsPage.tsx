@@ -97,6 +97,7 @@ export const BookingSeatsPage: React.FC = () => {
       searchKeys={['status']}
       columnContext={{ codes: bookingCodes, seats: seatLabels }}
       createLabel="Add Booking Seat"
+      createUrl="/admin/booking-seats/create"
       getId={(row) => row.id}
       getDisplayName={(row) => `#${row.id}`}
       onSave={async (values, id) => {

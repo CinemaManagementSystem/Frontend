@@ -148,6 +148,7 @@ export const SeatsPage: React.FC = () => {
       searchKeys={['seatNumber', 'rowName', 'seatType']}
       columnContext={{ names }}
       createLabel="Add Seat"
+      createUrl="/admin/seats/create"
       getId={(row) => row.id}
       getDisplayName={(row) => row.seatNumber}
       onSave={async (values, id) => {

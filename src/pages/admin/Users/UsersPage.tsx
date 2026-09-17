@@ -122,6 +122,7 @@ export const UsersPage: React.FC = () => {
       fields={fields}
       searchKeys={['username', 'email', 'role', 'status']}
       createLabel="Add User"
+      createUrl="/admin/users/create"
       getId={(row) => row.id}
       getDisplayName={(row) => row.username}
       onSave={async (values, id) => {

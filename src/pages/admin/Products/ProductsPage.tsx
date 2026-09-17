@@ -100,6 +100,7 @@ export const ProductsPage: React.FC = () => {
       searchKeys={['name']}
       columnContext={{ names }}
       createLabel="Add Product"
+      createUrl="/admin/products/create"
       getId={(row) => row.id}
       getDisplayName={(row) => row.name}
       onSave={async (values, id) => {

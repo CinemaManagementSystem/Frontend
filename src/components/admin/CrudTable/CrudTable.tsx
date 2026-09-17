@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Database, Plus, Edit2, Trash2, Search, ChevronDown, X } from 'lucide-react';
 import { Modal, type ModalProps } from '@/components/ui/Modal/Modal';
@@ -95,6 +96,7 @@ export interface CrudTableProps<T> {
   error?: string;
   onRetry?: () => void;
   modalMaxWidth?: ModalProps['maxWidth'];
+  createUrl?: string;
   getId: (row: T) => number;
   getDisplayName?: (row: T) => string;
   onSave: (values: Record<string, CrudValue>, id: number | null) => Promise<void>;
@@ -119,11 +121,13 @@ export function CrudTable<T>({
   error = '',
   onRetry,
   modalMaxWidth = 'lg',
+  createUrl,
   getId,
   getDisplayName,
   onSave,
   onDelete,
 }: CrudTableProps<T>) {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [filterValues, setFilterValues] = useState<Record<string, string>>({});
   const [modalOpen, setModalOpen] = useState(false);
@@ -179,6 +183,14 @@ export function CrudTable<T>({
     setFormError('');
     setFormValues(buildDefaultValues());
     setModalOpen(true);
+  };
+
+  const goToCreate = () => {
+    if (createUrl) {
+      navigate(createUrl);
+      return;
+    }
+    openCreate();
   };
 
   const openEdit = (row: T) => {
@@ -343,7 +355,7 @@ export function CrudTable<T>({
           <h1 className="mt-1 text-2xl font-bold text-foreground">{title}</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{subtitle}</p>
         </div>
-        <Button variant="primary" size="md" onClick={openCreate} disabled={loading || saving} className="w-full sm:w-auto">
+        <Button variant="primary" size="md" onClick={goToCreate} disabled={loading || saving} className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
           {createLabel}
         </Button>
@@ -442,7 +454,7 @@ export function CrudTable<T>({
                     : 'Try another search term or clear the filters.'}
                 </p>
                 {items.length === 0 ? (
-                  <Button type="button" variant="primary" size="sm" onClick={openCreate} className="mt-4">
+                  <Button type="button" variant="primary" size="sm" onClick={goToCreate} className="mt-4">
                     <Plus className="mr-2 h-4 w-4" />
                     {createLabel}
                   </Button>

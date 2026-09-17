@@ -61,6 +61,10 @@ export const DashboardLayout: React.FC = () => {
       '/admin/audit-logs': 'Security & Audit Log',
       '/admin/settings': 'Settings',
     };
+    if (location.pathname.endsWith('/create')) {
+      const base = titles[location.pathname.replace(/\/create$/, '')];
+      if (base) return `Add New ${base.replace(/s$/, '')}`;
+    }
     return titles[location.pathname] || 'Dashboard';
   };
 

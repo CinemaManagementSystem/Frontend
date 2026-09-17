@@ -137,6 +137,7 @@ export const TheatersPage: React.FC = () => {
         searchKeys={['name', 'address', 'phone']}
         columnContext={{ names }}
         createLabel="Add Theater"
+        createUrl="/admin/theaters/create"
         getId={(row) => row.id}
         getDisplayName={(row) => row.name}
         onSave={async (values, id) => {

@@ -96,6 +96,7 @@ export const BookingsPage: React.FC = () => {
       searchKeys={['bookingCode', 'status']}
       columnContext={{ lookups: showLookups }}
       createLabel="Add Booking"
+      createUrl="/admin/bookings/create"
       getId={(row) => row.id}
       getDisplayName={(row) => row.bookingCode}
       onSave={async (values, id) => {

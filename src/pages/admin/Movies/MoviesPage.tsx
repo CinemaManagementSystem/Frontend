@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   AlertCircle,
   CalendarDays,
@@ -161,6 +162,7 @@ function StatCard({
 }
 
 export const MoviesPage: React.FC = () => {
+  const navigate = useNavigate();
   const { movies, loading, fetchAll, create, update, remove } = useMovieAdminStore();
   const { categories, loading: categoriesLoading, fetchAll: fetchCategories } = useCategoryStore();
 
@@ -253,11 +255,8 @@ export const MoviesPage: React.FC = () => {
     setGenreFilter('ALL');
   };
 
-  const openCreate = () => {
-    setEditingMovie(null);
-    setFormValues(emptyForm);
-    setFormError('');
-    setModalOpen(true);
+  const goToCreate = () => {
+    navigate('/admin/movies/create');
   };
 
   const openEdit = (movie: ApiMovie) => {
@@ -384,7 +383,7 @@ export const MoviesPage: React.FC = () => {
         <Button
           variant="primary"
           size="md"
-          onClick={openCreate}
+          onClick={goToCreate}
           disabled={loading || categoriesLoading || saving}
           className="w-full sm:w-auto"
         >
@@ -514,7 +513,7 @@ export const MoviesPage: React.FC = () => {
                 <p className="mt-1 text-sm text-muted-foreground">
                   Add your first movie to start building the catalog.
                 </p>
-                <Button type="button" variant="primary" size="sm" onClick={openCreate} className="mt-4">
+                <Button type="button" variant="primary" size="sm" onClick={goToCreate} className="mt-4">
                   <Plus className="mr-2 h-4 w-4" />
                   Add Movie
                 </Button>

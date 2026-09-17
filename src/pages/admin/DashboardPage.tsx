@@ -27,8 +27,6 @@ import { screenService } from '@/services/screenService';
 import { seatService } from '@/services/seatService';
 import { showService } from '@/services/showService';
 import { Badge } from '@/components/ui/Badge/Badge';
-import { Modal } from '@/components/ui/Modal/Modal';
-import { MovieForm } from '@/components/forms/MovieForm/MovieForm';
 import { Button } from '@/components/ui/Button/Button';
 import { formatCurrency, formatDate, formatDateTime } from '@/utils/formatDate';
 import { cn } from '@/lib/utils';
@@ -140,14 +138,13 @@ function buildChartData(bookings: Booking[], range: ChartRange): ChartBucket[] {
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  const { movies, showtimes, bookings, addMovie } = useMovieStore();
+  const { movies, showtimes, bookings } = useMovieStore();
   const {
     bookings: adminBookings,
     loading: bookingsLoading,
     error: bookingsError,
     fetchAll: fetchAdminBookings,
   } = useBookingAdminStore();
-  const [addMovieModalOpen, setAddMovieModalOpen] = useState(false);
   const [range, setRange] = useState<ChartRange>('7D');
   const [liveShows, setLiveShows] = useState<Show[]>([]);
   const [liveScreens, setLiveScreens] = useState<Screen[]>([]);
@@ -396,7 +393,7 @@ export const DashboardPage: React.FC = () => {
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             Live System
           </div>
-          <Button size="sm" onClick={() => setAddMovieModalOpen(true)}>
+          <Button size="sm" onClick={() => navigate('/admin/movies/create')}>
             <Plus className="w-4 h-4 mr-1.5" />
             Add Movie
           </Button>
@@ -707,22 +704,7 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Add Movie Modal */}
-      <Modal
-        isOpen={addMovieModalOpen}
-        onClose={() => setAddMovieModalOpen(false)}
-        maxWidth="xl"
-        title="Add New Movie"
-      >
-        <MovieForm
-          onSubmit={(data) => {
-            addMovie(data);
-            setAddMovieModalOpen(false);
-          }}
-          onCancel={() => setAddMovieModalOpen(false)}
-        />
-      </Modal>
-    </div>
+      </div>
   );
 };
 

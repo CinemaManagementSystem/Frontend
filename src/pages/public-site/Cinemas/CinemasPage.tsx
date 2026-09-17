@@ -149,13 +149,6 @@ export const CinemasPage: React.FC = () => {
     }
   };
 
-  const handleTimeframeChange = (nextTimeframe: 'TODAY' | 'THIS_WEEK') => {
-    setTimeframe(nextTimeframe);
-    if (nextTimeframe === 'TODAY' && dateList[0]) {
-      setSelectedDate(dateList[0].dateStr);
-    }
-  };
-
   // Filter showtimes
   const filteredShowtimes = showtimes.filter((st) => {
     // 1. Matches selected cinema

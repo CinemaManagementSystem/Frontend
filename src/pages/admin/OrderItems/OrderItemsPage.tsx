@@ -82,6 +82,7 @@ export const OrderItemsPage: React.FC = () => {
       searchKeys={['quantity']}
       columnContext={context}
       createLabel="Add Order Item"
+      createUrl="/admin/order-items/create"
       getId={(row) => row.id}
       getDisplayName={(row) => `#${row.id}`}
       onSave={async (values, id) => {

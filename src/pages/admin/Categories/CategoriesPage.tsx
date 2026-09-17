@@ -101,6 +101,7 @@ export const CategoriesPage: React.FC = () => {
       modalMaxWidth="md"
       searchKeys={['name', 'description']}
       createLabel="Add Category"
+      createUrl="/admin/movie-categories/create"
       getId={(row) => row.id}
       getDisplayName={(row) => row.name}
       onSave={async (values, id) => {

@@ -103,6 +103,7 @@ export const LocationsPage: React.FC = () => {
         onRetry={() => void fetchAll()}
         searchKeys={['name', 'city', 'address']}
         createLabel="Add Location"
+        createUrl="/admin/locations/create"
         getId={(row) => row.id}
         getDisplayName={(row) => row.name}
         onSave={async (values, id) => {
