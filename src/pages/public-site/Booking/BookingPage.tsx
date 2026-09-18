@@ -1,29 +1,26 @@
 import React, { useMemo, useState } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import {
+  AlertTriangle,
   ArrowLeft,
   ArrowRight,
-  AlertTriangle,
   Check,
   CheckCircle2,
-  ClipboardCheck,
   Clock3,
   Coffee,
   Cookie,
-  CreditCard,
   Copy,
+  CreditCard,
   Download,
   GlassWater,
-  Home,
+  Home as HomeIcon,
   LoaderCircle,
   Minus,
   Plus,
   Popcorn,
   QrCode,
   ShieldCheck,
-  ShoppingBag,
-  Star,
   Ticket,
   Utensils,
 } from 'lucide-react';
@@ -40,7 +37,7 @@ import type { Payment as ApiPayment } from '@/types/payment';
 import type { PaymentTransaction } from '@/types/paymentTransaction';
 import { SnackImage } from './SnackImage';
 
-type BookingStep = 'seats' | 'snacks' | 'review' | 'payment' | 'qr-payment' | 'success' | 'ticket';
+type FlowStepId = 'seats' | 'concessions' | 'checkout' | 'confirmation';
 type BookingPaymentMethod = 'CREDIT_CARD' | 'QR_CODE';
 
 interface CheckoutPayment {
@@ -57,17 +54,14 @@ interface SnackItem {
   imageUrl: string;
 }
 
-const FLOW_STEPS: { id: BookingStep | 'movie' | 'showtime'; number: number; label: string; description: string }[] = [
-  { id: 'movie', number: 1, label: 'Browse Movies', description: 'Explore now playing and coming soon' },
-  { id: 'showtime', number: 2, label: 'Choose Date & Showtime', description: 'Select your preferred date and time' },
-  { id: 'seats', number: 3, label: 'Select Your Seats', description: 'Choose available seats on the seat map' },
-  { id: 'snacks', number: 4, label: 'Add Snacks & Drinks', description: 'Optional cinema treats' },
-  { id: 'review', number: 5, label: 'Review Your Order', description: 'Check your order details' },
-  { id: 'payment', number: 6, label: 'Select Payment Method', description: 'Choose how you want to pay' },
-  { id: 'qr-payment', number: 7, label: 'Complete Payment', description: 'Follow the payment instructions' },
-  { id: 'success', number: 8, label: 'Booking Success', description: 'Your booking is confirmed' },
-  { id: 'ticket', number: 9, label: 'Your E-Ticket', description: 'View and use your ticket' },
-];
+const FLOW_STEPS = [
+  { id: 'seats', label: 'Seats', title: 'Select Your Seats', description: 'Choose available seats on the seat map' },
+  { id: 'concessions', label: 'Concessions', title: 'Add Snacks & Drinks', description: 'Optional movie treats for your show' },
+  { id: 'checkout', label: 'Checkout', title: 'Review & Pay', description: 'Confirm your order, choose a payment method and pay' },
+  { id: 'confirmation', label: 'Confirmation', title: 'Booking Confirmed', description: 'Payment successful — here is your e-ticket' },
+] as const;
+
+type FlowStep = (typeof FLOW_STEPS)[number];
 
 const SNACKS: SnackItem[] = [
   { id: 'classic-popcorn', name: 'Classic Popcorn', category: 'Popcorn', price: 4, imageUrl: 'https://images.unsplash.com/photo-1585647347483-22b66260dfff?auto=format&fit=crop&w=500&q=80' },
@@ -95,6 +89,12 @@ const PAYMENT_METHODS: { id: BookingPaymentMethod; name: string; description: st
   { id: 'QR_CODE', name: 'QR Pay', description: 'Scan with your banking app', icon: QrCode },
 ];
 
+const PRIMARY_CTA =
+  'inline-flex items-center justify-center gap-2 rounded-xl bg-[#E50914] px-4 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-[#E50914]/30 transition-colors hover:bg-[#ff1f2d] disabled:cursor-not-allowed disabled:opacity-50 sm:px-6';
+
+const INPUT_CLASS =
+  'w-full rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-[#E50914] focus:outline-none focus:ring-2 focus:ring-[#E50914]/20';
+
 function parsePositiveId(value: string | null | undefined): number | null {
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
@@ -108,6 +108,16 @@ function parseDemoShowId(value: string | null | undefined): number | null {
   return match ? parsePositiveId(match[1]) : null;
 }
 
+function formatCardNumber(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 16);
+  return digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+}
+
+function formatExpiry(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 4);
+  return digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
+}
+
 export const BookingPage: React.FC = () => {
   const { showtimeId } = useParams<{ showtimeId: string }>();
   const [searchParams] = useSearchParams();
@@ -118,23 +128,34 @@ export const BookingPage: React.FC = () => {
 
   const showtime = showtimes.find((show) => show.id === showtimeId) || showtimes[0];
   const movie = getMovieById(movieId || showtime?.movieId || 'm-1');
-  const [step, setStep] = useState<BookingStep>('seats');
+
+  const [step, setStep] = useState<FlowStepId>('seats');
+  const [maxStepIndex, setMaxStepIndex] = useState(0);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
-  const [snackCategory, setSnackCategory] = useState<(typeof SNACK_CATEGORIES)[number]>('All');
+  const [snackCategory, setSnackCategory] = useState<SnackCategoryId>('All');
   const [snackQuantities, setSnackQuantities] = useState<Record<string, number>>({});
   const [paymentMethod, setPaymentMethod] = useState<BookingPaymentMethod>('QR_CODE');
   const [confirmedBookingId, setConfirmedBookingId] = useState('');
-  const [backendBookingId, setBackendBookingId] = useState<number | null>(() => parsePositiveId(searchParams.get('bookingId')));
+  const [backendBookingId, setBackendBookingId] = useState<number | null>(() =>
+    parsePositiveId(searchParams.get('bookingId')),
+  );
   const [checkoutPayment, setCheckoutPayment] = useState<CheckoutPayment | null>(null);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentError, setPaymentError] = useState('');
   const [snacksLoading, setSnacksLoading] = useState(false);
+  const [billingName, setBillingName] = useState(user?.name || user?.username || '');
+  const [billingEmail, setBillingEmail] = useState(user?.email || '');
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCvc, setCardCvc] = useState('');
   const backendOrderId = parsePositiveId(searchParams.get('orderId'));
 
   const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
   const seatsPerRow = 10;
-  const currentFlowStep = FLOW_STEPS.find((flowStep) => flowStep.id === step) ?? FLOW_STEPS[2];
-  const currentStepNumber = currentFlowStep.number;
+  const stepIndex = FLOW_STEPS.findIndex((flowStep) => flowStep.id === step);
+  const currentFlowStep: FlowStep = FLOW_STEPS[stepIndex] ?? FLOW_STEPS[0];
+  const isQrStep = paymentMethod === 'QR_CODE';
+  const showQrPanel = isQrStep && checkoutPayment !== null;
 
   const getSeatType = (row: string): 'STANDARD' | 'VIP' | 'COUPLE' => {
     if (row === 'H') return 'COUPLE';
@@ -161,6 +182,8 @@ export const BookingPage: React.FC = () => {
     [snackQuantities],
   );
 
+  const snackItemCount = Object.values(snackQuantities).reduce((sum, qty) => sum + qty, 0);
+
   const ticketSubtotal = selectedSeats.reduce((total, seatId) => total + getSeatPrice(seatId[0]), 0);
   const snacksSubtotal = selectedSnackItems.reduce(
     (total, snack) => total + snack.price * (snackQuantities[snack.id] ?? 0),
@@ -185,14 +208,39 @@ export const BookingPage: React.FC = () => {
     });
   };
 
-  const goToStep = (nextStep: BookingStep) => {
-    if (['snacks', 'review', 'payment'].includes(nextStep) && selectedSeats.length === 0) return;
-    if (nextStep === 'snacks') {
+  const goToStep = (nextStepId: FlowStepId) => {
+    if (step === 'confirmation') return;
+    if (nextStepId === 'concessions' && selectedSeats.length === 0) return;
+    const nextIndex = FLOW_STEPS.findIndex((flowStep) => flowStep.id === nextStepId);
+    setMaxStepIndex((current) => Math.max(current, nextIndex));
+    if (nextStepId === 'concessions' && stepIndex === 0) {
       setSnacksLoading(true);
-      window.setTimeout(() => setSnacksLoading(false), 600);
+      window.setTimeout(() => setSnacksLoading(false), 550);
     }
-    setStep(nextStep);
+    setStep(nextStepId);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const goBack = () => {
+    const backIndex = Math.max(0, stepIndex - 1);
+    const backStep = FLOW_STEPS[backIndex];
+    if (backStep.id === 'concessions' && selectedSeats.length === 0) {
+      goToStep('seats');
+      return;
+    }
+    goToStep(backStep.id);
+  };
+
+  const validateBilling = (): boolean => {
+    if (!billingName.trim() || !billingEmail.trim()) {
+      setPaymentError('Please enter a billing name and email address.');
+      return false;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(billingEmail.trim())) {
+      setPaymentError('Please enter a valid email address.');
+      return false;
+    }
+    return true;
   };
 
   const ensureBackendBookingId = async (): Promise<number | null> => {
@@ -202,7 +250,9 @@ export const BookingPage: React.FC = () => {
 
     const showId = parseDemoShowId(showtimeId) ?? parseDemoShowId(showtime?.id);
     if (!showId) {
-      throw new Error('This showtime does not have a backend show id yet. Open booking from a backend showtime or pass bookingId/orderId in the URL.');
+      throw new Error(
+        'This showtime does not have a backend show id yet. Open booking from a backend showtime or pass bookingId/orderId in the URL.',
+      );
     }
 
     const booking = await bookingAdminService.create({
@@ -220,13 +270,9 @@ export const BookingPage: React.FC = () => {
   };
 
   const startBackendPayment = async () => {
-    if (paymentLoading) return;
+    if (paymentLoading || !isQrStep) return;
+    if (!validateBilling()) return;
     setPaymentError('');
-
-    if (paymentMethod !== 'QR_CODE') {
-      goToStep('qr-payment');
-      return;
-    }
 
     try {
       setPaymentLoading(true);
@@ -246,8 +292,6 @@ export const BookingPage: React.FC = () => {
       if (!display) throw new Error('The payment API did not return QR data for this KHQR payment.');
 
       setCheckoutPayment({ payment, transactions, display });
-      setStep('qr-payment');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       setPaymentError(getApiErrorMessage(error, 'payment'));
     } finally {
@@ -255,20 +299,24 @@ export const BookingPage: React.FC = () => {
     }
   };
 
-  const handleConfirmBooking = async () => {
+  const confirmBooking = async () => {
     if (selectedSeats.length === 0) return;
     setPaymentError('');
 
-    if (paymentMethod === 'QR_CODE' && checkoutPayment) {
+    if (isQrStep && checkoutPayment) {
       try {
         setPaymentLoading(true);
         const payment = await paymentService.checkStatus(checkoutPayment.payment.id);
-        const transactions = await paymentTransactionService.listByPayment(payment.id).catch(() => checkoutPayment.transactions);
+        const transactions = await paymentTransactionService
+          .listByPayment(payment.id)
+          .catch(() => checkoutPayment.transactions);
         const display = resolvePaymentQrDisplay(payment, transactions) ?? checkoutPayment.display;
         setCheckoutPayment({ payment, transactions, display });
 
         if (payment.status !== 'PAID') {
-          setPaymentError('Payment is still pending. Scan the QR code and wait for the backend payment status to become PAID.');
+          setPaymentError(
+            'Payment is still pending. Scan the QR code and wait for the backend payment status to become PAID.',
+          );
           return;
         }
       } catch (error) {
@@ -281,8 +329,8 @@ export const BookingPage: React.FC = () => {
 
     const booking = addBooking({
       userId: user ? String(user.id) : 'u-guest',
-      userName: user?.username || 'Guest User',
-      userEmail: user?.email || 'guest@example.com',
+      userName: billingName.trim() || user?.username || 'Guest User',
+      userEmail: billingEmail.trim() || user?.email || 'guest@example.com',
       movieId: movie?.id || 'm-1',
       movieTitle: movie?.title || 'Unknown Movie',
       moviePoster: movie?.posterUrl || '',
@@ -296,18 +344,53 @@ export const BookingPage: React.FC = () => {
       paymentMethod,
       status: 'CONFIRMED',
     });
-    setConfirmedBookingId(confirmedBookingId || booking.id);
-    setStep('success');
+
+    setConfirmedBookingId((current) => current || booking.id);
+    setMaxStepIndex(FLOW_STEPS.length - 1);
+    setStep('confirmation');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const paymentReference = checkoutPayment?.display.reference || confirmedBookingId || `CIN-${(showtime?.date || '20260821').replace(/-/g, '')}-001234`;
-  const paymentQrUrl = checkoutPayment?.display.qrImageSrc || `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(`${paymentReference}|${grandTotal.toFixed(2)}|${movie?.title || 'Cinematique'}`)}`;
+  const handleCardConfirm = () => {
+    if (paymentLoading || selectedSeats.length === 0) return;
+    if (!validateBilling()) return;
+
+    const cardDigits = cardNumber.replace(/\D/g, '');
+    if (!/^\d{16}$/.test(cardDigits)) {
+      setPaymentError('Please enter a valid 16-digit card number.');
+      return;
+    }
+    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(cardExpiry)) {
+      setPaymentError('Please enter the card expiry as MM/YY.');
+      return;
+    }
+    if (!/^\d{3,4}$/.test(cardCvc)) {
+      setPaymentError('Please enter the card CVC.');
+      return;
+    }
+
+    setPaymentError('');
+    setPaymentLoading(true);
+    window.setTimeout(() => {
+      setPaymentLoading(false);
+      void confirmBooking();
+    }, 800);
+  };
+
+  const paymentReference =
+    checkoutPayment?.display.reference ||
+    confirmedBookingId ||
+    `CIN-${(showtime?.date || '20260821').replace(/-/g, '')}-001234`;
+  const paymentQrUrl =
+    checkoutPayment?.display.qrImageSrc ||
+    `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(
+      `${paymentReference}|${grandTotal.toFixed(2)}|${movie?.title || 'Cinematique'}`,
+    )}`;
 
   const downloadTicket = () => {
     const ticketText = [
       'CINEMATIQUE E-TICKET',
-      `Booking Reference: ${confirmedBookingId}`,
+      `Booking Reference: ${confirmedBookingId || paymentReference}`,
       `Movie: ${movie?.title || 'Unknown Movie'}`,
       `Showtime: ${showtime?.cinemaName} - ${showtime?.hallName}`,
       `Date: ${formatDate(showtime?.date || '')} at ${showtime?.time}`,
@@ -322,87 +405,142 @@ export const BookingPage: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
+  const renderStepper = () => (
+    <nav className="overflow-x-auto pb-2 scrollbar-none" aria-label="Booking progress">
+      <div className="flex min-w-[560px] items-start justify-between gap-2">
+        {FLOW_STEPS.map((flowStep, index) => {
+          const isActive = index === stepIndex;
+          const isComplete = index < stepIndex;
+          const canNavigate = index <= maxStepIndex && step !== 'confirmation';
+          return (
+            <React.Fragment key={flowStep.id}>
+              <button
+                type="button"
+                onClick={() => goToStep(flowStep.id)}
+                disabled={step === 'confirmation' || isActive || !canNavigate}
+                aria-current={isActive ? 'step' : undefined}
+                className={`group flex min-h-[4.5rem] shrink-0 flex-col items-center justify-start gap-2 rounded-xl border px-3 py-2 text-center transition-all disabled:cursor-default ${
+                  isActive ? 'border-[#E50914] bg-[#E50914]/10' : 'border-border bg-card hover:border-[#E50914]/40'
+                }`}
+              >
+                <span
+                  className={`flex h-8 w-8 items-center justify-center rounded-lg text-xs font-black transition-all ${
+                    isComplete || isActive
+                      ? 'bg-[#E50914] text-white shadow-lg shadow-[#E50914]/30'
+                      : 'bg-muted text-muted-foreground'
+                  }`}
+                >
+                  {isComplete ? <Check className="h-4 w-4" aria-hidden="true" /> : index + 1}
+                </span>
+                <span
+                  className={`whitespace-nowrap text-[11px] font-bold ${
+                    isActive ? 'text-[#E50914]' : 'text-muted-foreground'
+                  }`}
+                >
+                  {flowStep.label}
+                </span>
+              </button>
+              {index < FLOW_STEPS.length - 1 && (
+                <div className={`mt-4 h-px flex-1 ${index < stepIndex ? 'bg-[#E50914]' : 'bg-border'}`} aria-hidden="true" />
+              )}
+            </React.Fragment>
+          );
+        })}
+      </div>
+    </nav>
+  );
+
   const renderStepHeader = () => (
     <div className="mb-8 space-y-4">
-      <div className="overflow-hidden rounded-2xl border border-border bg-[#050506] shadow-2xl">
-        <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
+      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
+        <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
           <button
             type="button"
             onClick={() => navigate(movie ? `/movies/${movie.id}` : '/movies')}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition-colors hover:bg-white/10"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-muted text-foreground transition-colors hover:bg-secondary"
             aria-label="Back to movie"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           </button>
           <div className="text-center">
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#E50914]">Cinematique</p>
-            <h2 className="text-lg font-black uppercase text-white">Booking</h2>
+            <h2 className="text-lg font-black uppercase text-foreground">Booking</h2>
           </div>
-          <div className="flex items-center gap-1.5 rounded-full border border-[#E50914]/30 bg-[#E50914]/10 px-3 py-2 text-[11px] font-black text-white">
-            <Clock3 className="h-3.5 w-3.5 text-[#E50914]" aria-hidden="true" />
-            15:00
+          <div className="flex items-center gap-1.5 rounded-full border border-[#E50914]/30 bg-[#E50914]/10 px-3 py-2 text-[11px] font-black text-[#E50914]">
+            <Clock3 className="h-3.5 w-3.5" aria-hidden="true" />
+            {showtime?.time || '15:00'}
           </div>
         </div>
         <div className="grid gap-3 px-4 py-4 sm:grid-cols-[1fr_auto] sm:items-center">
           <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Step {currentStepNumber} of {FLOW_STEPS.length}</p>
-            <h1 className="mt-1 truncate text-2xl font-black uppercase text-white">{currentFlowStep.label}</h1>
-            <p className="mt-1 text-xs text-zinc-300">{currentFlowStep.description}</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+              Step {stepIndex + 1} of {FLOW_STEPS.length}
+            </p>
+            <h1 className="mt-1 truncate text-2xl font-black uppercase text-foreground sm:text-3xl">
+              {currentFlowStep.title}
+            </h1>
+            <p className="mt-1 text-xs text-muted-foreground">{currentFlowStep.description}</p>
           </div>
-          <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] p-2">
+          <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/50 p-2">
             <img src={movie?.posterUrl} alt={movie?.title || 'Movie poster'} className="h-14 w-10 rounded-lg object-cover" />
             <div className="min-w-0 pr-2">
-              <p className="max-w-52 truncate text-xs font-black uppercase text-white">{movie?.title || 'Selected movie'}</p>
-              <p className="mt-1 max-w-52 truncate text-[11px] text-zinc-400">{showtime?.cinemaName || 'All Cinemas'} - {showtime?.time || 'Showtime'}</p>
+              <p className="max-w-52 truncate text-xs font-black uppercase text-foreground">
+                {movie?.title || 'Selected movie'}
+              </p>
+              <p className="mt-1 max-w-52 truncate text-[11px] text-muted-foreground">
+                {showtime?.cinemaName || 'Cinematique'} · {showtime?.format || 'IMAX'} · {showtime?.time || '—'}
+              </p>
             </div>
           </div>
         </div>
       </div>
-      <nav className="overflow-x-auto pb-2 scrollbar-none" aria-label="Booking progress">
-        <div className="flex min-w-[560px] items-start justify-between gap-2">
-          {FLOW_STEPS.map((flowStep, index) => {
-            const isActive = flowStep.number === currentStepNumber;
-            const isComplete = flowStep.number < currentStepNumber;
-            const isMovieStep = flowStep.id === 'movie' || flowStep.id === 'showtime';
-            return (
-              <React.Fragment key={flowStep.id}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (isMovieStep) navigate(movie ? `/movies/${movie.id}` : '/movies');
-                    else if (isComplete && flowStep.id !== 'success' && flowStep.id !== 'ticket' && flowStep.id !== 'movie' && flowStep.id !== 'showtime') goToStep(flowStep.id);
-                  }}
-                  disabled={!isMovieStep && !isComplete && !isActive}
-                  className={`group flex min-h-[4.5rem] shrink-0 flex-col items-center justify-start gap-2 rounded-xl border px-3 py-2 text-center transition-all disabled:cursor-default ${isActive ? 'border-[#E50914] bg-[#E50914]/10' : 'border-border bg-card hover:border-[#E50914]/30'}`}
-                >
-                  <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-xs font-black transition-all ${isActive || isComplete ? 'bg-[#E50914] text-white shadow-lg shadow-[#E50914]/30' : 'bg-muted text-muted-foreground'} ${isMovieStep && !isActive ? 'group-hover:ring-2 group-hover:ring-[#E50914]/30' : ''}`}>
-                    {isComplete ? <Check className="h-4 w-4" /> : flowStep.number}
-                  </span>
-                  <span className={`whitespace-nowrap text-[11px] font-bold ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>{flowStep.label}</span>
-                </button>
-                {index < FLOW_STEPS.length - 1 && <div className={`mt-8 h-px flex-1 ${isComplete ? 'bg-[#E50914]' : 'bg-border'}`} />}
-              </React.Fragment>
-            );
-          })}
-        </div>
-      </nav>
+      {renderStepper()}
     </div>
   );
+
   const renderMovieSummary = () => (
     <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/60 p-3">
       <img src={movie?.posterUrl} alt={movie?.title || 'Movie poster'} className="h-20 w-14 rounded-lg object-cover" />
       <div className="min-w-0 space-y-1">
         <h2 className="truncate text-sm font-black uppercase text-foreground">{movie?.title}</h2>
         <p className="text-[11px] font-semibold text-[#E50914]">{showtime?.cinemaName || 'Cinematique Grand Hall'}</p>
-        <p className="text-[11px] text-muted-foreground">{showtime?.hallName || 'IMAX Theater 1'} · {formatDate(showtime?.date || '')} at {showtime?.time || '14:30'}</p>
+        <p className="text-[11px] text-muted-foreground">
+          {showtime?.hallName || 'IMAX Theater 1'} · {formatDate(showtime?.date || '')} at {showtime?.time || '14:30'}
+        </p>
       </div>
+    </div>
+  );
+
+  const renderLegend = () => (
+    <div className="mb-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] text-muted-foreground">
+      <span className="flex items-center gap-1.5">
+        <span className="h-3.5 w-3.5 rounded border border-border bg-muted" /> Available
+      </span>
+      <span className="flex items-center gap-1.5 font-semibold text-foreground">
+        <span className="h-3.5 w-3.5 rounded bg-[#E50914]" /> Selected
+      </span>
+      <span className="flex items-center gap-1.5">
+        <span className="h-3.5 w-3.5 rounded bg-muted seat-occupied" /> Occupied
+      </span>
+      <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-300">
+        <span className="h-3.5 w-3.5 rounded border border-amber-500/50 bg-amber-500/15" /> VIP
+      </span>
+      <span className="flex items-center gap-1.5 text-rose-600 dark:text-rose-300">
+        <span className="h-3.5 w-3.5 rounded border border-rose-500/50 bg-rose-500/15" /> Couple
+      </span>
     </div>
   );
 
   const renderSeatSelection = () => (
     <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
       <div className="rounded-2xl border border-border bg-card p-5 shadow-2xl sm:p-8">
-        <div className="mx-auto mb-8 max-w-lg space-y-2 text-center"><div className="screen-curve w-full" /><p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">THEATER SCREEN</p></div>
+        <div className="mx-auto mb-6 max-w-lg space-y-2 text-center">
+          <div className="screen-curve w-full" />
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">THEATER SCREEN</p>
+        </div>
+
+        {renderLegend()}
+
         <div className="space-y-3 overflow-x-auto pb-4 scrollbar-none">
           {rows.map((row) => {
             const seatType = getSeatType(row);
@@ -415,14 +553,42 @@ export const BookingPage: React.FC = () => {
                     const seatId = `${row}${index + 1}`;
                     const occupied = isSeatOccupied(seatId);
                     const selected = selectedSeats.includes(seatId);
-                    let seatClass = 'border border-border bg-muted text-muted-foreground hover:bg-secondary';
-                    if (occupied) seatClass = 'cursor-not-allowed border-transparent bg-zinc-900 text-transparent opacity-30';
-                    else if (selected) seatClass = 'scale-110 border-transparent bg-[#E50914] font-bold text-white shadow-lg shadow-[#E50914]/50';
-                    else if (seatType === 'VIP') seatClass = 'border border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/30';
-                    else if (seatType === 'COUPLE') seatClass = 'border border-rose-500/40 bg-rose-500/10 text-rose-300 hover:bg-rose-500/30';
+                    let seatClass = 'cursor-pointer border border-border bg-muted text-muted-foreground';
+                    if (seatType === 'VIP') {
+                      seatClass =
+                        'cursor-pointer border border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-300';
+                    } else if (seatType === 'COUPLE') {
+                      seatClass =
+                        'cursor-pointer border border-rose-500/40 bg-rose-500/10 text-rose-600 dark:text-rose-300';
+                    }
+                    if (occupied) {
+                      seatClass = 'seat-occupied cursor-not-allowed border-transparent bg-muted opacity-45';
+                    } else if (selected) {
+                      seatClass =
+                        'scale-110 cursor-pointer border-transparent bg-[#E50914] font-bold text-white shadow-lg shadow-[#E50914]/50';
+                    }
+                    const hoverClass = occupied
+                      ? ''
+                      : selected
+                        ? ''
+                        : seatType === 'VIP'
+                          ? 'hover:border-amber-500/70 hover:bg-amber-500/25 hover:text-amber-700 hover:shadow-[0_6px_16px_rgba(245,158,11,0.28)] dark:hover:text-amber-200'
+                          : seatType === 'COUPLE'
+                            ? 'hover:border-rose-500/70 hover:bg-rose-500/25 hover:text-rose-700 hover:shadow-[0_6px_16px_rgba(244,63,94,0.28)] dark:hover:text-rose-200'
+                            : 'hover:border-[#E50914]/60 hover:bg-[#E50914]/10 hover:text-[#E50914] hover:shadow-[0_6px_16px_rgba(229,9,20,0.24)]';
                     return (
-                      <motion.button key={seatId} type="button" disabled={occupied} onClick={() => handleSeatClick(seatId)} whileHover={occupied ? {} : { scale: 1.12 }} whileTap={occupied ? {} : { scale: 0.9 }} className={`flex h-8 w-8 items-center justify-center rounded-lg text-[10px] transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914] ${seatClass}`} title={`${seatId} (${seatType} - ${formatCurrency(price)})`} aria-label={`${seatId}, ${occupied ? 'occupied' : selected ? 'selected' : 'available'}`}>
-                        {index + 1}
+                      <motion.button
+                        key={seatId}
+                        type="button"
+                        disabled={occupied}
+                        onClick={() => handleSeatClick(seatId)}
+                        whileHover={occupied ? {} : { scale: 1.12, y: -2 }}
+                        whileTap={occupied ? {} : { scale: 0.9 }}
+                        className={`flex h-8 w-8 items-center justify-center rounded-lg text-[10px] font-bold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914] ${seatClass} ${hoverClass}`}
+                        title={`${seatId} (${seatType} - ${formatCurrency(price)})`}
+                        aria-label={`${seatId}, ${occupied ? 'occupied' : selected ? 'selected' : 'available'}, ${seatType}`}
+                      >
+                        {!occupied && index + 1}
                       </motion.button>
                     );
                   })}
@@ -432,25 +598,69 @@ export const BookingPage: React.FC = () => {
             );
           })}
         </div>
+
         <div className="mt-6 grid gap-3 border-t border-border pt-6 text-center sm:grid-cols-3">
-          <div className="rounded-xl bg-muted p-3"><span className="block text-[11px] font-medium text-muted-foreground">Standard · Rows A-E</span><span className="text-sm font-bold text-foreground">{formatCurrency(showtime?.price || 15)}</span></div>
-          <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3"><span className="block text-[11px] font-medium text-amber-300">VIP Lounge · Rows F-G</span><span className="text-sm font-bold text-foreground">{formatCurrency(showtime?.vipPrice || 22)}</span></div>
-          <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-3"><span className="block text-[11px] font-medium text-rose-300">Couple Suite · Row H</span><span className="text-sm font-bold text-foreground">{formatCurrency((showtime?.vipPrice || 22) + 8)}</span></div>
+          <div className="rounded-xl bg-muted p-3">
+            <span className="block text-[11px] font-medium text-muted-foreground">Standard · Rows A-E</span>
+            <span className="text-sm font-bold text-foreground">{formatCurrency(showtime?.price || 15)}</span>
+          </div>
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
+            <span className="block text-[11px] font-medium text-amber-600 dark:text-amber-300">VIP Lounge · Rows F-G</span>
+            <span className="text-sm font-bold text-foreground">{formatCurrency(showtime?.vipPrice || 22)}</span>
+          </div>
+          <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3">
+            <span className="block text-[11px] font-medium text-rose-600 dark:text-rose-300">Couple Suite · Row H</span>
+            <span className="text-sm font-bold text-foreground">{formatCurrency((showtime?.vipPrice || 22) + 8)}</span>
+          </div>
         </div>
       </div>
+
       <aside className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-2xl lg:sticky lg:top-24">
-        <h2 className="flex items-center gap-2 border-b border-border pb-3 text-sm font-black uppercase tracking-wider text-foreground"><Ticket className="h-4 w-4 text-[#E50914]" /> Booking Summary</h2>
+        <h2 className="flex items-center gap-2 border-b border-border pb-3 text-sm font-black uppercase tracking-wider text-foreground">
+          <Ticket className="h-4 w-4 text-[#E50914]" /> Booking Summary
+        </h2>
         {renderMovieSummary()}
-        <div className="space-y-2 border-t border-border pt-4"><div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">Selected Seats</span><span className="font-bold text-foreground">{selectedSeats.length} / 8</span></div>{selectedSeats.length > 0 ? <div className="flex flex-wrap gap-2">{selectedSeats.map((seatId) => <span key={seatId} className="rounded-md bg-[#E50914] px-2.5 py-1 text-xs font-bold text-white">{seatId}</span>)}</div> : <p className="text-xs italic text-muted-foreground">No seats selected yet.</p>}</div>
-        <div className="space-y-2 border-t border-border pt-4 text-xs"><div className="flex justify-between text-muted-foreground"><span>Tickets</span><span className="font-semibold text-foreground">{formatCurrency(ticketSubtotal)}</span></div><div className="flex justify-between text-muted-foreground"><span>Convenience Fee</span><span className="font-semibold text-foreground">{formatCurrency(serviceFee)}</span></div><div className="flex justify-between border-t border-border pt-3 text-sm font-bold"><span>Total</span><span className="text-[#E50914]">{formatCurrency(ticketSubtotal + serviceFee)}</span></div></div>
-        <button type="button" disabled={selectedSeats.length === 0} onClick={() => goToStep('snacks')} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#E50914] px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-white transition-all hover:bg-[#ff1f2d] disabled:cursor-not-allowed disabled:opacity-50">Continue to Snacks <ArrowRight className="h-4 w-4" /></button>
+        <div className="space-y-2 border-t border-border pt-4">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">Selected Seats</span>
+            <span className="font-bold text-foreground">{selectedSeats.length} / 8</span>
+          </div>
+          {selectedSeats.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {selectedSeats.map((seatId) => (
+                <span key={seatId} className="rounded-md bg-[#E50914] px-2.5 py-1 text-xs font-bold text-white">
+                  {seatId}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs italic text-muted-foreground">No seats selected yet.</p>
+          )}
+        </div>
+        <div className="space-y-2 border-t border-border pt-4 text-xs">
+          <div className="flex justify-between text-muted-foreground">
+            <span>Tickets</span>
+            <span className="font-semibold text-foreground">{formatCurrency(ticketSubtotal)}</span>
+          </div>
+          <div className="flex justify-between text-muted-foreground">
+            <span>Convenience Fee</span>
+            <span className="font-semibold text-foreground">{formatCurrency(serviceFee)}</span>
+          </div>
+          <div className="flex justify-between border-t border-border pt-3 text-sm font-bold">
+            <span>Total</span>
+            <span className="text-[#E50914]">{formatCurrency(ticketSubtotal + serviceFee)}</span>
+          </div>
+        </div>
+        <p className="rounded-xl border border-dashed border-border p-3 text-center text-[11px] text-muted-foreground">
+          Your running total is always visible in the sticky bar below.
+        </p>
       </aside>
     </div>
   );
 
   const renderSnackSelection = () => {
     const categoryCount = (category: SnackCategoryId) =>
-      category === 'All' ? SNACKS.length : SNACKS.filter((s) => s.category === category).length;
+      category === 'All' ? SNACKS.length : SNACKS.filter((snack) => snack.category === category).length;
 
     return (
       <div className="space-y-6">
@@ -464,17 +674,26 @@ export const BookingPage: React.FC = () => {
                 type="button"
                 onClick={() => setSnackCategory(category)}
                 aria-pressed={active}
-                className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2 text-xs font-bold transition-all ${active ? 'border-[#E50914] bg-[#E50914] text-white shadow-md shadow-[#E50914]/25' : 'border-border bg-card text-muted-foreground hover:border-[#E50914]/40 hover:text-foreground'}`}
+                className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2 text-xs font-bold transition-all ${
+                  active
+                    ? 'border-[#E50914] bg-[#E50914] text-white shadow-md shadow-[#E50914]/25'
+                    : 'border-border bg-card text-muted-foreground hover:border-[#E50914]/40 hover:text-foreground'
+                }`}
               >
                 <Icon className="h-3.5 w-3.5" aria-hidden="true" />
                 {category}
-                <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-black tabular-nums ${active ? 'bg-white/20 text-white' : 'bg-muted text-muted-foreground'}`}>
+                <span
+                  className={`rounded-full px-1.5 py-0.5 text-[10px] font-black tabular-nums ${
+                    active ? 'bg-white/20 text-white' : 'bg-muted text-muted-foreground'
+                  }`}
+                >
                   {categoryCount(category)}
                 </span>
               </button>
             );
           })}
         </div>
+
         {snacksLoading ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3" aria-busy="true" aria-label="Loading snacks">
             {Array.from({ length: 6 }, (_, index) => (
@@ -495,178 +714,601 @@ export const BookingPage: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {filteredSnacks.map((snack) => {
-            const quantity = snackQuantities[snack.id] ?? 0;
-            return (
-              <motion.article
-                key={snack.id}
-                whileHover={{ y: -4, scale: 1.015 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-                className="group overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-shadow duration-300 hover:shadow-lg hover:shadow-[#E50914]/15 hover:ring-1 hover:ring-[#E50914]/40"
-              >
-                <div className="aspect-[1.15] overflow-hidden bg-muted">
-                  <SnackImage name={snack.name} category={snack.category} src={snack.imageUrl} />
-                </div>
-                <div className="space-y-3 p-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="text-xs font-bold text-foreground">{snack.name}</h3>
-                    <span className="inline-flex shrink-0 items-center rounded-full bg-[#E50914]/10 px-2 py-0.5 text-[11px] font-black text-[#E50914]">
-                      {formatCurrency(snack.price)}
-                    </span>
+            {filteredSnacks.map((snack) => {
+              const quantity = snackQuantities[snack.id] ?? 0;
+              return (
+                <motion.article
+                  key={snack.id}
+                  whileHover={{ y: -4, scale: 1.015 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+                  className="group overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-shadow duration-300 hover:shadow-lg hover:shadow-[#E50914]/15 hover:ring-1 hover:ring-[#E50914]/40"
+                >
+                  <div className="aspect-[1.15] overflow-hidden bg-muted">
+                    <SnackImage name={snack.name} category={snack.category} src={snack.imageUrl} />
                   </div>
-                  <div>
-                    {quantity === 0 ? (
-                      <button
-                        type="button"
-                        onClick={() => updateSnackQuantity(snack.id, 1)}
-                        className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#E50914]/40 bg-[#E50914]/10 px-3 py-2 text-xs font-bold text-[#E50914] transition-colors hover:bg-[#E50914] hover:text-white"
-                        aria-label={`Add ${snack.name}`}
-                      >
-                        <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-                        Add
-                      </button>
-                    ) : (
-                      <motion.div
-                        key={`qty-${quantity}`}
-                        initial={{ scale: 0.94 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                        className="flex w-full items-center justify-between rounded-lg bg-[#E50914] p-1"
-                      >
-                        <button
-                          type="button"
-                          onClick={() => updateSnackQuantity(snack.id, -1)}
-                          className="flex h-7 w-9 items-center justify-center rounded-md text-white hover:bg-white/20"
-                          aria-label={`Remove one ${snack.name}`}
-                        >
-                          <Minus className="h-3.5 w-3.5" aria-hidden="true" />
-                        </button>
-                        <motion.span
-                          key={`count-${quantity}`}
-                          initial={{ scale: 1.25 }}
-                          animate={{ scale: 1 }}
-                          transition={{ type: 'spring', stiffness: 500, damping: 18 }}
-                          className="min-w-[1.5rem] text-center text-sm font-black text-white tabular-nums"
-                        >
-                          {quantity}
-                        </motion.span>
+                  <div className="space-y-3 p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="text-xs font-bold text-foreground">{snack.name}</h3>
+                      <span className="inline-flex shrink-0 items-center rounded-full bg-[#E50914]/10 px-2 py-0.5 text-[11px] font-black text-[#E50914]">
+                        {formatCurrency(snack.price)}
+                      </span>
+                    </div>
+                    <div>
+                      {quantity === 0 ? (
                         <button
                           type="button"
                           onClick={() => updateSnackQuantity(snack.id, 1)}
-                          className="flex h-7 w-9 items-center justify-center rounded-md text-white hover:bg-white/20"
-                          aria-label={`Add one ${snack.name}`}
+                          className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#E50914]/40 bg-[#E50914]/10 px-3 py-2 text-xs font-bold text-[#E50914] transition-colors hover:bg-[#E50914] hover:text-white"
+                          aria-label={`Add ${snack.name}`}
                         >
                           <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                          Add
                         </button>
-                      </motion.div>
-                    )}
+                      ) : (
+                        <motion.div
+                          key={`qty-${quantity}`}
+                          initial={{ scale: 0.94 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                          className="flex w-full items-center justify-between rounded-lg bg-[#E50914] p-1"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => updateSnackQuantity(snack.id, -1)}
+                            className="flex h-7 w-9 items-center justify-center rounded-md text-white hover:bg-white/20"
+                            aria-label={`Remove one ${snack.name}`}
+                          >
+                            <Minus className="h-3.5 w-3.5" aria-hidden="true" />
+                          </button>
+                          <motion.span
+                            key={`count-${quantity}`}
+                            initial={{ scale: 1.25 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: 'spring', stiffness: 500, damping: 18 }}
+                            className="min-w-[1.5rem] text-center text-sm font-black text-white tabular-nums"
+                          >
+                            {quantity}
+                          </motion.span>
+                          <button
+                            type="button"
+                            onClick={() => updateSnackQuantity(snack.id, 1)}
+                            className="flex h-7 w-9 items-center justify-center rounded-md text-white hover:bg-white/20"
+                            aria-label={`Add one ${snack.name}`}
+                          >
+                            <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                          </button>
+                        </motion.div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </motion.article>
-            );
-          })}
+                </motion.article>
+              );
+            })}
           </div>
         )}
       </div>
     );
   };
 
-  const renderOrderLines = () => <div className="space-y-3"><div className="flex items-center justify-between border-b border-border pb-3"><span className="text-xs font-bold text-foreground">Tickets ({selectedSeats.length})</span><span className="text-xs font-bold text-foreground">{formatCurrency(ticketSubtotal)}</span></div>{selectedSeats.map((seatId) => <div key={seatId} className="flex items-center justify-between text-xs text-muted-foreground"><span>Seat {seatId} · {getSeatType(seatId[0])}</span><span>{formatCurrency(getSeatPrice(seatId[0]))}</span></div>)}{selectedSnackItems.length > 0 && <div className="border-t border-border pt-3"><div className="mb-2 flex items-center justify-between text-xs font-bold text-foreground"><span>Snacks & Drinks</span><span>{formatCurrency(snacksSubtotal)}</span></div>{selectedSnackItems.map((snack) => <div key={snack.id} className="flex items-center justify-between text-xs text-muted-foreground"><span>{snack.name} × {snackQuantities[snack.id]}</span><span>{formatCurrency(snack.price * snackQuantities[snack.id])}</span></div>)}</div>}</div>;
-
-  const snackItemCount = Object.values(snackQuantities).reduce((sum, qty) => sum + qty, 0);
-
-  const renderSnackSummaryBar = () => (
-    <motion.div
-      initial={{ y: 80, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      exit={{ y: 80, opacity: 0 }}
-      transition={{ type: 'spring', stiffness: 260, damping: 26 }}
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E50914]/30 bg-card/95 backdrop-blur-md"
-    >
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => goToStep('seats')}
-            className="hidden items-center justify-center gap-1.5 rounded-lg border border-border bg-muted px-3 py-2 text-xs font-bold text-muted-foreground transition-colors hover:text-foreground md:inline-flex"
-            aria-label="Back to seat selection"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
-            Seats
-          </button>
-          <span className="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#E50914]/30 bg-[#E50914]/10 text-[#E50914]">
-            <ShoppingBag className="h-5 w-5" aria-hidden="true" />
-            {snackItemCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#E50914] px-1 text-[10px] font-black text-white">
-                {snackItemCount}
-              </span>
-            )}
+  const renderOrderLines = () => (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between border-b border-border pb-3">
+        <span className="text-xs font-bold text-foreground">Tickets ({selectedSeats.length})</span>
+        <span className="text-xs font-bold text-foreground">{formatCurrency(ticketSubtotal)}</span>
+      </div>
+      {selectedSeats.map((seatId) => (
+        <div key={seatId} className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>
+            Seat {seatId} · {getSeatType(seatId[0])}
           </span>
-          <div className="hidden min-w-0 sm:block">
-            <p className="truncate text-xs font-bold text-foreground">
-              {snackItemCount === 0 ? 'No snacks selected' : `${snackItemCount} ${snackItemCount === 1 ? 'item' : 'items'} selected`}
-            </p>
-            <p className="text-[11px] text-muted-foreground">Snacks & Drinks subtotal</p>
+          <span>{formatCurrency(getSeatPrice(seatId[0]))}</span>
+        </div>
+      ))}
+      {selectedSnackItems.length > 0 && (
+        <div className="border-t border-border pt-3">
+          <div className="mb-2 flex items-center justify-between text-xs font-bold text-foreground">
+            <span>Snacks & Drinks</span>
+            <span>{formatCurrency(snacksSubtotal)}</span>
+          </div>
+          {selectedSnackItems.map((snack) => (
+            <div key={snack.id} className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>
+                {snack.name} × {snackQuantities[snack.id]}
+              </span>
+              <span>{formatCurrency(snack.price * snackQuantities[snack.id])}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  const renderTotals = () => (
+    <div className="space-y-3 border-t border-border pt-4 text-xs">
+      <div className="flex justify-between text-muted-foreground">
+        <span>Tickets</span>
+        <span>{formatCurrency(ticketSubtotal)}</span>
+      </div>
+      <div className="flex justify-between text-muted-foreground">
+        <span>Snacks</span>
+        <span>{formatCurrency(snacksSubtotal)}</span>
+      </div>
+      <div className="flex justify-between text-muted-foreground">
+        <span>Convenience Fee</span>
+        <span>{formatCurrency(serviceFee)}</span>
+      </div>
+      <div className="flex justify-between border-t border-border pt-3 text-base font-black text-foreground">
+        <span>Total Amount</span>
+        <span className="text-[#E50914]">{formatCurrency(grandTotal)}</span>
+      </div>
+    </div>
+  );
+
+  const renderQrPanel = () => (
+    <div className="space-y-2 text-center">
+      <div className="flex items-center gap-2 border-b border-border pb-4 text-left">
+        <QrCode className="h-5 w-5 text-[#E50914]" />
+        <div>
+          <h2 className="text-lg font-black uppercase text-foreground">Scan to Pay</h2>
+          <p className="text-xs text-muted-foreground">Complete the payment in your banking app, then confirm below</p>
+        </div>
+      </div>
+      <div className="mx-auto mt-5 w-fit rounded-2xl bg-white p-4 shadow-xl">
+        <img src={paymentQrUrl} alt="KHQR payment code" className="h-56 w-56" />
+      </div>
+      <p className="mt-4 text-sm font-semibold text-foreground">Scan this QR code with your banking app</p>
+      <p className="text-xs text-muted-foreground">ABA, ACLEDA, Wing, Bakong, and other supported apps</p>
+      <div className="mx-auto flex max-w-md items-center justify-center gap-2 rounded-lg border border-border bg-muted/40 px-4 py-2 text-xs text-muted-foreground">
+        <span>
+          Reference:{' '}
+          <span className="font-mono font-bold text-foreground">{paymentReference}</span>
+        </span>
+        <button
+          type="button"
+          className="text-muted-foreground transition-colors hover:text-foreground"
+          title="Copy booking reference"
+          onClick={() => void navigator.clipboard?.writeText(paymentReference)}
+        >
+          <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+        </button>
+      </div>
+      {checkoutPayment && checkoutPayment.display.qrPayload === checkoutPayment.payment.transactionId && (
+        <p className="mx-auto max-w-md rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300">
+          Backend did not return a KHQR payload, so this QR uses the payment transaction reference.
+        </p>
+      )}
+      <button
+        type="button"
+        onClick={() => setCheckoutPayment(null)}
+        className="mt-2 text-xs font-semibold text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline"
+      >
+        Use a different payment method
+      </button>
+      {paymentError && (
+        <div className="flex items-start gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-left text-xs text-rose-700 dark:text-rose-300">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <span>{paymentError}</span>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderCheckout = () => (
+    <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="space-y-5 rounded-2xl border border-border bg-card p-5 shadow-2xl sm:p-8">
+        {showQrPanel ? (
+          renderQrPanel()
+        ) : (
+          <>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 border-b border-border pb-4">
+                <CreditCard className="h-5 w-5 text-[#E50914]" />
+                <div>
+                  <h2 className="text-lg font-black uppercase text-foreground">Payment Method</h2>
+                  <p className="text-xs text-muted-foreground">Choose how you want to pay</p>
+                </div>
+              </div>
+              {PAYMENT_METHODS.map((method) => {
+                const Icon = method.icon;
+                const active = paymentMethod === method.id;
+                return (
+                  <button
+                    key={method.id}
+                    type="button"
+                    onClick={() => {
+                      setPaymentMethod(method.id);
+                      setCheckoutPayment(null);
+                      setPaymentError('');
+                    }}
+                    className={`flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-all ${
+                      active
+                        ? 'border-[#E50914] bg-[#E50914]/10 shadow-lg shadow-[#E50914]/10'
+                        : 'border-border bg-muted/50 hover:bg-muted'
+                    }`}
+                  >
+                    <div
+                      className={`flex h-11 w-11 items-center justify-center rounded-lg ${
+                        active ? 'bg-[#E50914] text-white' : 'bg-secondary text-muted-foreground'
+                      }`}
+                    >
+                      <Icon className="h-5 w-5" aria-hidden="true" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-foreground">{method.name}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{method.description}</p>
+                    </div>
+                    <span
+                      className={`flex h-5 w-5 items-center justify-center rounded-full border ${
+                        active ? 'border-[#E50914] bg-[#E50914]' : 'border-muted-foreground/50'
+                      }`}
+                    >
+                      {active && <Check className="h-3 w-3 text-white" aria-hidden="true" />}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {isQrStep ? (
+              <div className="flex items-center gap-3 rounded-xl border border-dashed border-border p-4 text-xs text-muted-foreground">
+                <QrCode className="h-5 w-5 shrink-0 text-[#E50914]" />
+                Press “Generate QR Code” in the sticky bar below to create a KHQR payment you can scan with your banking app.
+              </div>
+            ) : (
+              <div className="space-y-4 rounded-xl border border-border bg-muted/40 p-4">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="h-4 w-4 text-[#E50914]" />
+                  <p className="text-sm font-bold text-foreground">Card Details</p>
+                </div>
+                <input
+                  className={INPUT_CLASS}
+                  placeholder="Card Number  (e.g. 4242 4242 4242 4242)"
+                  inputMode="numeric"
+                  value={cardNumber}
+                  onChange={(event) => setCardNumber(formatCardNumber(event.target.value))}
+                  aria-label="Card number"
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <input
+                    className={INPUT_CLASS}
+                    placeholder="MM/YY"
+                    inputMode="numeric"
+                    value={cardExpiry}
+                    onChange={(event) => setCardExpiry(formatExpiry(event.target.value))}
+                    aria-label="Card expiry"
+                  />
+                  <input
+                    className={INPUT_CLASS}
+                    placeholder="CVC"
+                    inputMode="numeric"
+                    value={cardCvc}
+                    onChange={(event) => setCardCvc(event.target.value.replace(/\D/g, '').slice(0, 4))}
+                    aria-label="Card CVC"
+                  />
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Demo checkout — no real payment is processed and your card details stay in this session.
+                </p>
+              </div>
+            )}
+
+            <div className="space-y-4 rounded-xl border border-border bg-muted/40 p-4">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-[#E50914]" />
+                <p className="text-sm font-bold text-foreground">Billing Details</p>
+              </div>
+              <input
+                className={INPUT_CLASS}
+                placeholder="Full name"
+                value={billingName}
+                onChange={(event) => setBillingName(event.target.value)}
+                aria-label="Billing name"
+              />
+              <input
+                className={INPUT_CLASS}
+                type="email"
+                placeholder="Email address"
+                value={billingEmail}
+                onChange={(event) => setBillingEmail(event.target.value)}
+                aria-label="Billing email"
+              />
+            </div>
+
+            {paymentError && (
+              <div className="flex items-start gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-700 dark:text-rose-300">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>{paymentError}</span>
+              </div>
+            )}
+            <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+              <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-500" aria-hidden="true" />
+              Secure checkout. Payments are encrypted and processed in-session.
+            </div>
+          </>
+        )}
+      </div>
+
+      <aside className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-2xl lg:sticky lg:top-24">
+        <h2 className="flex items-center gap-2 border-b border-border pb-3 text-sm font-black uppercase tracking-wider text-foreground">
+          <Ticket className="h-4 w-4 text-[#E50914]" /> Order Summary
+        </h2>
+        {renderMovieSummary()}
+        <div className="rounded-xl border border-border bg-muted/40 p-4">{renderOrderLines()}</div>
+        {renderTotals()}
+      </aside>
+    </div>
+  );
+
+  const renderTicket = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.12 }}
+      className="rounded-2xl border border-border bg-card p-5 shadow-2xl sm:p-8"
+    >
+      <div className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-[#E50914]">Your E-Ticket</p>
+          <h2 className="mt-1 text-2xl font-black text-foreground">My Tickets</h2>
+        </div>
+        <Badge variant="success" size="sm">
+          Confirmed
+        </Badge>
+      </div>
+      <div className="mt-6 grid gap-6 md:grid-cols-[1fr_220px]">
+        <div className="space-y-4">
+          <div className="flex items-start gap-4">
+            <img src={movie?.posterUrl} alt={movie?.title || 'Movie poster'} className="h-32 w-24 rounded-xl object-cover" />
+            <div>
+              <h3 className="text-lg font-black uppercase text-foreground">{movie?.title}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {showtime?.cinemaName} ({showtime?.format})
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {formatDate(showtime?.date || '')} at {showtime?.time}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Seats: <span className="font-bold text-foreground">{selectedSeats.join(', ')}</span>
+              </p>
+            </div>
+          </div>
+          <div className="rounded-xl border border-border bg-muted/50 p-4">
+            <p className="text-xs text-muted-foreground">Booking Reference</p>
+            <p className="mt-1 font-mono text-lg font-black text-foreground">{confirmedBookingId || paymentReference}</p>
           </div>
         </div>
-        <div className="flex flex-1 items-center justify-end gap-2 sm:gap-4">
-          <button
-            type="button"
-            onClick={() => goToStep('review')}
-            className="text-xs font-semibold text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline"
-          >
-            Skip snacks &amp; drinks
-          </button>
-          <button
-            type="button"
-            onClick={() => goToStep('review')}
-            className="flex items-center justify-center gap-2 rounded-xl bg-[#E50914] px-4 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-[#E50914]/30 transition-colors hover:bg-[#ff1f2d] sm:px-6"
-          >
-            Continue to Review
-            <span className="hidden text-sm font-black sm:inline">· {formatCurrency(grandTotal)}</span>
-            <ArrowRight className="h-4 w-4" aria-hidden="true" />
-          </button>
+        <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-white p-4">
+          <img src={paymentQrUrl} alt="Ticket QR code" className="h-40 w-40" />
+          <p className="mt-2 text-center text-[10px] font-semibold text-zinc-700">Show this QR code at the entrance</p>
         </div>
       </div>
     </motion.div>
   );
 
+  const renderConfirmation = () => (
+    <section className="mx-auto max-w-3xl space-y-6">
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-2xl border border-border bg-card p-6 text-center shadow-2xl sm:p-10"
+      >
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border-4 border-emerald-400/30 bg-emerald-500/15 text-emerald-400 shadow-lg shadow-emerald-500/20">
+          <CheckCircle2 className="h-12 w-12" aria-hidden="true" />
+        </div>
+        <p className="mt-6 text-xs font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+          Payment complete
+        </p>
+        <h2 className="mt-2 text-3xl font-black text-foreground">Payment Successful!</h2>
+        <p className="mt-2 text-sm text-muted-foreground">Your booking has been confirmed. Enjoy the movie!</p>
+        <div className="mx-auto mt-7 max-w-md rounded-xl border border-border bg-muted/50 p-4">
+          <p className="text-xs text-muted-foreground">Booking Reference</p>
+          <div className="mt-2 flex items-center justify-center gap-2">
+            <span className="font-mono text-lg font-black text-foreground">{confirmedBookingId || paymentReference}</span>
+            <button
+              type="button"
+              className="text-muted-foreground transition-colors hover:text-foreground"
+              title="Copy booking reference"
+              onClick={() => void navigator.clipboard?.writeText(confirmedBookingId || paymentReference)}
+            >
+              <Copy className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+        <div className="mt-5 space-y-2 text-sm text-muted-foreground">
+          <p className="font-bold text-foreground">{movie?.title}</p>
+          <p>
+            {showtime?.cinemaName} · {showtime?.hallName}
+          </p>
+          <p>
+            {formatDate(showtime?.date || '')} at {showtime?.time} · Seats {selectedSeats.join(', ')}
+          </p>
+        </div>
+      </motion.div>
 
-  const renderTotals = () => <div className="space-y-3 border-t border-border pt-4 text-xs"><div className="flex justify-between text-muted-foreground"><span>Tickets</span><span>{formatCurrency(ticketSubtotal)}</span></div><div className="flex justify-between text-muted-foreground"><span>Snacks</span><span>{formatCurrency(snacksSubtotal)}</span></div><div className="flex justify-between text-muted-foreground"><span>Convenience Fee</span><span>{formatCurrency(serviceFee)}</span></div><div className="flex justify-between border-t border-border pt-3 text-base font-black text-foreground"><span>Total Amount</span><span className="text-[#E50914]">{formatCurrency(grandTotal)}</span></div></div>;
+      {renderTicket()}
 
-  const renderReview = () => <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]"><div className="space-y-5 rounded-2xl border border-border bg-card p-5 shadow-2xl sm:p-8"><div className="flex items-center gap-2 border-b border-border pb-4"><ClipboardCheck className="h-5 w-5 text-[#E50914]" /><h2 className="text-lg font-black uppercase text-foreground">Review Your Order</h2></div>{renderMovieSummary()}<div className="rounded-xl border border-border bg-muted/40 p-4">{renderOrderLines()}</div>{selectedSnackItems.length === 0 && <div className="flex items-center gap-3 rounded-xl border border-dashed border-border p-4 text-xs text-muted-foreground"><ShoppingBag className="h-4 w-4" /> No snacks added. You can continue without snacks.</div>}</div><aside className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-2xl lg:sticky lg:top-24"><h2 className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-foreground"><Ticket className="h-4 w-4 text-[#E50914]" /> Order Summary</h2>{renderTotals()}<button type="button" onClick={() => goToStep('payment')} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#E50914] px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-white transition-colors hover:bg-[#ff1f2d]">Proceed to Payment <ArrowRight className="h-4 w-4" /></button></aside></div>;
+      <div className="grid gap-3 sm:grid-cols-2">
+        <button
+          type="button"
+          onClick={downloadTicket}
+          className="flex items-center justify-center gap-2 rounded-xl bg-[#E50914] px-4 py-3 text-xs font-bold uppercase tracking-wider text-white transition-colors hover:bg-[#ff1f2d]"
+        >
+          <Download className="h-4 w-4" aria-hidden="true" /> Download Ticket
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate('/history')}
+          className="flex items-center justify-center gap-2 rounded-xl border border-border bg-muted px-4 py-3 text-xs font-bold text-foreground transition-colors hover:bg-secondary"
+        >
+          <Ticket className="h-4 w-4" aria-hidden="true" /> View My Tickets
+        </button>
+      </div>
+      <div className="text-center">
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <HomeIcon className="h-3.5 w-3.5" aria-hidden="true" /> Back to Home
+        </button>
+      </div>
+    </section>
+  );
 
-  const renderPayment = () => <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]"><div className="space-y-5 rounded-2xl border border-border bg-card p-5 shadow-2xl sm:p-8"><div className="flex items-center gap-2 border-b border-border pb-4"><CreditCard className="h-5 w-5 text-[#E50914]" /><div><h2 className="text-lg font-black uppercase text-foreground">Payment Method</h2><p className="text-xs text-muted-foreground">Choose how you want to pay</p></div></div><div className="space-y-3">{PAYMENT_METHODS.map((method) => { const Icon = method.icon; const active = paymentMethod === method.id; return <button key={method.id} type="button" onClick={() => { setPaymentMethod(method.id); setPaymentError(''); }} className={`flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-all ${active ? 'border-[#E50914] bg-[#E50914]/10 shadow-lg shadow-[#E50914]/10' : 'border-border bg-muted/50 hover:bg-muted'}`}><div className={`flex h-11 w-11 items-center justify-center rounded-lg ${active ? 'bg-[#E50914] text-white' : 'bg-secondary text-muted-foreground'}`}><Icon className="h-5 w-5" /></div><div className="flex-1"><p className="text-sm font-bold text-foreground">{method.name}</p><p className="mt-1 text-xs text-muted-foreground">{method.description}</p></div><span className={`flex h-5 w-5 items-center justify-center rounded-full border ${active ? 'border-[#E50914] bg-[#E50914]' : 'border-muted-foreground/50'}`}>{active && <Check className="h-3 w-3 text-white" />}</span></button>; })}</div>{paymentError && <div className="flex items-start gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-700 dark:text-rose-300"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /> <span>{paymentError}</span></div>}<div className="flex items-center gap-2 rounded-xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground"><ShieldCheck className="h-4 w-4 shrink-0 text-emerald-500" /> Secure checkout. Your payment details are protected.</div></div><aside className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-2xl lg:sticky lg:top-24"><h2 className="text-sm font-black uppercase tracking-wider text-foreground">Total Amount</h2>{renderMovieSummary()}{renderTotals()}<button type="button" disabled={paymentLoading} onClick={() => void startBackendPayment()} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#E50914] px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-white shadow-xl shadow-[#E50914]/20 transition-all hover:bg-[#ff1f2d] hover:shadow-[#E50914]/40 disabled:cursor-not-allowed disabled:opacity-60">{paymentLoading ? <><LoaderCircle className="h-4 w-4 animate-spin" /> Generating KHQR</> : <>Continue to Payment <span className="ml-1">{formatCurrency(grandTotal)}</span></>}</button><p className="text-center text-[10px] text-muted-foreground">By proceeding, you agree to our Terms & Conditions and Privacy Policy.</p></aside></div>;
+  const renderStickyCta = () => {
+    if (step === 'seats') {
+      return (
+        <button
+          type="button"
+          onClick={() => goToStep('concessions')}
+          disabled={selectedSeats.length === 0}
+          className={PRIMARY_CTA}
+        >
+          Proceed to Snacks <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        </button>
+      );
+    }
 
-  const renderQrPayment = () => <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]"><div className="space-y-5 rounded-2xl border border-border bg-card p-5 text-center shadow-2xl sm:p-8"><div className="flex items-center gap-2 border-b border-border pb-4 text-left"><QrCode className="h-5 w-5 text-[#E50914]" /><div><h2 className="text-lg font-black uppercase text-foreground">{paymentMethod === 'QR_CODE' ? 'KHQR Payment' : 'Complete Payment'}</h2><p className="text-xs text-muted-foreground">Follow the payment instructions to finish your order</p></div></div>{paymentMethod === 'QR_CODE' ? <><div className="mx-auto mt-3 w-fit rounded-2xl bg-white p-4 shadow-xl"><img src={paymentQrUrl} alt="KHQR payment code" className="h-56 w-56" /></div><p className="text-sm font-semibold text-foreground">Scan this QR code with your banking app</p><p className="text-xs text-muted-foreground">ABA, ACLEDA, Wing, Bakong, and other supported apps</p>{checkoutPayment && checkoutPayment.display.qrPayload === checkoutPayment.payment.transactionId && <p className="mx-auto max-w-md rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300">Backend did not return a KHQR payload, so this QR uses the payment transaction reference.</p>}</> : <div className="rounded-xl border border-border bg-muted/50 p-8"><CreditCard className="mx-auto h-10 w-10 text-[#E50914]" /><p className="mt-3 text-sm font-bold text-foreground">Your card payment is ready</p><p className="mt-1 text-xs text-muted-foreground">Complete the payment below to confirm your booking.</p></div>}{paymentError && <div className="flex items-start gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-left text-xs text-rose-700 dark:text-rose-300"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /> <span>{paymentError}</span></div>}<div className="grid gap-3 text-left sm:grid-cols-2"><div className="rounded-xl border border-border bg-muted/50 p-3"><p className="text-[11px] text-muted-foreground">Amount</p><p className="mt-1 text-lg font-black text-foreground">{formatCurrency(grandTotal)}</p></div><div className="rounded-xl border border-border bg-muted/50 p-3"><p className="text-[11px] text-muted-foreground">Reference</p><p className="mt-1 truncate font-mono text-sm font-bold text-foreground">{paymentReference}</p></div></div>{checkoutPayment && <div className="grid gap-3 text-left sm:grid-cols-2"><div className="rounded-xl border border-border bg-muted/50 p-3"><p className="text-[11px] text-muted-foreground">Payment ID</p><p className="mt-1 font-mono text-sm font-bold text-foreground">#{checkoutPayment.payment.id}</p></div><div className="rounded-xl border border-border bg-muted/50 p-3"><p className="text-[11px] text-muted-foreground">Status</p><p className="mt-1 text-sm font-bold text-foreground">{checkoutPayment.payment.status}</p></div></div>}<div className="rounded-xl border border-blue-400/40 bg-blue-500/15 p-3 text-left text-xs text-blue-200">Payment will be confirmed after the backend reports PAID. Your reservation is held for 15 minutes.</div></div><aside className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-2xl lg:sticky lg:top-24"><h2 className="text-sm font-black uppercase tracking-wider text-foreground">Order Summary</h2>{renderMovieSummary()}{renderTotals()}<button type="button" disabled={paymentLoading} onClick={() => void handleConfirmBooking()} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#E50914] px-4 py-3.5 text-xs font-bold uppercase tracking-wider text-white shadow-xl shadow-[#E50914]/20 transition-all hover:bg-[#ff1f2d] disabled:cursor-not-allowed disabled:opacity-60">{paymentLoading ? <><LoaderCircle className="h-4 w-4 animate-spin" /> Checking Payment</> : 'I Have Completed Payment'}</button></aside></div>;
+    if (step === 'concessions') {
+      return (
+        <>
+          {snackItemCount > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setSnackQuantities({});
+                goToStep('checkout');
+              }}
+              className="hidden text-xs font-semibold text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline sm:inline"
+            >
+              Skip snacks
+            </button>
+          )}
+          <button type="button" onClick={() => goToStep('checkout')} className={PRIMARY_CTA}>
+            {snackItemCount > 0 ? 'Proceed to Checkout' : 'Skip Snacks & Continue'}
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </>
+      );
+    }
 
-  const renderSuccess = () => <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-2xl rounded-2xl border border-border bg-card p-6 text-center shadow-2xl sm:p-10"><div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border-4 border-emerald-400/30 bg-emerald-500/15 text-emerald-400 shadow-lg shadow-emerald-500/20"><CheckCircle2 className="h-12 w-12" /></div><p className="mt-6 text-xs font-bold uppercase tracking-widest text-emerald-400">Payment complete</p><h2 className="mt-2 text-3xl font-black text-foreground">Payment Successful!</h2><p className="mt-2 text-sm text-muted-foreground">Your booking has been confirmed. Enjoy the movie!</p><div className="mx-auto mt-7 max-w-md rounded-xl border border-border bg-muted/50 p-4"><p className="text-xs text-muted-foreground">Booking Reference</p><div className="mt-2 flex items-center justify-center gap-2"><span className="font-mono text-lg font-black text-foreground">{confirmedBookingId}</span><button type="button" className="text-muted-foreground hover:text-foreground" title="Copy booking reference" onClick={() => void navigator.clipboard?.writeText(confirmedBookingId)}><Copy className="h-4 w-4" /></button></div></div><div className="mt-5 space-y-2 text-sm text-muted-foreground"><p className="font-bold text-foreground">{movie?.title}</p><p>{showtime?.cinemaName} · {showtime?.hallName}</p><p>{formatDate(showtime?.date || '')} at {showtime?.time} · Seats {selectedSeats.join(', ')}</p></div><div className="mt-8 grid gap-3 sm:grid-cols-2"><button type="button" onClick={() => setStep('ticket')} className="flex items-center justify-center gap-2 rounded-xl bg-[#E50914] px-4 py-3 text-xs font-bold text-white hover:bg-[#ff1f2d]"><Ticket className="h-4 w-4" /> View My Tickets</button><button type="button" onClick={() => navigate('/')} className="flex items-center justify-center gap-2 rounded-xl border border-border bg-muted px-4 py-3 text-xs font-bold text-foreground hover:bg-secondary"><Home className="h-4 w-4" /> Back to Home</button></div></motion.section>;
+    if (isQrStep && !showQrPanel) {
+      return (
+        <button
+          type="button"
+          onClick={() => void startBackendPayment()}
+          disabled={paymentLoading || selectedSeats.length === 0}
+          className={PRIMARY_CTA}
+        >
+          {paymentLoading ? (
+            <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <QrCode className="h-4 w-4" aria-hidden="true" />
+          )}
+          Generate QR Code <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        </button>
+      );
+    }
 
-  const renderTicket = () => <section className="mx-auto max-w-3xl space-y-5"><div className="rounded-2xl border border-border bg-card p-5 shadow-2xl sm:p-8"><div className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-widest text-[#E50914]">Your E-Ticket</p><h2 className="mt-1 text-2xl font-black text-foreground">My Tickets</h2></div><Badge variant="success" size="sm">Confirmed</Badge></div><div className="mt-6 grid gap-6 md:grid-cols-[1fr_220px]"><div className="space-y-4"><div className="flex items-start gap-4"><img src={movie?.posterUrl} alt={movie?.title || 'Movie poster'} className="h-32 w-24 rounded-xl object-cover" /><div><h3 className="text-lg font-black uppercase text-foreground">{movie?.title}</h3><p className="mt-2 text-sm text-muted-foreground">{showtime?.cinemaName} ({showtime?.format})</p><p className="mt-1 text-sm text-muted-foreground">{formatDate(showtime?.date || '')} at {showtime?.time}</p><p className="mt-1 text-sm text-muted-foreground">Seats: <span className="font-bold text-foreground">{selectedSeats.join(', ')}</span></p></div></div><div className="rounded-xl border border-border bg-muted/50 p-4"><p className="text-xs text-muted-foreground">Booking Reference</p><p className="mt-1 font-mono text-lg font-black text-foreground">{confirmedBookingId}</p></div></div><div className="flex flex-col items-center justify-center rounded-xl border border-border bg-white p-4"><img src={paymentQrUrl} alt="Ticket QR code" className="h-40 w-40" /><p className="mt-2 text-center text-[10px] font-semibold text-zinc-700">Show this QR code at the entrance</p></div></div><div className="mt-6 grid gap-3 sm:grid-cols-2"><button type="button" onClick={downloadTicket} className="flex items-center justify-center gap-2 rounded-xl border border-border bg-muted px-4 py-3 text-xs font-bold text-foreground hover:bg-secondary"><Download className="h-4 w-4" /> Download</button><button type="button" onClick={() => navigate('/history')} className="flex items-center justify-center gap-2 rounded-xl bg-[#E50914] px-4 py-3 text-xs font-bold text-white hover:bg-[#ff1f2d]"><Ticket className="h-4 w-4" /> Add to My Tickets</button></div></div><div className="rounded-2xl border border-border bg-card p-5"><h3 className="text-sm font-black text-foreground">Important</h3><ul className="mt-3 space-y-2 text-xs text-muted-foreground"><li>• Show this QR code at the cinema entrance.</li><li>• Arrive at least 15 minutes before your showtime.</li><li>• Have a great movie experience! 🍿</li></ul></div></section>;
+    if (isQrStep && showQrPanel) {
+      return (
+        <button
+          type="button"
+          onClick={() => void confirmBooking()}
+          disabled={paymentLoading || selectedSeats.length === 0}
+          className={PRIMARY_CTA}
+        >
+          {paymentLoading ? (
+            <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+          )}
+          Confirm Booking <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        </button>
+      );
+    }
+
+    return (
+      <button
+        type="button"
+        onClick={handleCardConfirm}
+        disabled={paymentLoading || selectedSeats.length === 0}
+        className={PRIMARY_CTA}
+      >
+        {paymentLoading ? (
+          <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
+        ) : (
+          <CreditCard className="h-4 w-4" aria-hidden="true" />
+        )}
+        Pay & Confirm Booking <ArrowRight className="h-4 w-4" aria-hidden="true" />
+      </button>
+    );
+  };
+
+  const renderStickyBar = () => {
+    const caption =
+      step === 'seats'
+        ? `${selectedSeats.length} of 8 seats selected`
+        : step === 'concessions'
+          ? `${selectedSeats.length} seats · ${snackItemCount} snacks`
+          : 'Total amount payable';
+
+    return (
+      <motion.div
+        initial={{ y: 80, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 80, opacity: 0 }}
+        transition={{ type: 'spring', stiffness: 260, damping: 26 }}
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur-md"
+      >
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
+          <div className="flex min-w-0 items-center gap-3">
+            {step !== 'seats' && (
+              <button
+                type="button"
+                onClick={goBack}
+                className="hidden items-center justify-center gap-1.5 rounded-lg border border-border bg-muted px-3 py-2 text-xs font-bold text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
+                aria-label="Go back to the previous step"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+                Back
+              </button>
+            )}
+            <div className="min-w-0">
+              <p className="truncate text-[11px] text-muted-foreground">{caption}</p>
+              <p className="truncate text-base font-black text-foreground tabular-nums">{formatCurrency(grandTotal)}</p>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">{renderStickyCta()}</div>
+        </div>
+      </motion.div>
+    );
+  };
 
   const renderCurrentStep = () => {
     if (step === 'seats') return renderSeatSelection();
-    if (step === 'snacks') return renderSnackSelection();
-    if (step === 'review') return renderReview();
-    if (step === 'payment') return renderPayment();
-    if (step === 'qr-payment') return renderQrPayment();
-    if (step === 'ticket') return renderTicket();
-    return renderSuccess();
+    if (step === 'concessions') return renderSnackSelection();
+    if (step === 'checkout') return renderCheckout();
+    return renderConfirmation();
   };
 
-  const pageTitle = step === 'seats'
-    ? 'Select Your Seats'
-    : step === 'snacks'
-      ? 'Add Snacks & Drinks'
-      : step === 'review'
-        ? 'Review Your Order'
-        : step === 'payment'
-          ? 'Select Payment Method'
-          : step === 'qr-payment'
-            ? 'Complete Payment'
-            : step === 'ticket'
-              ? 'Your E-Ticket'
-              : 'Booking Success';
-
-  return <div className="min-h-screen bg-background pb-20"><div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{renderStepHeader()}{step !== 'success' && <div className="mb-6 flex flex-col gap-3 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between"><div><Link to={movie ? `/movies/${movie.id}` : '/movies'} className="mb-2 inline-flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"><ArrowLeft className="h-3.5 w-3.5" /> Back to Movie</Link><h1 className="text-2xl font-black uppercase tracking-tight text-foreground sm:text-3xl">{pageTitle}</h1><div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground"><span className="font-bold text-[#E50914]">{showtime?.cinemaName}</span><span>·</span><span>{showtime?.hallName}</span><span>·</span><Badge variant="primary" size="sm">{showtime?.format}</Badge><span>·</span><span className="font-medium text-foreground">{formatDate(showtime?.date || '')} at {showtime?.time}</span></div></div>{step === 'seats' && <div className="flex flex-wrap gap-3 text-xs text-muted-foreground"><span className="flex items-center gap-1.5"><span className="h-3.5 w-3.5 rounded border border-border bg-muted" /> Available</span><span className="flex items-center gap-1.5 font-semibold text-foreground"><span className="h-3.5 w-3.5 rounded bg-[#E50914]" /> Selected</span><span className="flex items-center gap-1.5"><span className="h-3.5 w-3.5 rounded bg-zinc-900 opacity-40" /> Occupied</span><span className="flex items-center gap-1.5 text-amber-400"><span className="h-3.5 w-3.5 rounded border border-amber-500 bg-amber-500/10" /> VIP</span></div>}</div>}{step === 'success' ? renderSuccess() : <AnimatePresence mode="wait" initial={false}><motion.div key={step} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.25 }}>{renderCurrentStep()}</motion.div></AnimatePresence>}{step !== 'success' && step !== 'seats' && step !== 'snacks' && step !== 'ticket' && <div className="mt-5 flex justify-start"><button type="button" onClick={() => goToStep(step === 'payment' ? 'review' : step === 'qr-payment' ? 'payment' : 'snacks')} className="flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Back to previous step</button></div>}{step === 'snacks' && <div className="mt-5 flex items-center gap-2 text-xs text-muted-foreground"><Utensils className="h-4 w-4 text-[#E50914]" /> Snacks are optional—you can continue without adding anything.</div>}{step === 'success' && <div className="mt-8 flex items-center justify-center gap-2 text-sm text-muted-foreground">Thank you for choosing Cinematique <Star className="h-4 w-4 fill-[#E50914] text-[#E50914]" /> See you at the movies!</div>}</div><AnimatePresence>{step === 'snacks' && renderSnackSummaryBar()}</AnimatePresence></div>;
+  return (
+    <div className="min-h-screen bg-background pb-32">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {renderStepHeader()}
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, x: 16 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -16 }}
+            transition={{ duration: 0.25 }}
+          >
+            {renderCurrentStep()}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+      <AnimatePresence>{step !== 'confirmation' && renderStickyBar()}</AnimatePresence>
+    </div>
+  );
 };

@@ -54,13 +54,16 @@ const MOVIE_MENU_ITEMS = [
 ];
 
 const baseNavClass =
-  'inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914]';
+  'group inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914]';
 const navActiveClass =
-  'bg-[#E50914]/15 text-[#E50914] shadow-[0_0_18px_rgba(229,9,20,0.12)] dark:bg-[#E50914]/15 dark:text-white';
+  'bg-[#E50914]/12 text-[#E50914] shadow-[0_2px_16px_rgba(229,9,20,0.16)] ring-1 ring-[#E50914]/30';
 const navIdleClass =
-  'text-slate-600 hover:bg-red-50 hover:text-[#E50914] dark:text-zinc-300 dark:hover:bg-white/10 dark:hover:text-white';
+  'text-slate-600 hover:bg-[#E50914]/10 hover:text-[#E50914] hover:ring-1 hover:ring-[#E50914]/25 dark:text-zinc-200 dark:hover:bg-[#E50914]/15 dark:hover:text-white';
 const navIconClass = (isActive: boolean) =>
-  cn('h-4 w-4 transition', isActive ? 'text-[#E50914]' : 'text-slate-600 group-hover:text-[#E50914] dark:text-slate-400');
+  cn(
+    'h-4 w-4 shrink-0 transition',
+    isActive ? 'text-[#E50914]' : 'text-slate-600 group-hover:text-[#E50914] dark:text-slate-300',
+  );
 
 const dropdownItemClass =
   'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 dark:text-zinc-200 dark:hover:bg-white/10 dark:hover:text-white';
@@ -455,7 +458,7 @@ export const Navbar: React.FC = () => {
         </AnimatePresence>
 
         {/* Desktop second row */}
-        <div className="hidden border-t border-slate-200 py-4 lg:flex lg:items-center lg:justify-between dark:border-white/10">
+        <div className="hidden border-t border-border py-4 lg:flex lg:items-center lg:justify-between">
           <nav className="no-scrollbar flex items-center gap-2 overflow-x-auto" aria-label="Public navigation">
             {NAV_LINKS.map((link) => {
               const Icon = link.icon;
@@ -480,13 +483,13 @@ export const Navbar: React.FC = () => {
                   isMoviesActive
                     ? navActiveClass
                     : moviesDropdownOpen
-                      ? 'bg-slate-100 dark:bg-[#211a1b]/80'
+                      ? 'bg-[#E50914]/12 text-[#E50914] ring-1 ring-[#E50914]/30'
                       : navIdleClass,
                 )}
               >
                 <NavLink
                   to="/movies"
-                  className="flex items-center gap-2 py-2 pl-4 pr-1 text-sm font-bold text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914] dark:text-white"
+                  className="flex items-center gap-2 py-2 pl-4 pr-1 text-sm font-bold text-inherit focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914]"
                 >
                   <Clapperboard className={navIconClass(isMoviesActive)} />
                   Movies
@@ -497,7 +500,7 @@ export const Navbar: React.FC = () => {
                   aria-haspopup="menu"
                   aria-expanded={moviesDropdownOpen}
                   aria-label="Toggle movies menu"
-                  className="flex h-8 w-7 items-center justify-center rounded-full text-slate-500 transition hover:text-[#E50914] dark:text-slate-300 dark:hover:text-white focus:outline-none"
+                  className="flex h-8 w-7 items-center justify-center rounded-full text-current transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914]"
                 >
                   <ChevronDown className={cn('h-4 w-4 transition', moviesDropdownOpen && 'rotate-180')} />
                 </button>
@@ -630,7 +633,7 @@ export const Navbar: React.FC = () => {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.22, ease: 'easeInOut' }}
-            className="overflow-hidden border-t border-slate-200 bg-white px-4 pb-4 lg:hidden dark:border-white/10 dark:bg-[#0b0809]"
+            className="overflow-hidden border-t border-border bg-white px-4 pb-4 lg:hidden dark:border-white/10 dark:bg-[#0b0809]"
           >
             {/* Cinema selector */}
             <div className="mt-4">
