@@ -126,7 +126,7 @@ export const HomePage: React.FC = () => {
           <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#101923]/85 via-[#16080a]/65 to-background" />
           <div className="absolute inset-x-0 bottom-0 -z-10 h-56 bg-gradient-to-t from-background via-background/90 to-transparent" />
 
-          <div className="mx-auto max-w-7xl px-4 pb-10 pt-44 sm:px-6 sm:pb-12 sm:pt-48 lg:px-8 lg:pb-14 lg:pt-52">
+          <div className="mx-auto max-w-7xl px-4 pb-10 pt-10 sm:px-6 sm:pb-12 sm:pt-12 lg:px-8 lg:pb-14 lg:pt-14">
             <div className="mx-auto max-w-5xl">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.article
@@ -276,7 +276,7 @@ export const HomePage: React.FC = () => {
           </label>
         </div>
 
-        <div className="flex gap-3 overflow-x-auto pb-2">
+        <div className="no-scrollbar flex items-center gap-2.5 overflow-x-auto py-2">
           {dateCards.map((date, index) => {
             const active = activeDateIndex === index;
 
@@ -285,10 +285,10 @@ export const HomePage: React.FC = () => {
                 key={date.id}
                 type="button"
                 onClick={() => setActiveDateIndex(index)}
-                className={`min-w-[132px] rounded-xl border px-5 py-3 text-center transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914] ${
+                className={`flex min-w-[96px] shrink-0 flex-col items-center rounded-2xl border px-3 py-2 text-center transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 ${
                   active
-                    ? 'border-[#E50914] bg-[#E50914] text-white shadow-lg shadow-[#E50914]/25'
-                    : 'border-border bg-card text-foreground hover:border-[#E50914]/50'
+                    ? 'border-red-600 bg-red-600 font-bold text-white shadow-md shadow-red-500/30'
+                    : 'border-transparent bg-muted/50 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
                 }`}
               >
                 <span className="block text-xs font-semibold uppercase tracking-wide opacity-80">{date.label}</span>

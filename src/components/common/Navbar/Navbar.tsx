@@ -54,15 +54,15 @@ const MOVIE_MENU_ITEMS = [
 ];
 
 const baseNavClass =
-  'group inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914]';
+  'group inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500';
 const navActiveClass =
-  'bg-[#E50914]/12 text-[#E50914] shadow-[0_2px_16px_rgba(229,9,20,0.16)] ring-1 ring-[#E50914]/30';
+  'bg-red-500/10 text-red-600 font-semibold dark:text-red-400';
 const navIdleClass =
-  'text-slate-600 hover:bg-[#E50914]/10 hover:text-[#E50914] hover:ring-1 hover:ring-[#E50914]/25 dark:text-zinc-200 dark:hover:bg-[#E50914]/15 dark:hover:text-white';
+  'text-slate-600 hover:bg-red-500/10 hover:text-red-600 dark:text-zinc-200 dark:hover:bg-red-500/10 dark:hover:text-red-400';
 const navIconClass = (isActive: boolean) =>
   cn(
     'h-4 w-4 shrink-0 transition',
-    isActive ? 'text-[#E50914]' : 'text-slate-600 group-hover:text-[#E50914] dark:text-slate-300',
+    isActive ? 'text-red-600 dark:text-red-400' : 'text-slate-600 group-hover:text-red-600 dark:text-slate-300',
   );
 
 const dropdownItemClass =
@@ -72,7 +72,7 @@ const menuItemClass =
   'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 dark:text-zinc-300 dark:hover:bg-white/10 dark:hover:text-white';
 
 const roundIconClass =
-  'inline-flex items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 backdrop-blur-md transition hover:border-[#E50914]/50 hover:bg-[#E50914]/10 hover:text-[#E50914] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914] dark:border-white/15 dark:bg-[#211a1b]/80 dark:text-white dark:hover:bg-[#E50914]/15 dark:hover:text-[#ff6a73]';
+  'inline-flex items-center justify-center rounded-full border border-input bg-card text-foreground backdrop-blur-md transition hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:hover:text-red-400';
 
 const dropdownPanelClass =
   'absolute z-50 mt-2 origin-top rounded-2xl border border-slate-200 bg-white p-2 text-slate-900 shadow-xl shadow-slate-900/10 dark:border-white/10 dark:bg-[#120d0e] dark:text-white dark:shadow-2xl dark:shadow-black/50';
@@ -248,7 +248,6 @@ export const Navbar: React.FC = () => {
   }, [location.pathname]);
 
   const isMoviesActive = location.pathname === '/movies' || location.pathname.startsWith('/movies/');
-  const isHomePage = location.pathname === '/';
   const selectedCinema = locations.find((cinema) => cinema.id === selectedLocationId) ?? null;
 
   const closeMenus = () => {
@@ -276,23 +275,11 @@ export const Navbar: React.FC = () => {
   return (
     <header
       className={cn(
-        'nav-shell fixed left-0 right-0 top-0 z-40 isolate w-full overflow-visible border-b text-slate-900 backdrop-blur-xl transition-colors dark:text-white',
-        'border-slate-200',
-        isHomePage
-          ? 'bg-white/80 shadow-none dark:border-white/10 dark:bg-black/25'
-          : 'bg-white/95 shadow-xl shadow-slate-900/5 dark:border-white/10 dark:bg-[#0b0809]/95 dark:shadow-black/40',
+        'nav-shell sticky top-0 z-50 isolate w-full overflow-visible border-b border-border bg-background/80 text-foreground backdrop-blur-md transition-colors',
       )}
     >
-      <div
-        className={cn(
-          'pointer-events-none absolute inset-0 -z-10',
-          isHomePage
-            ? 'bg-transparent dark:bg-[linear-gradient(180deg,rgba(0,0,0,0.78),rgba(20,6,8,0.52)_58%,rgba(0,0,0,0.18)),radial-gradient(circle_at_28%_0%,rgba(229,9,20,0.18),transparent_34%),radial-gradient(circle_at_72%_0%,rgba(255,255,255,0.06),transparent_30%)]'
-            : 'bg-transparent dark:bg-[radial-gradient(circle_at_32%_0%,rgba(229,9,20,0.20),transparent_32%),radial-gradient(circle_at_68%_0%,rgba(229,9,20,0.12),transparent_28%)]',
-        )}
-      />
       <div className="mx-auto max-w-[1080px] px-4 sm:px-6 lg:px-0">
-        <div className="grid gap-4 py-5 lg:grid-cols-[minmax(260px,1fr)_auto_minmax(440px,1fr)] lg:items-center">
+        <div className="grid gap-4 py-3 lg:grid-cols-[minmax(260px,1fr)_auto_minmax(440px,1fr)] lg:items-center">
           {/* Mobile top bar */}
           <div className="flex items-center justify-between gap-2 lg:hidden">
             <button
@@ -397,7 +384,7 @@ export const Navbar: React.FC = () => {
             <button
               type="button"
               onClick={handleTicketClick}
-              className="inline-flex h-12 items-center gap-2 rounded-full border border-slate-200 bg-white px-5 text-sm font-bold text-slate-700 backdrop-blur-md transition hover:border-[#E50914]/50 hover:bg-[#E50914]/10 hover:text-[#E50914] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914] dark:border-white/15 dark:bg-[#211a1b]/80 dark:text-white dark:hover:bg-[#E50914]/15"
+              className="inline-flex h-12 items-center gap-2 rounded-full border border-input bg-card px-5 text-sm font-bold text-foreground backdrop-blur-md transition hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:hover:text-red-400"
             >
               <Ticket className="h-4 w-4" />
               My Tickets
@@ -419,7 +406,7 @@ export const Navbar: React.FC = () => {
               <>
                 <Link
                   to="/login"
-                  className="inline-flex h-12 items-center rounded-full px-4 text-sm font-bold text-slate-700 transition hover:text-[#E50914] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914] dark:text-white dark:hover:text-[#ff4d57]"
+                  className="inline-flex h-12 items-center rounded-full px-4 text-sm font-bold text-foreground transition hover:text-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:hover:text-red-400"
                 >
                   Sign In
                 </Link>
@@ -458,7 +445,7 @@ export const Navbar: React.FC = () => {
         </AnimatePresence>
 
         {/* Desktop second row */}
-        <div className="hidden border-t border-border py-4 lg:flex lg:items-center lg:justify-between">
+        <div className="hidden py-2.5 lg:flex lg:items-center lg:justify-between">
           <nav className="no-scrollbar flex items-center gap-2 overflow-x-auto" aria-label="Public navigation">
             {NAV_LINKS.map((link) => {
               const Icon = link.icon;
@@ -483,7 +470,7 @@ export const Navbar: React.FC = () => {
                   isMoviesActive
                     ? navActiveClass
                     : moviesDropdownOpen
-                      ? 'bg-[#E50914]/12 text-[#E50914] ring-1 ring-[#E50914]/30'
+                      ? 'bg-red-500/10 text-red-600 dark:text-red-400'
                       : navIdleClass,
                 )}
               >
@@ -552,11 +539,11 @@ export const Navbar: React.FC = () => {
               onClick={() => setCinemaDropdownOpen((open) => !open)}
               aria-haspopup="listbox"
               aria-expanded={cinemaDropdownOpen}
-              className="inline-flex max-w-full items-center gap-2 rounded-full px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100 hover:text-[#E50914] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914] dark:text-white dark:hover:bg-white/10 dark:hover:text-white"
+              className="inline-flex max-w-full items-center gap-2 rounded-full border border-input bg-card px-4 py-2 text-sm font-semibold text-foreground transition hover:border-red-500/50 hover:bg-red-500/5 hover:text-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:hover:text-red-400"
             >
-              <MapPin className="h-4 w-4 shrink-0 text-[#E50914]" />
+              <MapPin className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
               <span className="max-w-[180px] truncate">{selectedCinema?.name ?? 'All Cinemas'}</span>
-              <ChevronDown className={cn('h-4 w-4 shrink-0 transition', cinemaDropdownOpen && 'rotate-180')} />
+              <ChevronDown className={cn('h-4 w-4 shrink-0 text-muted-foreground transition', cinemaDropdownOpen && 'rotate-180')} />
             </button>
 
             <AnimatePresence>
@@ -633,7 +620,7 @@ export const Navbar: React.FC = () => {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.22, ease: 'easeInOut' }}
-            className="overflow-hidden border-t border-border bg-white px-4 pb-4 lg:hidden dark:border-white/10 dark:bg-[#0b0809]"
+            className="overflow-hidden border-t border-border bg-background px-4 pb-4 lg:hidden"
           >
             {/* Cinema selector */}
             <div className="mt-4">
@@ -693,14 +680,14 @@ export const Navbar: React.FC = () => {
                       cn(
                         'flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-bold transition',
                         isActive
-                          ? 'bg-[#E50914]/15 text-[#E50914] dark:text-white'
-                          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white',
+                          ? 'bg-red-500/10 text-red-600 font-semibold dark:text-red-400'
+                          : 'text-slate-600 hover:bg-red-500/10 hover:text-red-600 dark:text-slate-300 dark:hover:bg-red-500/10 dark:hover:text-red-400',
                       )
                     }
                   >
                     {({ isActive }) => (
                       <>
-                        <Icon className={cn('h-4 w-4', isActive ? 'text-[#E50914]' : 'text-slate-500 dark:text-slate-400')} />
+                        <Icon className={cn('h-4 w-4', isActive ? 'text-red-600 dark:text-red-400' : 'text-slate-500 dark:text-slate-400')} />
                         {link.name}
                       </>
                     )}

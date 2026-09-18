@@ -26,7 +26,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie, className = '' }) =
       whileHover={shouldReduceMotion ? {} : { y: -4 }}
       whileTap={{ scale: 0.98 }}
       onClick={() => navigate(`/movies/${movie.id}`)}
-      className={`group relative flex flex-col rounded-xl overflow-hidden bg-card border border-border hover:border-[#E50914]/50 transition-all duration-300 hover:shadow-xl hover:shadow-[#E50914]/10 cursor-pointer ${className}`}
+      className={`group relative flex flex-col rounded-xl overflow-hidden bg-card border border-border hover:border-red-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-red-500/10 cursor-pointer ${className}`}
     >
       {/* Poster Image & Badges */}
       <div className="relative aspect-[2/3] w-full overflow-hidden bg-card">
@@ -86,10 +86,17 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie, className = '' }) =
           {movie.title}
         </h3>
 
-        {/* Genres */}
-        <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
-          {movie.genres.slice(0, 3).join(', ')}
-        </p>
+        {/* Genre tags */}
+        <div className="mt-2 flex flex-wrap gap-1">
+          {movie.genres.slice(0, 3).map((genre) => (
+            <span
+              key={genre}
+              className="rounded-md border border-border bg-muted/50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground"
+            >
+              {genre}
+            </span>
+          ))}
+        </div>
 
         <div className="flex items-center justify-between mt-auto pt-3 border-t border-border text-xs text-muted-foreground">
           <div className="flex items-center gap-1.5">

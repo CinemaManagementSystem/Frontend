@@ -101,7 +101,7 @@ export const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
   return (
     <div ref={containerRef} className="relative">
       <label className="relative block">
-        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-300" />
+        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <input
           type="search"
           value={value}
@@ -117,7 +117,7 @@ export const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
           aria-label="Search movies"
           aria-expanded={open}
           className={cn(
-            'w-full rounded-full border border-slate-300 bg-white/80 text-sm font-medium text-slate-900 outline-none backdrop-blur-md transition placeholder:text-slate-500 focus:border-[#E50914] focus:ring-2 focus:ring-[#E50914]/30 dark:border-white/20 dark:bg-[#211a1b]/80 dark:text-white dark:placeholder:text-zinc-400',
+            'w-full rounded-full border border-input bg-card text-sm font-medium text-foreground outline-none transition placeholder:text-muted-foreground focus:border-red-500 focus:ring-2 focus:ring-red-500/30',
             heightClass,
           )}
         />

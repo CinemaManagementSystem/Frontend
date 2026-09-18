@@ -336,15 +336,15 @@ export const CinemasPage: React.FC = () => {
       </section>
 
       {/* Date Picker Bar */}
-      <section className="bg-card border-b border-border py-4 sticky top-20 lg:top-40 z-20 shadow-md">
+      <section className="bg-card border-b border-border py-4 sticky top-20 lg:top-40 z-20 shadow-sm">
         <div className="max-w-[1080px] mx-auto px-4 sm:px-6 lg:px-0">
-          <div className="flex items-center gap-3 overflow-x-auto scrollbar-none pb-1">
+          <div className="no-scrollbar flex items-center gap-3 overflow-x-auto py-2">
             <div className="flex items-center gap-2 shrink-0 border-r border-border pr-4 text-xs font-bold text-muted-foreground uppercase tracking-widest">
               <Calendar className="w-4 h-4 text-[#E50914]" />
               <span>Select Date</span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               {dateList.map((d, index) => {
                 const active = selectedDate === d.dateStr;
                 return (
@@ -353,10 +353,10 @@ export const CinemasPage: React.FC = () => {
                     onClick={() => setSelectedDate(d.dateStr)}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className={`flex flex-col items-center justify-center p-2.5 rounded-xl border min-w-[70px] transition-all relative ${
+                    className={`relative flex min-w-[70px] flex-col items-center justify-center rounded-2xl border p-2.5 transition-all ${
                       active
-                        ? "bg-[#E50914] text-white border-transparent shadow-lg shadow-[#E50914]/40 scale-105"
-                        : "bg-muted border-border hover:border-border text-muted-foreground hover:text-foreground"
+                        ? "border-red-600 bg-red-600 font-bold text-white shadow-md shadow-red-500/30"
+                        : "border-transparent bg-muted/50 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground"
                     }`}
                   >
                     <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">
@@ -479,14 +479,14 @@ export const CinemasPage: React.FC = () => {
                 <motion.div
                   key={movie.id}
                   variants={itemVariants}
-                  className="bg-card border border-border rounded-2xl p-5 shadow-xl flex flex-col md:flex-row gap-5 hover:border-border transition-all duration-300"
+                  className="bg-card border border-border rounded-2xl p-5 shadow-xl flex flex-col md:flex-row gap-5 hover:border-red-500/50 transition-all duration-300"
                 >
                   {/* Movie Poster & Basic Details */}
                   <div className="w-full md:w-44 shrink-0 space-y-4">
                     <img
                       src={movie.posterUrl}
                       alt={movie.title}
-                      className="w-full h-56 md:h-64 object-cover rounded-xl border border-border shadow-lg shadow-black/40 hover:scale-[1.02] transition-transform duration-300"
+                      className="aspect-[2/3] w-full object-cover rounded-xl border border-border shadow-lg shadow-black/40 transition-transform duration-300 hover:scale-[1.02]"
                     />
                     <div className="space-y-2 hidden md:block">
                       <div className="flex items-center gap-1 text-xs text-amber-400 font-bold">
@@ -521,7 +521,7 @@ export const CinemasPage: React.FC = () => {
                       <div className="space-y-5 pt-3 border-t border-border">
                         {Object.values(formatGroups).map((group) => (
                           <div key={group.formatName} className="space-y-2.5">
-                            <span className="text-[10px] uppercase font-black text-muted-foreground tracking-widest block">
+                            <span className="inline-flex items-center rounded-full border border-border/80 bg-card px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                               {group.formatName}
                             </span>
 
@@ -536,8 +536,6 @@ export const CinemasPage: React.FC = () => {
                                     (occupiedCount / totalSeats) * 100;
 
                                   let statusColor = "bg-emerald-500";
-                                  let hoverBorderColor =
-                                    "hover:border-emerald-500";
                                   let occupancyLabel = "Available";
                                   const isSoldOut = occupiedCount >= totalSeats;
 
@@ -546,7 +544,6 @@ export const CinemasPage: React.FC = () => {
                                     occupancyLabel = "SOLD OUT";
                                   } else if (occupancyPercent >= 75) {
                                     statusColor = "bg-amber-500";
-                                    hoverBorderColor = "hover:border-amber-500";
                                     occupancyLabel = "ALMOST FULL";
                                   }
 
@@ -565,10 +562,10 @@ export const CinemasPage: React.FC = () => {
                                       whileTap={
                                         isSoldOut ? {} : { scale: 0.95 }
                                       }
-                                      className={`relative flex flex-col items-center justify-center p-3 rounded-2xl bg-muted border border-border min-w-[95px] transition-all group ${
+                                      className={`group relative flex min-w-[95px] flex-col items-center justify-center rounded-2xl border border-border/80 bg-card p-3 transition-colors ${
                                         isSoldOut
-                                          ? "opacity-40 cursor-not-allowed border-transparent"
-                                          : `hover:bg-accent/10 cursor-pointer ${hoverBorderColor}`
+                                          ? "cursor-not-allowed border-transparent opacity-40"
+                                          : "cursor-pointer hover:border-red-500/80 hover:bg-red-500/5"
                                       }`}
                                       title={`${occupancyLabel} (${occupiedCount}/${totalSeats} seats)`}
                                     >

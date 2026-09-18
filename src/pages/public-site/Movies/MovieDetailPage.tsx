@@ -175,15 +175,15 @@ export const MovieDetailPage: React.FC = () => {
             </div>
 
             {/* Date Picker Buttons */}
-            <div className="flex items-center gap-2">
+            <div className="no-scrollbar flex items-center gap-2.5 overflow-x-auto py-2">
               {['2026-08-21', '2026-08-22', '2026-08-23'].map((d) => (
                 <button
                   key={d}
                   onClick={() => setSelectedDate(d)}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                  className={`shrink-0 rounded-2xl border px-3 py-2 text-xs font-bold transition-all ${
                     selectedDate === d
-                      ? 'bg-[#E50914] text-white shadow-md shadow-[#E50914]/30'
-                      : 'bg-muted text-muted-foreground hover:text-foreground border border-border'
+                      ? 'border-red-600 bg-red-600 text-white shadow-md shadow-red-500/30'
+                      : 'border-transparent bg-muted/50 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
                   }`}
                 >
                   {formatDate(d)}
@@ -198,7 +198,7 @@ export const MovieDetailPage: React.FC = () => {
               showtimes.map((st) => (
                 <div
                   key={st.id}
-                  className="p-5 rounded-2xl bg-card border border-border flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-border transition-all"
+                  className="p-5 rounded-2xl border border-border/80 bg-card flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors hover:border-red-500/80 hover:bg-red-500/5"
                 >
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 rounded-xl bg-[#E50914]/15 border border-[#E50914]/30 flex items-center justify-center shrink-0">
@@ -209,9 +209,9 @@ export const MovieDetailPage: React.FC = () => {
                         <h4 className="font-bold text-foreground text-base">
                           {st.cinemaName}
                         </h4>
-                        <Badge variant="primary" size="sm">
+                        <span className="inline-flex items-center rounded-full border border-border/80 bg-card px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-foreground">
                           {st.format}
-                        </Badge>
+                        </span>
                       </div>
                       <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
                         <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
