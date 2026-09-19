@@ -245,42 +245,42 @@ export const HomePage: React.FC = () => {
       )}
 
       <section id="movies" className="mx-auto max-w-7xl space-y-8 px-4 pt-10 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <div className="flex items-center gap-4">
-              {(['NOW_SHOWING', 'COMING_SOON'] as const).map((tab, index) => (
-                <React.Fragment key={tab}>
-                  {index > 0 && <span className="hidden h-10 w-px bg-border sm:block" />}
-                  <button
-                    type="button"
-                    onClick={() => setActiveListingTab(tab)}
-                    className={`text-left text-3xl font-black tracking-tight transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914] sm:text-4xl ${
-                      activeListingTab === tab ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    {tab === 'NOW_SHOWING' ? 'Now Showing' : 'Coming Soon'}
-                  </button>
-                </React.Fragment>
-              ))}
-            </div>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Pick a date, choose your movie, then continue into the booking flow.
-            </p>
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setActiveListingTab('NOW_SHOWING')}
+              className={`text-left text-2xl font-black tracking-tight transition sm:text-3xl cursor-pointer ${
+                activeListingTab === 'NOW_SHOWING' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+            >
+              Now Showing
+            </button>
+            <span className="text-2xl font-light text-zinc-700">|</span>
+            <button
+              type="button"
+              onClick={() => setActiveListingTab('COMING_SOON')}
+              className={`text-left text-2xl font-black tracking-tight transition sm:text-3xl cursor-pointer ${
+                activeListingTab === 'COMING_SOON' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+            >
+              Coming Soon
+            </button>
           </div>
 
-          <label className="relative w-full max-w-md">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <label className="relative w-full max-w-xs">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400" />
             <input
               type="search"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder="Search movies..."
-              className="h-12 w-full rounded-2xl border border-border bg-card pl-11 pr-4 text-sm font-semibold text-foreground outline-none transition placeholder:text-muted-foreground focus:border-[#E50914] focus:ring-2 focus:ring-[#E50914]/20"
+              className="h-10 w-full rounded-full border border-zinc-800 bg-zinc-900/90 pl-9 pr-4 text-xs font-semibold text-white outline-none transition placeholder:text-zinc-500 focus:border-[#E50914] focus:ring-1 focus:ring-[#E50914]"
             />
           </label>
         </div>
 
-        <div className="no-scrollbar flex items-center gap-2.5 overflow-x-auto py-2">
+        <div className="no-scrollbar flex items-center gap-2.5 overflow-x-auto py-1">
           {dateCards.map((date, index) => {
             const active = activeDateIndex === index;
 
@@ -289,15 +289,15 @@ export const HomePage: React.FC = () => {
                 key={date.id}
                 type="button"
                 onClick={() => setActiveDateIndex(index)}
-                className={`flex min-w-[96px] shrink-0 flex-col items-center rounded-2xl border px-3 py-2 text-center transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 ${
+                className={`flex min-w-[96px] shrink-0 flex-col items-center rounded-xl border px-3 py-2 text-center transition-all cursor-pointer ${
                   active
-                    ? 'border-red-600 bg-red-600 font-bold text-white shadow-md shadow-red-500/30'
-                    : 'border-transparent bg-muted/50 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
+                    ? 'border-[#E50914] bg-black text-white shadow-lg shadow-[#E50914]/20 ring-1 ring-[#E50914]'
+                    : 'border-zinc-800/80 bg-zinc-900/90 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-800 hover:text-white'
                 }`}
               >
-                <span className="block text-xs font-semibold uppercase tracking-wide opacity-80">{date.label}</span>
-                <span className="mt-1 block text-2xl font-black leading-none">{date.day}</span>
-                <span className="mt-1 block text-[11px] font-bold uppercase opacity-70">{date.month}</span>
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-zinc-400">{date.label}</span>
+                <span className="mt-0.5 block text-xl font-black leading-none text-white">{date.day}</span>
+                <span className="mt-0.5 block text-[10px] font-bold uppercase tracking-wider text-zinc-400">{date.month}</span>
               </button>
             );
           })}

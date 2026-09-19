@@ -81,20 +81,21 @@
     --sidebar-ring: #E50914;
 }
 
-/* ---- Light Theme ---- */
-:root.light {
-    --background: #f5f5f6;
-    --foreground: #1a1a1e;
+/* ---- Light Theme Variables ---- */
+:root.light,
+.light {
+    --background: #f8f9fa;
+    --foreground: #0f172a;
     --card: #ffffff;
-    --card-foreground: #1a1a1e;
+    --card-foreground: #0f172a;
     --popover: #ffffff;
-    --popover-foreground: #1a1a1e;
+    --popover-foreground: #0f172a;
     --primary: #E50914;
     --primary-foreground: #ffffff;
-    --secondary: #e4e4e7;
-    --secondary-foreground: #1a1a1e;
-    --muted: #ececee;
-    --muted-foreground: #52525b;
+    --secondary: #e2e8f0;
+    --secondary-foreground: #0f172a;
+    --muted: #f1f5f9;
+    --muted-foreground: #64748b;
     --accent: #E50914;
     --accent-foreground: #ffffff;
     --destructive: #dc2626;
@@ -102,38 +103,13 @@
     --input: rgba(0, 0, 0, 0.14);
     --ring: #E50914;
     --sidebar: #ffffff;
-    --sidebar-foreground: #27272a;
+    --sidebar-foreground: #1e293b;
     --sidebar-primary: #E50914;
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #f4f4f5;
-    --sidebar-accent-foreground: #27272a;
+    --sidebar-accent: #f1f5f9;
+    --sidebar-accent-foreground: #1e293b;
     --sidebar-border: rgba(0, 0, 0, 0.1);
     --sidebar-ring: #E50914;
-}
-
-/* Map hardcoded dark surface colors to light equivalents when light mode is active.
-   Keeps pages themed without rewriting every arbitrary-value utility. */
-html.light .bg-\[\#141417\],
-html.light .bg-\[\#141416\],
-html.light .bg-\[\#161619\],
-html.light .bg-\[\#16161a\],
-html.light .bg-\[\#18181b\],
-html.light .bg-\[\#1a1a1e\],
-html.light .bg-\[\#18181c\],
-html.light .bg-\[\#1a1112\],
-html.light .bg-\[\#27272a\],
-html.light .bg-\[\#2a2a2e\],
-html.light .bg-\[\#1e1e22\],
-html.light .bg-\[\#1e1e24\] {
-    background-color: #ffffff;
-}
-
-html.light .bg-\[\#0f0f10\],
-html.light .bg-\[\#0c0c0e\],
-html.light .bg-\[\#0b0b0d\],
-html.light .bg-\[\#101014\],
-html.light .bg-\[\#0e0e10\] {
-    background-color: #f5f5f6;
 }
 
 @layer base {
@@ -157,7 +133,7 @@ html.light .bg-\[\#0e0e10\] {
 }
 
 html.light .glass-panel {
-  background-color: rgba(255, 255, 255, 0.78);
+  background-color: rgba(255, 255, 255, 0.85);
   border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
@@ -169,122 +145,14 @@ html.light .glass-panel {
 }
 
 html.light .glass-nav {
-  background-color: rgba(255, 255, 255, 0.82);
+  background-color: rgba(255, 255, 255, 0.9);
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--background);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #E50914;
-}
-
-/* ================================================
-   LIGHT MODE COMPREHENSIVE OVERRIDES
-   ================================================ */
-
-/* 1. Flip text-white → dark text on light surfaces.
-   Re-enable white on primary/accent buttons so brand identity stays correct. */
-html.light .text-white {
-    color: var(--foreground) !important;
-}
-html.light .bg-\[\#E50914\].text-white,
-html.light .bg-\[\#E50914\] .text-white,
-html.light .bg-\[\#E50914\] + .text-white,
-html.light .hover\:bg-\[\#ff1f2d\].text-white,
-html.light .hover\:bg-\[\#ff1f2d\] .text-white,
-html.light .bg-yellow-500\.text-white,
-html.light .bg-yellow-500 .text-white,
-html.light [class*="bg-"][class*="text-white"]:where(.bg-\[\#E50914\], [class*="bg-red"], [class*="bg-yellow"], [class*="bg-emerald"]) {
-    color: #fff !important;
-}
-
-/* 2. Keep white text inside hero / dark sections that stay dark */
-html.light .bg-black.text-white,
-html.light .bg-black .text-white,
-html.light [class*="bg-black/"].text-white,
-html.light [class*="bg-black/"] .text-white {
-    color: #fff !important;
-}
-
-/* Keep white text + chips readable in the home hero carousel (always dark) */
-html.light .bg-\[\#06080b\] .text-white {
-    color: #fff !important;
-}
-
-html.light .bg-\[\#06080b\] .bg-black\/35.text-white,
-html.light .bg-\[\#06080b\] .bg-black\/35 .text-white {
-    color: #fff !important;
-}
-
-html.light .bg-\[\#06080b\] .bg-white\/35 {
-    background-color: rgba(255, 255, 255, 0.35) !important;
-}
-
-html.light .bg-\[\#06080b\] .group-hover\:bg-white\/75:hover {
-    background-color: rgba(255, 255, 255, 0.75) !important;
-}
-
-/* 3. Dark inputs → light inputs */
-html.light .bg-\[\#1e1e22\],
-html.light .bg-\[\#1e1e22\]\/80,
-html.light [class*="bg-zinc-950"],
-html.light .bg-\[\#161619\] {
-    background-color: #ffffff !important;
-}
-
-/* 4. Subtle overlays: bg-white/5 and bg-white/10 are white-on-dark accents.
-   In light mode they disappear on white — flip to dark tints. */
-html.light .bg-white\/5 {
-    background-color: rgba(0, 0, 0, 0.04) !important;
-}
-html.light .bg-white\/10 {
-    background-color: rgba(0, 0, 0, 0.07) !important;
-}
-html.light .bg-white\/15 {
-    background-color: rgba(0, 0, 0, 0.08) !important;
-}
-html.light .bg-white\/20 {
-    background-color: rgba(0, 0, 0, 0.10) !important;
-}
-html.light .hover\:bg-white\/5:hover {
-    background-color: rgba(0, 0, 0, 0.04) !important;
-}
-html.light .hover\:bg-white\/10:hover {
-    background-color: rgba(0, 0, 0, 0.07) !important;
-}
-html.light .hover\:bg-white\/15:hover {
-    background-color: rgba(0, 0, 0, 0.09) !important;
-}
-html.light .hover\:bg-white\/20:hover {
-    background-color: rgba(0, 0, 0, 0.12) !important;
-}
-
-/* 5. Page-level dark containers that override surface — keep them readable */
-html.light .bg-\[\#0f0f10\].min-h-screen,
-html.light .bg-\[\#0c0c0e\].min-h-screen,
-html.light .bg-\[\#0b0b0d\].min-h-screen,
-html.light .bg-background.min-h-screen {
-    color: var(--foreground) !important;
-}
-
-/* 6. Selection color */
+/* Selection color */
 html.light ::selection {
-    background-color: rgba(229, 9, 20, 0.2) !important;
-    color: var(--foreground) !important;
+    background-color: rgba(229, 9, 20, 0.2);
+    color: var(--foreground);
 }
 
 /* 7. Modals in light mode */

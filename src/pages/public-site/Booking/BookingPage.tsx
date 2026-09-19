@@ -132,6 +132,7 @@ const BookingFlow: React.FC = () => {
   const [step, setStep] = useState<FlowStepId>('seats');
   const [maxStepIndex, setMaxStepIndex] = useState(0);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
+  const [activeSeatFilter, setActiveSeatFilter] = useState<'ALL' | 'AVAILABLE' | 'SELECTED' | 'OCCUPIED' | 'STANDARD' | 'VIP' | 'COUPLE'>('ALL');
   const [snackCategory, setSnackCategory] = useState<SnackCategoryId>('All');
   const [snacks, setSnacks] = useState<SnackItem[]>([]);
   const [snackCategories, setSnackCategories] = useState<string[]>(DEFAULT_SNACK_CATEGORIES);
@@ -650,23 +651,72 @@ const BookingFlow: React.FC = () => {
     </div>
   );
 
+  const toggleSeatFilter = (filter: 'ALL' | 'AVAILABLE' | 'SELECTED' | 'OCCUPIED' | 'STANDARD' | 'VIP' | 'COUPLE') => {
+    setActiveSeatFilter((prev) => (prev === filter ? 'ALL' : filter));
+  };
+
+  const isSeatMatchingFilter = (seatType: string, occupied: boolean, selected: boolean) => {
+    if (activeSeatFilter === 'ALL') return true;
+    if (activeSeatFilter === 'AVAILABLE') return !occupied && !selected;
+    if (activeSeatFilter === 'SELECTED') return selected;
+    if (activeSeatFilter === 'OCCUPIED') return occupied;
+    if (activeSeatFilter === 'STANDARD') return seatType === 'STANDARD';
+    if (activeSeatFilter === 'VIP') return seatType === 'VIP';
+    if (activeSeatFilter === 'COUPLE') return seatType === 'COUPLE';
+    return true;
+  };
+
   const renderLegend = () => (
-    <div className="mb-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] text-muted-foreground">
-      <span className="flex items-center gap-1.5">
-        <span className="h-3.5 w-3.5 rounded border border-border bg-muted" /> Available
-      </span>
-      <span className="flex items-center gap-1.5 font-semibold text-foreground">
-        <span className="h-3.5 w-3.5 rounded bg-[#E50914]" /> Selected
-      </span>
-      <span className="flex items-center gap-1.5">
-        <span className="h-3.5 w-3.5 rounded bg-muted seat-occupied" /> Occupied
-      </span>
-      <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-300">
-        <span className="h-3.5 w-3.5 rounded border border-amber-500/50 bg-amber-500/15" /> VIP
-      </span>
-      <span className="flex items-center gap-1.5 text-rose-600 dark:text-rose-300">
-        <span className="h-3.5 w-3.5 rounded border border-rose-500/50 bg-rose-500/15" /> Couple
-      </span>
+    <div className="mb-6 flex items-center justify-center">
+      <div className="inline-flex items-center gap-1.5 p-1.5 rounded-full bg-muted border border-border shadow-inner dark:bg-zinc-900/90 dark:border-zinc-800">
+        <button
+          type="button"
+          onClick={() => toggleSeatFilter('ALL')}
+          className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer focus:outline-none ${
+            activeSeatFilter === 'ALL'
+              ? 'bg-[#E50914] text-white shadow-md shadow-[#E50914]/30'
+              : 'text-foreground/70 hover:text-foreground hover:bg-muted-foreground/10'
+          }`}
+        >
+          All
+        </button>
+
+        <button
+          type="button"
+          onClick={() => toggleSeatFilter('STANDARD')}
+          className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer focus:outline-none ${
+            activeSeatFilter === 'STANDARD'
+              ? 'bg-foreground text-background shadow-md'
+              : 'text-foreground/70 hover:text-foreground hover:bg-muted-foreground/10'
+          }`}
+        >
+          <span className="h-2 w-2 rounded-full bg-zinc-400 dark:bg-zinc-300 shadow-[0_0_6px_rgba(150,150,150,0.6)]" /> Standard
+        </button>
+
+        <button
+          type="button"
+          onClick={() => toggleSeatFilter('VIP')}
+          className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer focus:outline-none ${
+            activeSeatFilter === 'VIP'
+              ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/50 shadow-md shadow-amber-500/20'
+              : 'text-amber-600/80 dark:text-amber-400/80 hover:text-amber-700 hover:bg-amber-500/10'
+          }`}
+        >
+          <span className="h-2 w-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(245,158,11,0.8)]" /> VIP
+        </button>
+
+        <button
+          type="button"
+          onClick={() => toggleSeatFilter('COUPLE')}
+          className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer focus:outline-none ${
+            activeSeatFilter === 'COUPLE'
+              ? 'bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/50 shadow-md shadow-rose-500/20'
+              : 'text-rose-600/80 dark:text-rose-400/80 hover:text-rose-700 hover:bg-rose-500/10'
+          }`}
+        >
+          <span className="h-2 w-2 rounded-full bg-rose-400 shadow-[0_0_6px_rgba(244,63,94,0.8)]" /> Couple
+        </button>
+      </div>
     </div>
   );
 
@@ -692,29 +742,36 @@ const BookingFlow: React.FC = () => {
                     const price = getSeatPrice(seatId);
                     const occupied = isSeatOccupied(seatId);
                     const selected = selectedSeats.includes(seatId);
-                    let seatClass = 'cursor-pointer border border-border bg-muted text-muted-foreground';
+                    const isMatchingFilter = isSeatMatchingFilter(seatType, occupied, selected);
+
+                    let seatClass = 'cursor-pointer border border-zinc-300 bg-zinc-100 text-zinc-900 dark:border-zinc-700/50 dark:bg-zinc-800/90 dark:text-zinc-200';
                     if (seatType === 'VIP') {
                       seatClass =
-                        'cursor-pointer border border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-300';
+                        'cursor-pointer border border-amber-400 bg-amber-100/90 text-amber-950 font-bold dark:border-amber-500/40 dark:bg-amber-950/40 dark:text-amber-300';
                     } else if (seatType === 'COUPLE') {
                       seatClass =
-                        'cursor-pointer border border-rose-500/40 bg-rose-500/10 text-rose-600 dark:text-rose-300';
+                        'cursor-pointer border border-rose-400 bg-rose-100/90 text-rose-950 font-bold dark:border-rose-500/40 dark:bg-rose-950/40 dark:text-rose-300';
                     }
+
                     if (occupied) {
-                      seatClass = 'seat-occupied cursor-not-allowed border-transparent bg-muted opacity-45';
+                      seatClass = 'seat-occupied cursor-not-allowed border border-border bg-muted/60 text-muted-foreground/40 opacity-40';
                     } else if (selected) {
                       seatClass =
-                        'scale-110 cursor-pointer border-transparent bg-[#E50914] font-bold text-white shadow-lg shadow-[#E50914]/50';
+                        'scale-105 cursor-pointer border-transparent bg-[#E50914] font-black text-white shadow-lg shadow-[#E50914]/70 ring-2 ring-[#E50914]/50 z-10';
                     }
+
                     const hoverClass = occupied
                       ? ''
                       : selected
                         ? ''
                         : seatType === 'VIP'
-                          ? 'hover:border-amber-500/70 hover:bg-amber-500/25 hover:text-amber-700 hover:shadow-[0_6px_16px_rgba(245,158,11,0.28)] dark:hover:text-amber-200'
+                          ? 'hover:border-amber-500 hover:bg-amber-200 hover:text-amber-950 dark:hover:border-amber-400 dark:hover:bg-amber-900/60 dark:hover:text-amber-200'
                           : seatType === 'COUPLE'
-                            ? 'hover:border-rose-500/70 hover:bg-rose-500/25 hover:text-rose-700 hover:shadow-[0_6px_16px_rgba(244,63,94,0.28)] dark:hover:text-rose-200'
-                            : 'hover:border-[#E50914]/60 hover:bg-[#E50914]/10 hover:text-[#E50914] hover:shadow-[0_6px_16px_rgba(229,9,20,0.24)]';
+                            ? 'hover:border-rose-500 hover:bg-rose-200 hover:text-rose-950 dark:hover:border-rose-400 dark:hover:bg-rose-900/60 dark:hover:text-rose-200'
+                            : 'hover:border-zinc-400 hover:bg-zinc-200 hover:text-zinc-900 dark:hover:border-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-white';
+
+                    const dimClass = !isMatchingFilter ? 'opacity-25 blur-[0.2px] transition-all duration-300' : 'opacity-100 transition-all duration-300';
+
                     return (
                       <motion.button
                         key={seatId}
@@ -722,8 +779,8 @@ const BookingFlow: React.FC = () => {
                         disabled={occupied}
                         onClick={() => handleSeatClick(seatId)}
                         whileHover={occupied ? {} : { scale: 1.12, y: -2 }}
-                        whileTap={occupied ? {} : { scale: 0.9 }}
-                        className={`flex h-8 w-8 items-center justify-center rounded-lg text-[10px] font-bold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914] ${seatClass} ${hoverClass}`}
+                        whileTap={occupied ? {} : { scale: 0.92 }}
+                        className={`flex h-9 w-9 items-center justify-center rounded-t-lg rounded-b-md text-[11px] font-bold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914] ${seatClass} ${hoverClass} ${dimClass}`}
                         title={`${seatId} (${seatType} - ${formatCurrency(price)})`}
                         aria-label={`${seatId}, ${occupied ? 'occupied' : selected ? 'selected' : 'available'}, ${seatType}`}
                       >
@@ -744,15 +801,30 @@ const BookingFlow: React.FC = () => {
             const prices = typedSeats.map((seat) => Number(seat.price));
             const min = Math.min(...prices);
             const max = Math.max(...prices);
+            const isFilterActive = activeSeatFilter === type;
+
             return (
-              <div key={type} className="rounded-xl bg-muted p-3">
+              <button
+                key={type}
+                type="button"
+                onClick={() => toggleSeatFilter(type as 'STANDARD' | 'VIP' | 'COUPLE')}
+                className={`rounded-xl p-3 text-left transition-all border cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914] ${
+                  isFilterActive
+                    ? type === 'COUPLE'
+                      ? 'border-rose-500 bg-rose-500/20 text-rose-600 dark:text-rose-300 font-bold shadow-md shadow-rose-500/20'
+                      : type === 'VIP'
+                        ? 'border-amber-500 bg-amber-500/20 text-amber-600 dark:text-amber-300 font-bold shadow-md shadow-amber-500/20'
+                        : 'border-[#E50914] bg-[#E50914]/15 text-[#E50914] font-bold shadow-md shadow-[#E50914]/20'
+                    : 'border-border/60 bg-muted hover:border-border hover:bg-muted/80 text-foreground'
+                }`}
+              >
                 <span className="block text-[11px] font-medium text-muted-foreground">
                   {type} · Rows {Array.from(new Set(typedSeats.map((seat) => seat.rowName))).join(', ')}
                 </span>
                 <span className="text-sm font-bold text-foreground">
                   {formatCurrency(min)}{max !== min ? ` – ${formatCurrency(max)}` : ''}
                 </span>
-              </div>
+              </button>
             );
           })}
         </div>

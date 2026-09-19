@@ -7,7 +7,6 @@ import {
   ChevronDown,
   Clapperboard,
   Crown,
-  Film,
   Gift,
   Home,
   LogOut,
@@ -15,8 +14,6 @@ import {
   Menu,
   Moon,
   Play,
-  Search,
-  Settings,
   Shield,
   ShoppingBag,
   Sparkles,
@@ -30,11 +27,11 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useAuthStore } from '@/store/authStore';
 import { useLocationStore } from '@/store/locationStore';
 import { canAccessAdmin } from '@/lib/authRole';
-import { useMovieStore } from '@/store/movieStore';
 import { cn } from '@/lib/utils';
 import { SearchAutocomplete } from './SearchAutocomplete';
 import { LogoutModal } from '@/components/common/LogoutModal/LogoutModal';
 import { Avatar } from '@/components/ui/Avatar/Avatar';
+import { CinematiqueLogo } from '@/components/common/CinematiqueLogo';
 import type { User } from '@/types/auth';
 import './Navbar.css';
 
@@ -50,39 +47,17 @@ const MOVIE_MENU_ITEMS = [
   { name: 'Now Showing', path: '/movies', icon: Play, description: 'Currently in theaters' },
   { name: 'Coming Soon', path: '/coming-soon', icon: CalendarDays, description: 'Upcoming releases' },
   { name: 'Premiere', path: '/premiere', icon: Sparkles, description: 'Member premieres & events' },
-  { name: 'View All Movies', path: '/movies', icon: Clapperboard, description: 'Browse the full catalog' },
+  { name: 'View All Movies', path: '/movies', icon: Clapperboard, description: 'Browse full catalog' },
 ];
 
-const baseNavClass =
-  'group inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500';
-const navActiveClass =
-  'bg-red-500/10 text-red-600 font-semibold dark:text-red-400';
-const navIdleClass =
-  'text-slate-600 hover:bg-red-500/10 hover:text-red-600 dark:text-zinc-200 dark:hover:bg-red-500/10 dark:hover:text-red-400';
-const navIconClass = (isActive: boolean) =>
-  cn(
-    'h-4 w-4 shrink-0 transition',
-    isActive ? 'text-red-600 dark:text-red-400' : 'text-slate-600 group-hover:text-red-600 dark:text-slate-300',
-  );
-
-const dropdownItemClass =
-  'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 dark:text-zinc-200 dark:hover:bg-white/10 dark:hover:text-white';
-
-const menuItemClass =
-  'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 dark:text-zinc-300 dark:hover:bg-white/10 dark:hover:text-white';
-
-const roundIconClass =
-  'inline-flex items-center justify-center rounded-full border border-input bg-card text-foreground backdrop-blur-md transition hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:hover:text-red-400';
-
 const dropdownPanelClass =
-  'absolute z-50 mt-2 origin-top rounded-2xl border border-slate-200 bg-white p-2 text-slate-900 shadow-xl shadow-slate-900/10 dark:border-white/10 dark:bg-[#120d0e] dark:text-white dark:shadow-2xl dark:shadow-black/50';
+  'absolute z-50 mt-2 origin-top rounded-2xl border border-border bg-card p-2 text-foreground shadow-2xl backdrop-blur-xl dark:border-zinc-800 dark:bg-zinc-950 dark:text-white';
 
 interface UserMenuProps {
   user: User;
-  compact?: boolean;
 }
 
-const UserMenu: React.FC<UserMenuProps> = ({ user, compact = false }) => {
+const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { logoutAsync, isLoggingOut } = useAuthStore();
@@ -112,24 +87,11 @@ const UserMenu: React.FC<UserMenuProps> = ({ user, compact = false }) => {
         <button
           type="button"
           onClick={() => setOpen((value) => !value)}
-          aria-haspopup="menu"
-          aria-expanded={open}
-className={cn(
-            'inline-flex items-center rounded-full border border-slate-200 bg-white/80 backdrop-blur-md transition hover:border-[#E50914]/50 hover:bg-[#E50914]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914] dark:border-white/15 dark:bg-[#211a1b]/80 dark:hover:bg-[#E50914]/15',
-            compact ? 'h-10 w-10 justify-center p-0' : 'h-12 gap-2 py-1 pl-1 pr-4 text-sm font-bold text-slate-900 dark:text-white',
-          )}
+          className="inline-flex h-9 items-center gap-2 rounded-full border border-border bg-card py-1 pl-1 pr-3 text-xs font-bold text-foreground transition hover:border-[#E50914]/60 hover:bg-muted dark:border-zinc-700/80 dark:bg-zinc-900/90 dark:text-white dark:hover:bg-zinc-800"
         >
-          <Avatar
-            src={user.avatar}
-            alt={user.username}
-            className={cn('border border-[#E50914]', compact ? 'h-8 w-8' : 'h-9 w-9')}
-          />
-          {!compact && (
-            <>
-              <span className="max-w-[110px] truncate">{user.username}</span>
-              <ChevronDown className={cn('h-4 w-4 text-slate-500 transition dark:text-slate-300', open && 'rotate-180')} />
-            </>
-          )}
+          <Avatar src={user.avatar} alt={user.username} className="h-7 w-7 border border-[#E50914]" />
+          <span className="max-w-[90px] truncate">{user.username}</span>
+          <ChevronDown className={cn('h-3.5 w-3.5 text-muted-foreground transition-transform', open && 'rotate-180')} />
         </button>
 
         <AnimatePresence>
@@ -137,58 +99,58 @@ className={cn(
             <>
               <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
               <motion.div
-                initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                initial={{ opacity: 0, y: 8, scale: 0.96 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                transition={{ duration: 0.15, ease: 'easeOut' }}
-className={cn(dropdownPanelClass, 'right-0 top-full w-64')}
+                exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                transition={{ duration: 0.15 }}
+                className={cn(dropdownPanelClass, 'right-0 top-full w-60')}
               >
-                <div className="mb-1 flex items-center gap-2 border-b border-slate-200 px-3 py-2 dark:border-white/10">
-                  <Avatar
-                    src={user.avatar}
-                    alt={user.username}
-                    className="h-9 w-9 border border-[#E50914]"
-                  />
+                <div className="mb-1 flex items-center gap-2.5 border-b border-border px-3 py-2.5 dark:border-zinc-800">
+                  <Avatar src={user.avatar} alt={user.username} className="h-9 w-9 border border-[#E50914]" />
                   <div className="min-w-0">
-                    <p className="truncate text-xs font-bold text-slate-900 dark:text-white">{user.username}</p>
-                    <p className="truncate text-[11px] text-slate-500 dark:text-zinc-400">{user.email}</p>
-                    <span className="mt-1 inline-block rounded bg-[#E50914]/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-[#E50914]">
+                    <p className="truncate text-xs font-bold text-foreground dark:text-white">{user.username}</p>
+                    <p className="truncate text-[10px] text-muted-foreground">{user.email}</p>
+                    <span className="mt-0.5 inline-block rounded bg-[#E50914]/20 px-2 py-0.5 text-[9px] font-black uppercase text-[#E50914]">
                       {user.role}
                     </span>
                   </div>
                 </div>
 
                 {canViewAdminPanel && (
-                  <button type="button" onClick={() => go('/admin/dashboard')} className={menuItemClass}>
+                  <button
+                    type="button"
+                    onClick={() => go('/admin/dashboard')}
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-foreground hover:bg-muted dark:text-white dark:hover:bg-zinc-800"
+                  >
                     <Shield className="h-4 w-4 text-[#E50914]" />
                     Admin Dashboard
                   </button>
                 )}
-                <button type="button" onClick={() => go('/settings')} className={menuItemClass}>
-                  <UserIcon className="h-4 w-4 text-[#E50914]" />
-                  Profile
+                <button
+                  type="button"
+                  onClick={() => go('/settings')}
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-foreground hover:bg-muted dark:text-zinc-200 dark:hover:bg-zinc-800"
+                >
+                  <UserIcon className="h-4 w-4 text-muted-foreground" />
+                  Profile & Settings
                 </button>
-                <button type="button" onClick={() => go('/history')} className={menuItemClass}>
+                <button
+                  type="button"
+                  onClick={() => go('/history')}
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-foreground hover:bg-muted dark:text-zinc-200 dark:hover:bg-zinc-800"
+                >
                   <Ticket className="h-4 w-4 text-amber-400" />
                   My Tickets
                 </button>
-                <button type="button" onClick={() => go('/history')} className={menuItemClass}>
-                  <CalendarDays className="h-4 w-4 text-[#E50914]" />
-                  Booking History
-                </button>
-                <button type="button" onClick={() => go('/settings')} className={menuItemClass}>
-                  <Settings className="h-4 w-4" />
-                  Settings
-                </button>
 
-                <div className="my-1 border-t border-slate-200 pt-1 dark:border-white/10">
+                <div className="my-1 border-t border-border pt-1 dark:border-zinc-800">
                   <button
                     type="button"
                     onClick={() => {
                       setOpen(false);
                       setLogoutOpen(true);
                     }}
-                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-rose-600 transition hover:bg-rose-500/10 hover:text-rose-600 dark:text-rose-300 dark:hover:text-rose-300"
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-rose-500 transition hover:bg-rose-500/10 dark:text-rose-400"
                   >
                     <LogOut className="h-4 w-4" />
                     Sign Out
@@ -211,60 +173,44 @@ className={cn(dropdownPanelClass, 'right-0 top-full w-64')}
 };
 
 export const Navbar: React.FC = () => {
-  const location = useLocation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const { user, isAuthenticated } = useAuthStore();
-  const { searchQuery, setSearchQuery } = useMovieStore();
-  const { locations, loading: locationsLoading, selectedLocationId, selectLocation } = useLocationStore();
-  const canViewAdminPanel = canAccessAdmin(user?.role);
+  const { locations, selectedLocationId, selectLocation, loading: locationsLoading } = useLocationStore();
 
+  const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const [mobileMoviesOpen, setMobileMoviesOpen] = useState(false);
   const [moviesDropdownOpen, setMoviesDropdownOpen] = useState(false);
   const [cinemaDropdownOpen, setCinemaDropdownOpen] = useState(false);
-  const [logoutOpen, setLogoutOpen] = useState(false);
-  const logoutAsync = useAuthStore((state) => state.logoutAsync);
-  const isLoggingOut = useAuthStore((state) => state.isLoggingOut);
 
-  const handleLogout = async () => {
-    await logoutAsync();
-    setLogoutOpen(false);
-    closeMenus();
-    navigate('/login');
-  };
-
-  useEffect(() => {
-    useLocationStore.getState().fetchAll();
-  }, []);
+  const selectedCinema = locations.find((item) => item.id === selectedLocationId);
+  const isMoviesActive =
+    location.pathname.startsWith('/movies') ||
+    location.pathname === '/coming-soon' ||
+    location.pathname === '/premiere';
 
   useEffect(() => {
     setMobileMenuOpen(false);
-    setMobileSearchOpen(false);
-    setMobileMoviesOpen(false);
     setMoviesDropdownOpen(false);
     setCinemaDropdownOpen(false);
   }, [location.pathname]);
 
-  const isMoviesActive = location.pathname === '/movies' || location.pathname.startsWith('/movies/');
-  const selectedCinema = locations.find((cinema) => cinema.id === selectedLocationId) ?? null;
-
   const closeMenus = () => {
     setMobileMenuOpen(false);
-    setMobileSearchOpen(false);
-    setMobileMoviesOpen(false);
     setMoviesDropdownOpen(false);
     setCinemaDropdownOpen(false);
   };
 
-  const handleTicketClick = () => {
-    navigate(isAuthenticated ? '/history' : '/login');
+  const handleSearchSubmit = (query: string) => {
+    if (!query.trim()) return;
+    closeMenus();
+    navigate(`/movies?search=${encodeURIComponent(query.trim())}`);
   };
 
-  const handleSearchSubmit = (query: string) => {
+  const handleTicketClick = () => {
     closeMenus();
-    navigate(`/movies?search=${encodeURIComponent(query)}`);
+    navigate('/history');
   };
 
   const handleSuggestionSelect = (movieId: string) => {
@@ -273,236 +219,144 @@ export const Navbar: React.FC = () => {
   };
 
   return (
-    <header
-      className={cn(
-        'nav-shell sticky top-0 z-50 isolate w-full overflow-visible border-b border-border bg-background/80 text-foreground backdrop-blur-md transition-colors',
-      )}
-    >
-      <div className="mx-auto max-w-[1080px] px-4 sm:px-6 lg:px-0">
-        <div className="grid gap-4 py-3 lg:grid-cols-[minmax(260px,1fr)_auto_minmax(440px,1fr)] lg:items-center">
-          {/* Mobile top bar */}
-          <div className="flex items-center justify-between gap-2 lg:hidden">
-            <button
-              type="button"
-              onClick={() => {
-                setMobileMenuOpen((open) => !open);
-                setMobileSearchOpen(false);
-              }}
-              className={cn('h-10 w-10', roundIconClass)}
-              aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-            >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-card/95 text-foreground backdrop-blur-xl shadow-md transition-all dark:border-zinc-800/80 dark:bg-zinc-950/95 dark:text-white">
+      {/* Top Header Row (Search | Brand Logo | Actions) */}
+      <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8">
+        
+        {/* Left: Search Bar (Desktop) & Mobile Menu Toggle */}
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-foreground hover:bg-muted lg:hidden dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </button>
 
-            <Link
-              to="/"
-              onClick={closeMenus}
-              className="flex items-center gap-2 rounded-full py-1 text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914] dark:text-white"
-              aria-label="Go to Cinematique home"
-            >
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E50914] text-white shadow-lg shadow-[#E50914]/35">
-                <Film className="h-4 w-4" />
-              </span>
-              <span className="text-lg font-black uppercase tracking-wider">
-                CINEMA<span className="text-[#E50914]">TIQUE</span>
-              </span>
-            </Link>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={toggleTheme}
-                title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                className={cn('h-10 w-10', roundIconClass)}
-              >
-                {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileSearchOpen((open) => !open);
-                  setMobileMenuOpen(false);
-                }}
-                className={cn('h-10 w-10', roundIconClass)}
-                aria-label={mobileSearchOpen ? 'Close movie search' : 'Search movies'}
-              >
-                {mobileSearchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
-              </button>
-
-              {isAuthenticated && user ? (
-                <UserMenu user={user} compact />
-              ) : (
-                <Link
-                  to="/login"
-                  className={cn('h-10 w-10', roundIconClass)}
-                  aria-label="Sign in"
-                >
-                  <UserIcon className="h-5 w-5" />
-                </Link>
-              )}
-            </div>
-          </div>
-
-          {/* Desktop search */}
-          <div className="hidden w-full max-w-[280px] lg:block lg:justify-self-start">
+          <div className="hidden w-52 lg:block xl:w-64">
             <SearchAutocomplete
-              size="lg"
+              size="sm"
               value={searchQuery}
               onChange={setSearchQuery}
               onSubmit={handleSearchSubmit}
               onSelect={handleSuggestionSelect}
             />
           </div>
-
-          {/* Desktop logo */}
-          <Link
-            to="/"
-            onClick={closeMenus}
-            className="group hidden items-center justify-start gap-3 rounded-full py-2 text-slate-900 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914] dark:text-white lg:flex lg:justify-self-center"
-            aria-label="Go to Cinematique home"
-          >
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#E50914] text-white shadow-lg shadow-[#E50914]/35 transition group-hover:scale-105">
-              <Film className="h-5 w-5" />
-            </span>
-            <span className="text-2xl font-black uppercase tracking-wider">
-              CINEMA<span className="text-[#E50914]">TIQUE</span>
-            </span>
-          </Link>
-
-          {/* Desktop account actions */}
-          <div className="hidden items-center justify-end gap-2 lg:flex">
-            <button
-              type="button"
-              onClick={toggleTheme}
-              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              className={cn('h-12 w-12', roundIconClass)}
-            >
-              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </button>
-            <button
-              type="button"
-              onClick={handleTicketClick}
-              className="inline-flex h-12 items-center gap-2 rounded-full border border-input bg-card px-5 text-sm font-bold text-foreground backdrop-blur-md transition hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:hover:text-red-400"
-            >
-              <Ticket className="h-4 w-4" />
-              My Tickets
-            </button>
-
-            {isAuthenticated && user ? (
-              <>
-                <button
-                  type="button"
-                  className={cn('relative h-12 w-12', roundIconClass)}
-                  aria-label="Notifications"
-                >
-                  <Bell className="h-4 w-4" />
-                  <span className="absolute right-3 top-3 h-2 w-2 rounded-full bg-[#E50914]" />
-                </button>
-                <UserMenu user={user} />
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="inline-flex h-12 items-center rounded-full px-4 text-sm font-bold text-foreground transition hover:text-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:hover:text-red-400"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  to="/register"
-                  className="inline-flex h-12 items-center rounded-full bg-[#E50914] px-6 text-sm font-black text-white shadow-lg shadow-[#E50914]/30 transition hover:scale-[1.03] hover:bg-[#ff1f2d] focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                >
-                  Join Now
-                </Link>
-              </>
-            )}
-
-          </div>
         </div>
 
-        {/* Mobile expanding search bar */}
-        <AnimatePresence>
-          {mobileSearchOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.18, ease: 'easeInOut' }}
-              className="overflow-hidden px-4 pb-4 lg:hidden"
-            >
-              <SearchAutocomplete
-                size="sm"
-                autoFocus
-                value={searchQuery}
-                onChange={setSearchQuery}
-                onSubmit={handleSearchSubmit}
-                onSelect={handleSuggestionSelect}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Center: Brand Logo */}
+        <Link
+          to="/"
+          onClick={closeMenus}
+          className="flex items-center rounded-full focus:outline-none"
+          aria-label="CINEMATIQUE Home"
+        >
+          <CinematiqueLogo />
+        </Link>
 
-        {/* Desktop second row */}
-        <div className="hidden py-2.5 lg:flex lg:items-center lg:justify-between">
-          <nav className="no-scrollbar flex items-center gap-2 overflow-x-auto" aria-label="Public navigation">
+        {/* Right: Actions (Ticket, User/Join, Bell, Theme) */}
+        <div className="flex items-center gap-2 sm:gap-2.5">
+          {/* Ticket Button */}
+          <button
+            type="button"
+            onClick={handleTicketClick}
+            className="hidden items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-bold text-foreground transition hover:border-[#E50914]/60 hover:bg-muted dark:border-zinc-700/80 dark:bg-zinc-900/90 dark:text-white dark:hover:bg-zinc-800 sm:flex"
+          >
+            <Ticket className="h-3.5 w-3.5 text-[#E50914]" />
+            Ticket
+          </button>
+
+          {/* Account / Join Now */}
+          {isAuthenticated && user ? (
+            <UserMenu user={user} />
+          ) : (
+            <Link
+              to="/login"
+              className="flex h-9 items-center gap-1.5 rounded-full border border-border bg-card px-4 text-xs font-bold text-foreground transition hover:border-[#E50914]/60 hover:bg-muted dark:border-zinc-700/80 dark:bg-zinc-900/90 dark:text-white dark:hover:bg-zinc-800"
+            >
+              <UserIcon className="h-3.5 w-3.5 text-[#E50914]" />
+              Join Now
+            </Link>
+          )}
+
+          {/* Notifications Bell */}
+          <button
+            type="button"
+            className="relative flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground transition hover:bg-muted dark:border-zinc-700/80 dark:bg-zinc-900/90 dark:text-zinc-300 dark:hover:text-white"
+            aria-label="Notifications"
+          >
+            <Bell className="h-4 w-4" />
+            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#E50914]" />
+          </button>
+
+          {/* Theme Toggle */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground transition hover:bg-muted dark:border-zinc-700/80 dark:bg-zinc-900/90 dark:text-zinc-300 dark:hover:text-white"
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          >
+            {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-slate-700" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Sub-Navigation Bar (Nav links on Left | Cinema Selector on Right) */}
+      <div className="hidden border-t border-border bg-muted/60 py-1.5 backdrop-blur-md dark:border-zinc-800/80 dark:bg-zinc-950/90 lg:block">
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8">
+          {/* Nav Links */}
+          <nav className="flex items-center gap-1" aria-label="Public sub navigation">
             {NAV_LINKS.map((link) => {
               const Icon = link.icon;
 
               return (
-                <NavLink key={link.name} to={link.path} end={link.end} className={({ isActive }) => cn(baseNavClass, isActive ? navActiveClass : navIdleClass)}>
-                  {({ isActive }) => (
-                    <>
-                      <Icon className={navIconClass(isActive)} />
-                      {link.name}
-                    </>
-                  )}
+                <NavLink
+                  key={link.name}
+                  to={link.path}
+                  end={link.end}
+                  className={({ isActive }) =>
+                    cn(
+                      'flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold transition-all',
+                      isActive
+                        ? 'bg-[#E50914] text-white shadow-md shadow-[#E50914]/30'
+                        : 'text-foreground/80 hover:bg-muted hover:text-foreground dark:text-zinc-300 dark:hover:bg-zinc-800/80 dark:hover:text-white',
+                    )
+                  }
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {link.name}
                 </NavLink>
               );
             })}
 
-            {/* Movies dropdown */}
-            <div className="relative inline-flex shrink-0">
-              <div
+            {/* Movies Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setMoviesDropdownOpen((open) => !open)}
                 className={cn(
-                  'group inline-flex items-center rounded-full transition',
+                  'flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold transition-all cursor-pointer',
                   isMoviesActive
-                    ? navActiveClass
-                    : moviesDropdownOpen
-                      ? 'bg-red-500/10 text-red-600 dark:text-red-400'
-                      : navIdleClass,
+                    ? 'bg-[#E50914] text-white shadow-md shadow-[#E50914]/30'
+                    : 'text-foreground/80 hover:bg-muted hover:text-foreground dark:text-zinc-300 dark:hover:bg-zinc-800/80 dark:hover:text-white',
                 )}
               >
-                <NavLink
-                  to="/movies"
-                  className="flex items-center gap-2 py-2 pl-4 pr-1 text-sm font-bold text-inherit focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914]"
-                >
-                  <Clapperboard className={navIconClass(isMoviesActive)} />
-                  Movies
-                </NavLink>
-                <button
-                  type="button"
-                  onClick={() => setMoviesDropdownOpen((open) => !open)}
-                  aria-haspopup="menu"
-                  aria-expanded={moviesDropdownOpen}
-                  aria-label="Toggle movies menu"
-                  className="flex h-8 w-7 items-center justify-center rounded-full text-current transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914]"
-                >
-                  <ChevronDown className={cn('h-4 w-4 transition', moviesDropdownOpen && 'rotate-180')} />
-                </button>
-              </div>
+                <Clapperboard className="h-3.5 w-3.5" />
+                Movies
+                <ChevronDown className={cn('h-3 w-3 transition-transform', moviesDropdownOpen && 'rotate-180')} />
+              </button>
 
               <AnimatePresence>
                 {moviesDropdownOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setMoviesDropdownOpen(false)} />
                     <motion.div
-                      initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                      transition={{ duration: 0.15, ease: 'easeOut' }}
-                      className={cn(dropdownPanelClass, 'left-0 top-full w-72 origin-top-left')}
+                      exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute left-0 top-full mt-2 z-50 w-64 rounded-2xl border border-border bg-card p-2 text-foreground shadow-2xl dark:border-zinc-800 dark:bg-zinc-950 dark:text-white"
                     >
                       {MOVIE_MENU_ITEMS.map((item) => {
                         const Icon = item.icon;
@@ -515,13 +369,13 @@ export const Navbar: React.FC = () => {
                               navigate(item.path);
                               closeMenus();
                             }}
-                            className="flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-slate-100 dark:hover:bg-white/10"
+                            className="flex w-full items-start gap-3 rounded-xl p-2.5 text-left transition hover:bg-muted dark:hover:bg-zinc-800"
                           >
                             <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[#E50914]" />
-                            <span>
-                              <span className="block text-sm font-bold text-slate-900 dark:text-white">{item.name}</span>
-                              <span className="block text-[11px] text-slate-500 dark:text-slate-400">{item.description}</span>
-                            </span>
+                            <div>
+                              <span className="block text-xs font-bold text-foreground dark:text-white">{item.name}</span>
+                              <span className="block text-[10px] text-muted-foreground">{item.description}</span>
+                            </div>
                           </button>
                         );
                       })}
@@ -532,18 +386,16 @@ export const Navbar: React.FC = () => {
             </div>
           </nav>
 
-          {/* Cinema selector */}
-          <div className="relative flex-shrink-0">
+          {/* Cinema Location Selector (Far Right) */}
+          <div className="relative">
             <button
               type="button"
               onClick={() => setCinemaDropdownOpen((open) => !open)}
-              aria-haspopup="listbox"
-              aria-expanded={cinemaDropdownOpen}
-              className="inline-flex max-w-full items-center gap-2 rounded-full border border-input bg-card px-4 py-2 text-sm font-semibold text-foreground transition hover:border-red-500/50 hover:bg-red-500/5 hover:text-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:hover:text-red-400"
+              className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1 text-xs font-bold text-foreground transition hover:border-[#E50914]/50 hover:bg-muted dark:border-zinc-800 dark:bg-zinc-900/90 dark:text-zinc-200 dark:hover:bg-zinc-800"
             >
-              <MapPin className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
-              <span className="max-w-[180px] truncate">{selectedCinema?.name ?? 'All Cinemas'}</span>
-              <ChevronDown className={cn('h-4 w-4 shrink-0 text-muted-foreground transition', cinemaDropdownOpen && 'rotate-180')} />
+              <MapPin className="h-3.5 w-3.5 shrink-0 text-[#E50914]" />
+              <span className="max-w-[150px] truncate">{selectedCinema?.name ?? 'All Cinemas'}</span>
+              <ChevronDown className={cn('h-3 w-3 shrink-0 text-muted-foreground transition-transform', cinemaDropdownOpen && 'rotate-180')} />
             </button>
 
             <AnimatePresence>
@@ -551,28 +403,25 @@ export const Navbar: React.FC = () => {
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setCinemaDropdownOpen(false)} />
                   <motion.div
-                    initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                    transition={{ duration: 0.15, ease: 'easeOut' }}
-                    role="listbox"
-                    className={cn(dropdownPanelClass, 'right-0 top-full w-72 origin-top-right')}
+                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-full mt-2 z-50 w-64 rounded-2xl border border-border bg-card p-2 text-foreground shadow-2xl dark:border-zinc-800 dark:bg-zinc-950 dark:text-white"
                   >
                     <button
                       type="button"
-                      role="option"
-                      aria-selected={selectedLocationId === null}
                       onClick={() => {
                         selectLocation(null);
                         setCinemaDropdownOpen(false);
                       }}
-                      className={cn(dropdownItemClass, 'justify-between')}
+                      className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-bold text-foreground hover:bg-muted dark:text-white dark:hover:bg-zinc-800"
                     >
                       <span className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-[#E50914]" />
+                        <MapPin className="h-3.5 w-3.5 text-[#E50914]" />
                         All Cinemas
                       </span>
-                      {selectedLocationId === null && <Check className="h-4 w-4 text-[#E50914]" />}
+                      {selectedLocationId === null && <Check className="h-3.5 w-3.5 text-[#E50914]" />}
                     </button>
 
                     {locations.map((cinema) => {
@@ -582,27 +431,23 @@ export const Navbar: React.FC = () => {
                         <button
                           key={cinema.id}
                           type="button"
-                          role="option"
-                          aria-selected={isSelected}
                           onClick={() => {
                             selectLocation(cinema.id);
                             setCinemaDropdownOpen(false);
                           }}
-                          className={cn(dropdownItemClass, 'justify-between')}
+                          className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs text-foreground hover:bg-muted dark:text-white dark:hover:bg-zinc-800"
                         >
                           <span className="min-w-0">
-                            <span className="block truncate text-xs font-bold text-slate-900 dark:text-white">{cinema.name}</span>
-                            <span className="block truncate text-[10px] text-slate-500 dark:text-slate-400">
-                              {cinema.city}, {cinema.address}
-                            </span>
+                            <span className="block truncate font-bold">{cinema.name}</span>
+                            <span className="block truncate text-[10px] text-muted-foreground">{cinema.city}</span>
                           </span>
-                          {isSelected && <Check className="h-4 w-4 shrink-0 text-[#E50914]" />}
+                          {isSelected && <Check className="h-3.5 w-3.5 shrink-0 text-[#E50914]" />}
                         </button>
                       );
                     })}
 
                     {locations.length === 0 && !locationsLoading && (
-                      <p className="px-3 py-2 text-xs text-slate-500 dark:text-slate-400">No cinemas available.</p>
+                      <p className="px-3 py-1.5 text-xs text-muted-foreground">No cinemas available.</p>
                     )}
                   </motion.div>
                 </>
@@ -612,64 +457,65 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile drawer */}
+      {/* Mobile Menu Drawer */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.22, ease: 'easeInOut' }}
-            className="overflow-hidden border-t border-border bg-background px-4 pb-4 lg:hidden"
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden border-t border-border bg-card px-4 py-4 dark:border-zinc-800 dark:bg-zinc-950 lg:hidden"
           >
-            {/* Cinema selector */}
-            <div className="mt-4">
-              <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Cinema</p>
-              <div className="grid gap-1.5">
+            {/* Search */}
+            <div className="mb-3">
+              <SearchAutocomplete
+                size="sm"
+                value={searchQuery}
+                onChange={setSearchQuery}
+                onSubmit={handleSearchSubmit}
+                onSelect={handleSuggestionSelect}
+              />
+            </div>
+
+            {/* Cinema Location */}
+            <div className="mb-3">
+              <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Cinema</p>
+              <div className="grid gap-1">
                 <button
                   type="button"
                   onClick={() => {
                     selectLocation(null);
                     setMobileMenuOpen(false);
                   }}
-                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-bold text-slate-900 transition hover:bg-slate-100 dark:text-white dark:hover:bg-white/10"
+                  className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-bold text-foreground hover:bg-muted dark:text-white dark:hover:bg-zinc-800"
                 >
-                  <MapPin className="h-4 w-4 shrink-0 text-[#E50914]" />
+                  <MapPin className="h-3.5 w-3.5 text-[#E50914]" />
                   <span className="flex-1 truncate">All Cinemas</span>
-                  {selectedLocationId === null && <Check className="h-4 w-4 shrink-0 text-[#E50914]" />}
+                  {selectedLocationId === null && <Check className="h-3.5 w-3.5 text-[#E50914]" />}
                 </button>
-
-                {locations.map((cinema) => {
-                  const isSelected = cinema.id === selectedLocationId;
-
-                  return (
-                    <button
-                      key={cinema.id}
-                      type="button"
-                      onClick={() => {
-                        selectLocation(cinema.id);
-                        setMobileMenuOpen(false);
-                      }}
-                      className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-bold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
-                    >
-                      <MapPin className="h-4 w-4 shrink-0 text-[#E50914]" />
-                      <span className="flex-1 truncate">{cinema.name}</span>
-                      {isSelected && <Check className="h-4 w-4 shrink-0 text-[#E50914]" />}
-                    </button>
-                  );
-                })}
-
-                {locations.length === 0 && !locationsLoading && (
-                  <p className="px-3 py-1 text-xs text-slate-500 dark:text-slate-400">No cinemas available.</p>
-                )}
+                {locations.map((cinema) => (
+                  <button
+                    key={cinema.id}
+                    type="button"
+                    onClick={() => {
+                      selectLocation(cinema.id);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-semibold text-foreground hover:bg-muted dark:text-white dark:hover:bg-zinc-800"
+                  >
+                    <MapPin className="h-3.5 w-3.5 text-[#E50914]" />
+                    <span className="flex-1 truncate">{cinema.name}</span>
+                    {cinema.id === selectedLocationId && <Check className="h-3.5 w-3.5 text-[#E50914]" />}
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Nav links */}
-            <nav className="mt-4 grid gap-2" aria-label="Mobile public navigation">
+            {/* Links */}
+            <nav className="grid gap-1 border-t border-border pt-3 dark:border-zinc-800" aria-label="Mobile navigation">
               {NAV_LINKS.map((link) => {
                 const Icon = link.icon;
-
                 return (
                   <NavLink
                     key={link.name}
@@ -678,164 +524,22 @@ export const Navbar: React.FC = () => {
                     onClick={closeMenus}
                     className={({ isActive }) =>
                       cn(
-                        'flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-bold transition',
+                        'flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs font-bold transition',
                         isActive
-                          ? 'bg-red-500/10 text-red-600 font-semibold dark:text-red-400'
-                          : 'text-slate-600 hover:bg-red-500/10 hover:text-red-600 dark:text-slate-300 dark:hover:bg-red-500/10 dark:hover:text-red-400',
+                          ? 'bg-[#E50914] text-white'
+                          : 'text-foreground/80 hover:bg-muted hover:text-foreground dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white',
                       )
                     }
                   >
-                    {({ isActive }) => (
-                      <>
-                        <Icon className={cn('h-4 w-4', isActive ? 'text-red-600 dark:text-red-400' : 'text-slate-500 dark:text-slate-400')} />
-                        {link.name}
-                      </>
-                    )}
+                    <Icon className="h-4 w-4" />
+                    {link.name}
                   </NavLink>
                 );
               })}
-
-              {/* Movies accordion */}
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setMobileMoviesOpen((open) => !open)}
-                  aria-expanded={mobileMoviesOpen}
-                  className="flex w-full items-center justify-between rounded-xl px-3 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
-                >
-                  <span className="flex items-center gap-3">
-                    <Clapperboard className="h-4 w-4 text-slate-500 dark:text-slate-400" />
-                    Movies
-                  </span>
-                  <ChevronDown className={cn('h-4 w-4 transition', mobileMoviesOpen && 'rotate-180')} />
-                </button>
-
-                <AnimatePresence>
-                  {mobileMoviesOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.18, ease: 'easeInOut' }}
-                      className="overflow-hidden"
-                    >
-                      <div className="ml-6 mt-1 grid gap-1 border-l border-slate-200 pl-3 dark:border-white/10">
-                        {MOVIE_MENU_ITEMS.map((item) => {
-                          const Icon = item.icon;
-
-                          return (
-                            <button
-                              key={item.name}
-                              type="button"
-                              onClick={() => {
-                                navigate(item.path);
-                                closeMenus();
-                              }}
-                              className="flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
-                            >
-                              <Icon className="h-4 w-4 text-[#E50914]" />
-                              {item.name}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
             </nav>
-
-            {/* My Tickets */}
-            <div className="mt-2 grid gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  handleTicketClick();
-                  closeMenus();
-                }}
-                className="flex items-center gap-3 rounded-xl border border-slate-200 px-3 py-3 text-left text-sm font-bold text-slate-700 transition hover:bg-slate-100 hover:text-[#E50914] dark:border-white/15 dark:text-white dark:hover:bg-white/10"
-              >
-                <Ticket className="h-4 w-4 text-[#E50914]" />
-                My Tickets
-              </button>
-            </div>
-
-            {/* Account options */}
-            <div className="mt-4 border-t border-slate-200 pt-4 dark:border-white/10">
-              {canViewAdminPanel && (
-                <Link
-                  to="/admin/dashboard"
-                  onClick={closeMenus}
-                  className="flex items-center gap-3 rounded-xl bg-[#E50914]/15 px-3 py-3 text-sm font-black text-[#E50914] dark:text-[#ff4d57]"
-                >
-                  <Shield className="h-4 w-4" />
-                  Admin Panel
-                </Link>
-              )}
-
-              {isAuthenticated && user ? (
-                <div className="grid gap-2">
-<div className="flex items-center gap-3 rounded-xl bg-slate-100 px-3 py-2.5 dark:bg-[#211a1b]/80">
-                    <Avatar
-                      src={user.avatar}
-                      alt={user.username}
-                      className="h-8 w-8 border border-[#E50914]"
-                    />
-                    <div className="min-w-0">
-                      <p className="truncate text-xs font-bold text-slate-900 dark:text-white">{user.username}</p>
-                      <p className="truncate text-[10px] text-slate-500 dark:text-slate-400">{user.email}</p>
-                    </div>
-                  </div>
-                  <Link
-                    to="/settings"
-                    onClick={closeMenus}
-                    className="flex items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-bold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
-                  >
-                    <Settings className="h-4 w-4 text-[#E50914]" />
-                    Settings
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      closeMenus();
-                      setLogoutOpen(true);
-                    }}
-                    className="flex items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-bold text-rose-600 transition hover:bg-rose-500/10 dark:text-rose-300 dark:hover:bg-rose-500/10"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Sign Out
-                  </button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-2">
-<Link
-                  to="/login"
-                  onClick={closeMenus}
-                  className="rounded-xl border border-slate-200 px-3 py-3 text-center text-sm font-bold text-slate-700 dark:border-white/15 dark:text-white"
-                >
-                  Sign In
-                </Link>
-                  <Link
-                    to="/register"
-                    onClick={closeMenus}
-                    className="rounded-xl bg-[#E50914] px-3 py-3 text-center text-sm font-black text-white"
-                  >
-                    Join Now
-                  </Link>
-                </div>
-              )}
-            </div>
-
           </motion.div>
         )}
       </AnimatePresence>
-
-      <LogoutModal
-        isOpen={logoutOpen}
-        isLoading={isLoggingOut}
-        onCancel={() => setLogoutOpen(false)}
-        onConfirm={handleLogout}
-      />
     </header>
   );
 };

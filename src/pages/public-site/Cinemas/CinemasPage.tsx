@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   MapPin,
   ChevronDown,
-  Calendar,
-  Filter,
   Sparkles,
-  Star,
-  Clock,
-  AlertCircle,
+  Filter,
+  Building2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useMovieStore } from "@/store/movieStore";
+import { theaterService } from "@/services/theaterService";
+import { getApiErrorMessage } from "@/services/apiClient";
+import { DateSelector, DateItem } from "./components/DateSelector";
+import { ShowtimeFilters } from "./components/ShowtimeFilters";
+import { ShowtimeResults } from "./components/ShowtimeResults";
+import { ShowtimeSkeleton } from "./components/ShowtimeSkeleton";
+import { ShowtimeEmptyState } from "./components/ShowtimeEmptyState";
 
 interface CinemaLocation {
   id: string;
@@ -20,149 +23,181 @@ interface CinemaLocation {
   phone: string;
 }
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.05 },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 12 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.35, ease: "easeOut" as const },
-  },
-};
-
 export const CinemasPage: React.FC = () => {
-  const navigate = useNavigate();
-  const { movies, showtimes, fetchCatalog } = useMovieStore();
+  const { movies, showtimes, loading, fetchCatalog } = useMovieStore();
 
-  const cinemas = Array.from(
-    new Map(showtimes.map((showtime) => [showtime.cinemaId, {
-      id: showtime.cinemaId,
-      name: showtime.cinemaName,
-      address: '',
-      phone: '',
-    }])).values(),
-  );
-
-  // State
+  const [allTheaters, setAllTheaters] = useState<CinemaLocation[]>([]);
   const [selectedCinema, setSelectedCinema] = useState<CinemaLocation | null>(null);
   const [locationDropdownOpen, setLocationDropdownOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [timeframe, setTimeframe] = useState<"TODAY" | "THIS_WEEK">("TODAY");
   const [selectedFormat, setSelectedFormat] = useState<string>("ALL");
   const [selectedTimeFilter, setSelectedTimeFilter] = useState<string>("ALL");
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
-  // Generate 8 days starting from today
-  const [dateList, setDateList] = useState<
-    Array<{
-      dateStr: string;
-      dayName: string;
-      dayNum: string;
-      monthName: string;
-    }>
-  >([]);
+  // Derive cinemas from showtimes as fallback
+  const derivedCinemas = Array.from(
+    new Map(
+      showtimes.map((st) => [
+        st.cinemaId,
+        {
+          id: st.cinemaId,
+          name: st.cinemaName,
+          address: "Central Cinema Hub",
+          phone: "+855 23 999 888",
+        },
+      ]),
+    ).values(),
+  );
+
+  const cinemasList = allTheaters.length > 0 ? allTheaters : derivedCinemas;
+
+  // Initialize data from API
+  const loadData = async () => {
+    setFetchError(null);
+    try {
+      await fetchCatalog();
+      const theaterData = await theaterService.list().catch(() => []);
+      if (theaterData && theaterData.length > 0) {
+        const mapped: CinemaLocation[] = theaterData.map((t) => ({
+          id: `c-${t.id}`,
+          name: t.name,
+          address: t.address || "Main Cinema Complex",
+          phone: t.phone || "+855 23 999 888",
+        }));
+        setAllTheaters(mapped);
+      }
+    } catch (err) {
+      setFetchError(getApiErrorMessage(err, "showtimes"));
+    }
+  };
 
   useEffect(() => {
-    const list = [];
+    void loadData();
+  }, [fetchCatalog]);
+
+  // Set default cinema once loaded
+  useEffect(() => {
+    if (!selectedCinema && cinemasList.length > 0) {
+      setSelectedCinema(cinemasList[0]);
+    }
+  }, [cinemasList, selectedCinema]);
+
+  // Generate date list with ONLY dates that have movies/showtimes for the selected cinema
+  const [dateList, setDateList] = useState<DateItem[]>([]);
+
+  useEffect(() => {
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const months = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
     ];
 
-    for (let i = 0; i < 8; i++) {
-      const d = new Date();
-      d.setDate(d.getDate() + i);
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, "0");
-      const dateVal = String(d.getDate()).padStart(2, "0");
-      const dateStr = `${year}-${month}-${dateVal}`;
+    const todayDate = new Date();
+    const todayStr = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, "0")}-${String(todayDate.getDate()).padStart(2, "0")}`;
 
-      list.push({
-        dateStr,
-        dayName: days[d.getDay()],
-        dayNum: String(d.getDate()),
-        monthName: months[d.getMonth()],
+    // Extract unique dates for showtimes at the selected cinema
+    const cinemaShowtimes = showtimes.filter(
+      (st) => !selectedCinema || st.cinemaId === selectedCinema.id,
+    );
+
+    const uniqueDates = Array.from(
+      new Set(cinemaShowtimes.map((st) => st.date)),
+    )
+      .filter(Boolean)
+      .sort();
+
+    let list: DateItem[] = [];
+
+    if (uniqueDates.length > 0) {
+      list = uniqueDates.map((dateStr) => {
+        const parts = dateStr.split("-").map(Number);
+        const d =
+          parts.length === 3
+            ? new Date(parts[0], parts[1] - 1, parts[2])
+            : new Date();
+        return {
+          dateStr,
+          dayName: days[d.getDay()],
+          dayNum: String(d.getDate()),
+          monthName: months[d.getMonth()],
+          isToday: dateStr === todayStr,
+          hasShowtimes: true,
+        };
       });
+    } else {
+      // Fallback: if no showtimes exist for this cinema, show today as placeholder
+      const d = new Date();
+      list = [
+        {
+          dateStr: todayStr,
+          dayName: days[d.getDay()],
+          dayNum: String(d.getDate()),
+          monthName: months[d.getMonth()],
+          isToday: true,
+          hasShowtimes: false,
+        },
+      ];
     }
 
     setDateList(list);
-    // Set default selected date as today
-    if (list.length > 0) {
+
+    // Auto-select first date with showtimes if current selectedDate is not in the list
+    if (
+      list.length > 0 &&
+      (!selectedDate || !list.some((item) => item.dateStr === selectedDate))
+    ) {
       setSelectedDate(list[0].dateStr);
     }
-  }, []);
+  }, [showtimes, selectedCinema]);
 
-  useEffect(() => {
-    void fetchCatalog();
-  }, [fetchCatalog]);
-
-  useEffect(() => {
-    if (!selectedCinema && cinemas.length > 0) setSelectedCinema(cinemas[0]);
-  }, [cinemas, selectedCinema]);
-
-  if (!selectedCinema) {
-    return <div className="px-6 py-24 text-center text-muted-foreground">Loading cinemas from the server…</div>;
-  }
-
-  // Handle location selector change
+  // Actions
   const handleSelectCinema = (cinema: CinemaLocation) => {
     setSelectedCinema(cinema);
     setLocationDropdownOpen(false);
   };
 
-  // Clear filters
   const handleClearFilters = () => {
     setSelectedFormat("ALL");
     setSelectedTimeFilter("ALL");
   };
 
-  const handleTimeframeChange = (nextTimeframe: 'TODAY' | 'THIS_WEEK') => {
+  const handleTimeframeChange = (nextTimeframe: "TODAY" | "THIS_WEEK") => {
     setTimeframe(nextTimeframe);
-    if (nextTimeframe === 'TODAY' && dateList[0]) {
+    if (nextTimeframe === "TODAY" && dateList[0]) {
       setSelectedDate(dateList[0].dateStr);
     }
   };
 
-  // Filter showtimes
+  // Filter Showtimes
   const filteredShowtimes = showtimes.filter((st) => {
     // 1. Matches selected cinema
-    if (!selectedCinema || st.cinemaId !== selectedCinema.id) return false;
+    if (selectedCinema && st.cinemaId !== selectedCinema.id) return false;
 
     // 2. Matches date
     if (st.date !== selectedDate) return false;
 
     // 3. Matches format filter
     if (selectedFormat !== "ALL") {
-      if (selectedFormat === "IMAX" && st.format !== "IMAX") return false;
-      if (selectedFormat === "DOLBY" && st.format !== "Dolby") return false;
-      if (selectedFormat === "VIP" && st.format !== "VIP") return false;
-      if (selectedFormat === "3D" && st.format !== "3D") return false;
-      if (selectedFormat === "2D" && st.format !== "2D") return false;
+      const fmt = (st.format || "2D").toUpperCase();
+      if (selectedFormat === "IMAX" && fmt !== "IMAX") return false;
+      if (selectedFormat === "DOLBY" && fmt !== "DOLBY" && fmt !== "DOLBY ATMOS") return false;
+      if (selectedFormat === "VIP" && fmt !== "VIP") return false;
+      if (selectedFormat === "3D" && fmt !== "3D") return false;
+      if (selectedFormat === "2D" && fmt !== "2D" && fmt !== "STANDARD") return false;
     }
 
     // 4. Matches time filter
     if (selectedTimeFilter !== "ALL") {
-      const hour = parseInt(st.time.split(":")[0], 10);
+      let hour = 12;
+      if (st.time && st.time.includes(":")) {
+        hour = parseInt(st.time.split(":")[0], 10);
+      }
+      if (Number.isNaN(hour)) hour = 12;
+
       if (selectedTimeFilter === "MORNING" && hour >= 12) return false;
-      if (selectedTimeFilter === "AFTERNOON" && (hour < 12 || hour >= 17))
-        return false;
+      if (selectedTimeFilter === "AFTERNOON" && (hour < 12 || hour >= 17)) return false;
       if (selectedTimeFilter === "EVENING" && hour < 17) return false;
     }
 
@@ -178,37 +213,31 @@ export const CinemasPage: React.FC = () => {
     showtimesByMovie[st.movieId].push(st);
   });
 
-  const activeFormatFilters = [
-    { id: "ALL", label: "All Formats" },
-    { id: "IMAX", label: "IMAX 3D Laser" },
-    { id: "DOLBY", label: "Dolby Atmos" },
-    { id: "VIP", label: "VIP Director Suite" },
-    { id: "3D", label: "Standard 3D" },
-    { id: "2D", label: "Standard Digital" },
-  ];
+  // Check next available date with showtimes
+  const tomorrowItem = dateList.find((d) => d.hasShowtimes && d.dateStr > selectedDate);
+  const tomorrowDateStr = tomorrowItem ? tomorrowItem.dateStr : undefined;
 
-  const activeTimeFilters = [
-    { id: "ALL", label: "All Showtimes" },
-    { id: "MORNING", label: "Morning (Before 12 PM)" },
-    { id: "AFTERNOON", label: "Afternoon (12 PM - 5 PM)" },
-    { id: "EVENING", label: "Evening (After 5 PM)" },
-  ];
+  const hasAnyShowtimeForCinemaAndDate = showtimes.some(
+    (st) => (!selectedCinema || st.cinemaId === selectedCinema.id) && st.date === selectedDate,
+  );
+
+  const activeFiltersCount = (selectedFormat !== "ALL" ? 1 : 0) + (selectedTimeFilter !== "ALL" ? 1 : 0);
 
   return (
     <div className="pb-24 bg-background min-h-screen text-foreground selection:bg-[#E50914]">
-      {/* Dynamic Design Header - Glassmorphic Hero */}
-      <section className="relative w-full py-12 md:py-16 overflow-hidden border-b border-border bg-gradient-to-b from-muted/70 to-transparent dark:from-zinc-900 dark:to-transparent">
+      {/* Glassmorphic Hero Section */}
+      <section className="relative w-full py-10 sm:py-14 overflow-hidden border-b border-border bg-gradient-to-b from-muted/70 to-transparent dark:from-zinc-900 dark:to-transparent">
         <div className="absolute inset-0 z-0">
           <img
-            src="https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80"
-            alt="Cinema Interior"
+            src="https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1400&q=80"
+            alt="Cinema Background"
             className="w-full h-full object-cover object-center opacity-10 filter grayscale brightness-50"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent dark:from-[#0f0f10] dark:via-[#0f0f10]/80 dark:to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
         </div>
 
-        <div className="relative z-10 max-w-[1080px] mx-auto px-4 sm:px-6 lg:px-0 flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-4">
+        <div className="relative z-10 max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="space-y-3">
             <div className="flex items-center gap-2">
               <span className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#E50914]/15 border border-[#E50914]/30 text-[#E50914] text-[10px] font-black uppercase tracking-widest shadow-sm">
                 <Sparkles className="w-3.5 h-3.5" />
@@ -219,11 +248,12 @@ export const CinemasPage: React.FC = () => {
             {/* Cinema Location Title Selector */}
             <div className="relative inline-block text-left">
               <button
+                type="button"
                 onClick={() => setLocationDropdownOpen(!locationDropdownOpen)}
-                className="flex items-center gap-3 text-3xl sm:text-5xl font-black text-foreground uppercase tracking-tight text-left focus:outline-none hover:text-muted-foreground transition-colors cursor-pointer group"
+                className="flex items-center gap-3 text-3xl sm:text-4xl lg:text-5xl font-black text-foreground uppercase tracking-tight text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914] rounded-lg cursor-pointer group"
               >
-                <span>{selectedCinema.name}</span>
-                <ChevronDown className="w-8 h-8 text-[#E50914] group-hover:translate-y-0.5 transition-transform" />
+                <span>{selectedCinema ? selectedCinema.name : "Select Cinema"}</span>
+                <ChevronDown className="w-7 h-7 sm:w-8 sm:h-8 text-[#E50914] group-hover:translate-y-0.5 transition-transform shrink-0" />
               </button>
 
               <AnimatePresence>
@@ -238,25 +268,27 @@ export const CinemasPage: React.FC = () => {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -8, scale: 0.98 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute left-0 mt-3 w-80 rounded-2xl bg-popover border border-border p-2 shadow-2xl z-30 origin-top-left"
+                      className="absolute left-0 mt-3 w-80 sm:w-96 rounded-2xl bg-popover border border-border p-2 shadow-2xl z-30 origin-top-left"
                     >
-                      <div className="px-3 py-2 text-[10px] uppercase font-bold tracking-wider text-muted-foreground border-b border-border mb-1">
-                        Choose Cinema Location
+                      <div className="px-3 py-2 text-[10px] uppercase font-bold tracking-wider text-muted-foreground border-b border-border mb-1 flex items-center justify-between">
+                        <span>Choose Cinema Location</span>
+                        <Building2 className="w-3.5 h-3.5" />
                       </div>
-                      {cinemas.map((cinema) => (
+                      {cinemasList.map((cinema) => (
                         <button
                           key={cinema.id}
+                          type="button"
                           onClick={() => handleSelectCinema(cinema)}
-                          className={`w-full text-left p-3 rounded-xl transition-all flex flex-col gap-1 hover:bg-muted ${
-                            selectedCinema.id === cinema.id
-                              ? "bg-[#E50914]/10 text-foreground border border-[#E50914]/20"
+                          className={`w-full text-left p-3 rounded-xl transition-all flex flex-col gap-0.5 hover:bg-muted cursor-pointer ${
+                            selectedCinema?.id === cinema.id
+                              ? "bg-[#E50914]/10 text-foreground border border-[#E50914]/30"
                               : "text-muted-foreground hover:text-foreground"
                           }`}
                         >
-                          <span className="text-sm font-bold">
+                          <span className="text-sm font-bold text-foreground">
                             {cinema.name}
                           </span>
-                          <span className="text-[10px] text-muted-foreground">
+                          <span className="text-[11px] text-muted-foreground line-clamp-1">
                             {cinema.address}
                           </span>
                         </button>
@@ -268,24 +300,27 @@ export const CinemasPage: React.FC = () => {
             </div>
 
             {/* Address */}
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <MapPin className="w-4 h-4 text-[#E50914]" />
-              <span className="font-semibold text-muted-foreground">
-                {selectedCinema.address}
-              </span>
-              <span className="text-muted-foreground">•</span>
-              <span>{selectedCinema.phone}</span>
-            </div>
+            {selectedCinema && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <MapPin className="w-4 h-4 text-[#E50914] shrink-0" />
+                <span className="font-semibold">{selectedCinema.address}</span>
+                {selectedCinema.phone && (
+                  <>
+                    <span>•</span>
+                    <span>{selectedCinema.phone}</span>
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Today / This Week Filter Tabs */}
-          <div className="flex bg-muted border border-border p-1 rounded-xl shadow-inner max-w-xs shrink-0 self-start md:self-end relative overflow-hidden">
+          {/* Timeframe Toggle */}
+          <div className="flex bg-muted/80 border border-border p-1 rounded-xl shadow-inner max-w-xs shrink-0 self-start md:self-end relative overflow-hidden">
             <button
-              onClick={() => handleTimeframeChange('TODAY')}
-              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all relative z-10 ${
-                timeframe === "TODAY"
-                  ? ""
-                  : "text-muted-foreground hover:text-foreground"
+              type="button"
+              onClick={() => handleTimeframeChange("TODAY")}
+              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all relative z-10 cursor-pointer ${
+                timeframe === "TODAY" ? "text-white" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {timeframe === "TODAY" && (
@@ -295,18 +330,13 @@ export const CinemasPage: React.FC = () => {
                   transition={{ type: "spring", stiffness: 380, damping: 30 }}
                 />
               )}
-              <span
-                className={`relative z-10 ${timeframe === "TODAY" ? "text-white" : ""}`}
-              >
-                Today
-              </span>
+              <span className="relative z-10">Today</span>
             </button>
             <button
-              onClick={() => handleTimeframeChange('THIS_WEEK')}
-              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all relative z-10 ${
-                timeframe === "THIS_WEEK"
-                  ? ""
-                  : "text-muted-foreground hover:text-foreground"
+              type="button"
+              onClick={() => handleTimeframeChange("THIS_WEEK")}
+              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all relative z-10 cursor-pointer ${
+                timeframe === "THIS_WEEK" ? "text-white" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {timeframe === "THIS_WEEK" && (
@@ -316,307 +346,125 @@ export const CinemasPage: React.FC = () => {
                   transition={{ type: "spring", stiffness: 380, damping: 30 }}
                 />
               )}
-              <span
-                className={`relative z-10 ${timeframe === "THIS_WEEK" ? "text-white" : ""}`}
-              >
-                This Week
-              </span>
+              <span className="relative z-10">This Week</span>
             </button>
           </div>
         </div>
       </section>
 
-      {/* Date Picker Bar */}
-      <section className="bg-card border-b border-border py-4 sticky top-20 lg:top-40 z-20 shadow-sm">
-        <div className="max-w-[1080px] mx-auto px-4 sm:px-6 lg:px-0">
-          <div className="no-scrollbar flex items-center gap-3 overflow-x-auto py-2">
-            <div className="flex items-center gap-2 shrink-0 border-r border-border pr-4 text-xs font-bold text-muted-foreground uppercase tracking-widest">
-              <Calendar className="w-4 h-4 text-[#E50914]" />
-              <span>Select Date</span>
-            </div>
+      {/* Date Picker Carousel */}
+      <DateSelector
+        dateList={dateList}
+        selectedDate={selectedDate}
+        onSelectDate={(d) => setSelectedDate(d)}
+      />
 
-            <div className="flex items-center gap-2.5">
-              {dateList.map((d, index) => {
-                const active = selectedDate === d.dateStr;
-                return (
-                  <motion.button
-                    key={d.dateStr}
-                    onClick={() => setSelectedDate(d.dateStr)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`relative flex min-w-[70px] flex-col items-center justify-center rounded-2xl border p-2.5 transition-all ${
-                      active
-                        ? "border-red-600 bg-red-600 font-bold text-white shadow-md shadow-red-500/30"
-                        : "border-transparent bg-muted/50 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground"
-                    }`}
-                  >
-                    <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">
-                      {index === 0 ? "Today" : d.dayName}
-                    </span>
-                    <span className="text-base font-black my-0.5">
-                      {d.dayNum}
-                    </span>
-                    <span className="text-[9px] uppercase font-bold tracking-widest opacity-75">
-                      {d.monthName}
-                    </span>
-                  </motion.button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Filters Showcase */}
-      <section className="max-w-[1080px] mx-auto px-4 sm:px-6 lg:px-0 mt-7 grid grid-cols-1 lg:grid-cols-4 gap-5 items-start">
-        {/* Left Side: Filter Panels */}
-        <div className="lg:col-span-1 bg-card border border-border rounded-2xl p-5 space-y-7 shadow-xl">
-          <div className="flex items-center justify-between pb-4 border-b border-border">
-            <h3 className="text-sm font-black uppercase tracking-wider text-foreground flex items-center gap-2">
-              <Filter className="w-4 h-4 text-[#E50914]" />
-              Filter Showtimes
-            </h3>
-            {(selectedFormat !== "ALL" || selectedTimeFilter !== "ALL") && (
-              <button
-                onClick={handleClearFilters}
-                className="text-[10px] font-bold text-[#E50914] hover:underline uppercase"
-              >
-                Clear All
-              </button>
+      {/* Main Content Layout */}
+      <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+        {/* Mobile Filter Trigger Bar */}
+        <div className="lg:hidden flex items-center justify-between mb-4 bg-card border border-border rounded-xl p-3 shadow-sm">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
+            <Filter className="w-4 h-4 text-[#E50914]" />
+            <span>Filters</span>
+            {activeFiltersCount > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-[#E50914] text-white text-[10px] font-bold">
+                {activeFiltersCount}
+              </span>
             )}
           </div>
 
-          {/* Formats filter */}
-          <div className="space-y-3">
-            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest block">
-              Format
-            </span>
-            <div className="flex flex-col gap-2">
-              {activeFormatFilters.map((fmt) => (
-                <button
-                  key={fmt.id}
-                  onClick={() => setSelectedFormat(fmt.id)}
-                  className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-semibold transition-all border ${
-                    selectedFormat === fmt.id
-                      ? "bg-[#E50914] text-white border-transparent shadow-md"
-                      : "bg-muted border-border hover:border-border text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {fmt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Timefilter */}
-          <div className="space-y-3 pt-2">
-            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest block">
-              Showtime Time
-            </span>
-            <div className="flex flex-col gap-2">
-              {activeTimeFilters.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => setSelectedTimeFilter(t.id)}
-                  className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-semibold transition-all border ${
-                    selectedTimeFilter === t.id
-                      ? "bg-[#E50914] text-white border-transparent shadow-md"
-                      : "bg-muted border-border hover:border-border text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
+          <div className="flex items-center gap-2">
+            {activeFiltersCount > 0 && (
+              <button
+                type="button"
+                onClick={handleClearFilters}
+                className="text-[11px] font-bold text-[#E50914] hover:underline uppercase"
+              >
+                Clear
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
+              className="px-3 py-1.5 rounded-lg bg-[#E50914] text-white text-xs font-bold uppercase tracking-wider cursor-pointer"
+            >
+              {mobileFilterOpen ? "Hide" : "Filter"}
+            </button>
           </div>
         </div>
 
-        {/* Right Side: Movie list showing showtimes */}
-        <motion.div
-          key={
-            selectedCinema.id +
-            selectedDate +
-            selectedFormat +
-            selectedTimeFilter
-          }
-          variants={containerVariants}
-          initial="hidden"
-          animate="show"
-          className="lg:col-span-3 space-y-6"
-        >
-          {Object.keys(showtimesByMovie).length > 0 ? (
-            Object.entries(showtimesByMovie).map(
-              ([movieId, movieShowtimes]) => {
-                const movie = movies.find((m) => m.id === movieId);
-                if (!movie) return null;
+        {/* Mobile Filter Collapsible */}
+        {mobileFilterOpen && (
+          <div className="lg:hidden mb-6">
+            <ShowtimeFilters
+              selectedFormat={selectedFormat}
+              selectedTimeFilter={selectedTimeFilter}
+              onSelectFormat={(fmt) => {
+                setSelectedFormat(fmt);
+                setMobileFilterOpen(false);
+              }}
+              onSelectTimeFilter={(tf) => {
+                setSelectedTimeFilter(tf);
+                setMobileFilterOpen(false);
+              }}
+              onClearFilters={() => {
+                handleClearFilters();
+                setMobileFilterOpen(false);
+              }}
+            />
+          </div>
+        )}
 
-                // Group showtimes of this movie by Hall/Format combo
-                const formatGroups: Record<
-                  string,
-                  { formatName: string; list: typeof movieShowtimes }
-                > = {};
-                movieShowtimes.forEach((st) => {
-                  const groupKey = `${st.format}-${st.hallName}`;
-                  if (!formatGroups[groupKey]) {
-                    formatGroups[groupKey] = {
-                      formatName: `${st.format} (${st.hallName})`,
-                      list: [],
-                    };
-                  }
-                  formatGroups[groupKey].list.push(st);
-                });
+        {/* Desktop 2-Column Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)] gap-6 items-start">
+          {/* Desktop Filter Sidebar */}
+          <div className="hidden lg:block w-[260px] shrink-0">
+            <ShowtimeFilters
+              selectedFormat={selectedFormat}
+              selectedTimeFilter={selectedTimeFilter}
+              onSelectFormat={setSelectedFormat}
+              onSelectTimeFilter={setSelectedTimeFilter}
+              onClearFilters={handleClearFilters}
+            />
+          </div>
 
-              return (
-                <motion.div
-                  key={movie.id}
-                  variants={itemVariants}
-                  className="bg-card border border-border rounded-2xl p-5 shadow-xl flex flex-col md:flex-row gap-5 hover:border-red-500/50 transition-all duration-300"
-                >
-                  {/* Movie Poster & Basic Details */}
-                  <div className="w-full md:w-44 shrink-0 space-y-4">
-                    <img
-                      src={movie.posterUrl}
-                      alt={movie.title}
-                      className="aspect-[2/3] w-full object-cover rounded-xl border border-border shadow-lg shadow-black/40 transition-transform duration-300 hover:scale-[1.02]"
-                    />
-                    <div className="space-y-2 hidden md:block">
-                      <div className="flex items-center gap-1 text-xs text-amber-400 font-bold">
-                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                        <span>{movie.rating.toFixed(1)} / 10</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
-                        <Clock className="w-3.5 h-3.5" />
-                        <span>{movie.durationMinutes} mins</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Movie Showtimes Info */}
-                  <div className="flex-1 space-y-6">
-                    <div>
-                      <h4 
-                        onClick={() => navigate(`/movies/${movie.id}`)}
-                        className="text-xl font-black text-foreground hover:text-[#E50914] cursor-pointer transition-colors uppercase tracking-tight"
-                      >
-                        {movie.title}
-                      </h4>
-                      <p className="text-xs mt-1 uppercase font-bold tracking-wider text-[#E50914]">
-                        {movie.genres.join(' • ')}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-3 line-clamp-2 md:line-clamp-3 leading-relaxed">
-                        {movie.description}
-                      </p>
-                    </div>
-
-                      {/* Showtimes by Format Groups */}
-                      <div className="space-y-5 pt-3 border-t border-border">
-                        {Object.values(formatGroups).map((group) => (
-                          <div key={group.formatName} className="space-y-2.5">
-                            <span className="inline-flex items-center rounded-full border border-border/80 bg-card px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                              {group.formatName}
-                            </span>
-
-                            <div className="flex flex-wrap gap-3">
-                              {group.list
-                                .sort((a, b) => a.time.localeCompare(b.time))
-                                .map((st) => {
-                                  // Capacity calculations
-                                  const occupiedCount = st.occupiedSeats.length;
-                                  const totalSeats = 80;
-                                  const occupancyPercent =
-                                    (occupiedCount / totalSeats) * 100;
-
-                                  let statusColor = "bg-emerald-500";
-                                  let occupancyLabel = "Available";
-                                  const isSoldOut = occupiedCount >= totalSeats;
-
-                                  if (isSoldOut) {
-                                    statusColor = "bg-rose-500";
-                                    occupancyLabel = "SOLD OUT";
-                                  } else if (occupancyPercent >= 75) {
-                                    statusColor = "bg-amber-500";
-                                    occupancyLabel = "ALMOST FULL";
-                                  }
-
-                                  return (
-                                    <motion.button
-                                      key={st.id}
-                                      disabled={isSoldOut}
-                                      onClick={() =>
-                                        navigate(
-                                          `/booking/${st.id}?movieId=${movie.id}`,
-                                        )
-                                      }
-                                      whileHover={
-                                        isSoldOut ? {} : { scale: 1.05 }
-                                      }
-                                      whileTap={
-                                        isSoldOut ? {} : { scale: 0.95 }
-                                      }
-                                      className={`group relative flex min-w-[95px] flex-col items-center justify-center rounded-2xl border border-border/80 bg-card p-3 transition-colors ${
-                                        isSoldOut
-                                          ? "cursor-not-allowed border-transparent opacity-40"
-                                          : "cursor-pointer hover:border-red-500/80 hover:bg-red-500/5"
-                                      }`}
-                                      title={`${occupancyLabel} (${occupiedCount}/${totalSeats} seats)`}
-                                    >
-                                      {isSoldOut ? (
-                                        <>
-                                          <span className="text-sm font-black text-muted-foreground line-through">
-                                            {st.time}
-                                          </span>
-                                          <span className="text-[8px] font-bold text-rose-500 mt-1 tracking-wider">
-                                            SOLD OUT
-                                          </span>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <span className="text-sm font-black text-foreground group-hover:text-[#E50914] transition-colors">
-                                            {st.time}
-                                          </span>
-                                          {/* Occupancy Indicator Bar */}
-                                          <div className="w-12 h-1 bg-black/10 dark:bg-white/10 rounded-full mt-2 overflow-hidden">
-                                            <div
-                                              className={`h-full ${statusColor}`}
-                                              style={{
-                                                width: `${Math.max(15, occupancyPercent)}%`,
-                                              }}
-                                            />
-                                          </div>
-                                        </>
-                                      )}
-                                    </motion.button>
-                                  );
-                                })}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              },
-            )
-          ) : (
-            /* Empty State */
-            <div className="py-20 text-center bg-card border border-border rounded-3xl p-8 space-y-4">
-              <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto animate-pulse" />
-              <h3 className="text-lg font-black text-foreground uppercase tracking-wider">
-                No Showtimes Found
-              </h3>
-              <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                There are no scheduled showtimes at {selectedCinema.name}{" "}
-                matching your format or time filters on the selected date.
-              </p>
-              <button
-                onClick={handleClearFilters}
-                className="px-5 py-2.5 rounded-xl bg-secondary text-secondary-foreground text-xs font-bold uppercase tracking-wider hover:bg-muted transition-all"
-              >
-                Reset Filters
-              </button>
-            </div>
-          )}
-        </motion.div>
+          {/* Results Area */}
+          <div className="w-full flex-1">
+            {loading ? (
+              <ShowtimeSkeleton />
+            ) : fetchError ? (
+              <ShowtimeEmptyState
+                type="ERROR"
+                cinemaName={selectedCinema?.name || "Cinema"}
+                selectedDate={selectedDate}
+                errorMessage={fetchError}
+                onResetFilters={handleClearFilters}
+                onRetry={loadData}
+              />
+            ) : Object.keys(showtimesByMovie).length > 0 ? (
+              <ShowtimeResults
+                showtimesByMovie={showtimesByMovie}
+                movies={movies}
+              />
+            ) : !hasAnyShowtimeForCinemaAndDate ? (
+              <ShowtimeEmptyState
+                type="NO_SHOWTIMES"
+                cinemaName={selectedCinema?.name || "Selected Cinema"}
+                selectedDate={selectedDate}
+                tomorrowDateStr={tomorrowDateStr}
+                onResetFilters={handleClearFilters}
+                onSelectTomorrow={(nextDate) => setSelectedDate(nextDate)}
+              />
+            ) : (
+              <ShowtimeEmptyState
+                type="FILTER_EMPTY"
+                cinemaName={selectedCinema?.name || "Selected Cinema"}
+                selectedDate={selectedDate}
+                onResetFilters={handleClearFilters}
+              />
+            )}
+          </div>
+        </div>
       </section>
     </div>
   );

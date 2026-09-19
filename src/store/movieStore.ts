@@ -74,16 +74,40 @@ export const useMovieStore = create<MovieState>((set, get) => ({
         const standard = screenSeats.find((seat) => seat.seatType === 'STANDARD')?.price ?? show.ticketPrice;
         const vip = screenSeats.find((seat) => seat.seatType === 'VIP')?.price ?? standard;
         const occupiedSeats = screenSeats.filter((seat) => seat.status.toUpperCase() !== 'AVAILABLE').map((seat) => seat.seatNumber);
+        
         const start = new Date(show.startTime);
+        let dateStr = show.startTime ? show.startTime.slice(0, 10) : '';
+        let timeStr = show.startTime || '';
+
+        if (!Number.isNaN(start.getTime())) {
+          const yyyy = start.getFullYear();
+          const mm = String(start.getMonth() + 1).padStart(2, '0');
+          const dd = String(start.getDate()).padStart(2, '0');
+          dateStr = `${yyyy}-${mm}-${dd}`;
+
+          const hh = String(start.getHours()).padStart(2, '0');
+          const min = String(start.getMinutes()).padStart(2, '0');
+          timeStr = `${hh}:${min}`;
+        }
+
+        const rawScreenType = (screen?.screenType || '2D').toUpperCase();
+        let normalizedFormat: Showtime['format'] = '2D';
+        if (rawScreenType === '3D') normalizedFormat = '3D';
+        else if (rawScreenType === 'IMAX') normalizedFormat = 'IMAX';
+        else if (rawScreenType === '4DX') normalizedFormat = '4DX';
+        else if (rawScreenType === 'VIP') normalizedFormat = 'VIP';
+        else if (rawScreenType === 'DOLBY' || rawScreenType === 'DOLBY ATMOS') normalizedFormat = 'Dolby';
+        else normalizedFormat = '2D'; // STANDARD, 2D, DIGITAL, etc.
+
         return {
           id: `st-${show.id}`,
           movieId: `m-${show.movieId}`,
           cinemaId: theater ? `c-${theater.id}` : `theater-${screen?.theaterId ?? 0}`,
           cinemaName: theater?.name ?? 'Cinema',
           hallName: screen?.name ?? 'Screen',
-          date: show.startTime.slice(0, 10),
-          time: Number.isNaN(start.getTime()) ? show.startTime : start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
-          format: (screen?.screenType || '2D') as Showtime['format'],
+          date: dateStr,
+          time: timeStr,
+          format: normalizedFormat,
           price: standard,
           vipPrice: vip,
           occupiedSeats,
