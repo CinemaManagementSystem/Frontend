@@ -77,7 +77,10 @@ export function usePaymentSession(session: GatewaySession) {
     alive.current = true;
     if (phaseRef.current !== 'waiting') return () => { alive.current = false; };
     const timers: number[] = [];
-    const checks = [...SCHEDULED_CHECK_SECONDS, 250, 260, 270, 280, 290];
+    // Keep the browser calls aligned with the documented milestones. The
+    // server scheduler continues recovery polling independently, while the
+    // final request below verifies once at the hard deadline.
+    const checks = [...SCHEDULED_CHECK_SECONDS];
     for (const second of checks) {
       const at = session.startedAt + second * 1000;
       if (at < Date.now() || at >= session.expiresAt || fired.current.has(second)) continue;
@@ -94,8 +97,9 @@ export function usePaymentSession(session: GatewaySession) {
       transition('finalizing');
       const result = await verify('final');
       if (!alive.current || (phaseRef.current as Phase) !== 'finalizing') return;
-      transition(result ? 'expired' : 'unverified');
-      setMessage(result ? 'Time is up. Payment has not been confirmed. Check your booking history before paying again.'
+      const finalExpired = result?.status === 'EXPIRED' || result?.status === 'FAILED';
+      transition(finalExpired ? 'expired' : 'unverified');
+      setMessage(finalExpired ? 'Time is up. Payment has not been confirmed. Check your booking history before paying again.'
         : 'The QR is closed, but we could not verify the payment. Check your booking history before paying again.');
     }, Math.max(0, session.expiresAt - Date.now())));
     const tick = window.setInterval(() => {
