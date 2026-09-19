@@ -23,6 +23,9 @@ export interface Showtime {
   cinemaId: string;
   cinemaName: string;
   hallName: string;
+  startTime: string; // Backend LocalDateTime in Asia/Phnom_Penh, or ISO with offset
+  endTime: string;
+  status: string;
   date: string; // YYYY-MM-DD
   time: string; // e.g. "14:30"
   format: '2D' | '3D' | 'IMAX' | '4DX' | 'VIP' | 'Dolby';

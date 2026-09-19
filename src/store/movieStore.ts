@@ -8,12 +8,14 @@ import { bookingAdminService } from '@/services/bookingAdminService';
 import { bookingSeatService } from '@/services/bookingSeatService';
 import { screenService } from '@/services/screenService';
 import { theaterService } from '@/services/theaterService';
+import { getCinemaDateTime, isUpcomingShowtime } from '@/lib/showtime';
 
 interface MovieState {
   movies: Movie[];
   showtimes: Showtime[];
   bookings: Booking[];
   loading: boolean;
+  catalogRequiresSignIn: boolean;
   selectedCategory: string;
   searchQuery: string;
   fetchCatalog: () => Promise<void>;
@@ -26,6 +28,7 @@ interface MovieState {
 }
 
 type ApiMovie = Awaited<ReturnType<typeof movieAdminService.list>>[number];
+let catalogRequest: Promise<void> | null = null;
 
 const toMovie = (movie: ApiMovie): Movie => ({
   id: `m-${movie.id}`,
@@ -51,72 +54,69 @@ export const useMovieStore = create<MovieState>((set, get) => ({
   showtimes: [],
   bookings: [],
   loading: false,
+  catalogRequiresSignIn: false,
   selectedCategory: 'ALL',
   searchQuery: '',
 
-  fetchCatalog: async () => {
+  fetchCatalog: () => {
+    if (catalogRequest) return catalogRequest;
     set({ loading: true });
-    try {
-      const [apiMovies, apiShows, seats, screens, theaters] = await Promise.all([
-        movieAdminService.list(),
-        showService.list(),
-        seatService.list(),
-        screenService.list(),
-        theaterService.list(),
-      ]);
-      const movies = apiMovies.map(toMovie);
-      const screenById = new Map(screens.map((screen) => [screen.id, screen]));
-      const theaterById = new Map(theaters.map((theater) => [theater.id, theater]));
-      const showtimes = apiShows.map((show): Showtime => {
-        const screen = screenById.get(show.screenId);
-        const theater = screen ? theaterById.get(screen.theaterId) : undefined;
-        const screenSeats = seats.filter((seat) => seat.screenId === show.screenId);
-        const standard = screenSeats.find((seat) => seat.seatType === 'STANDARD')?.price ?? show.ticketPrice;
-        const vip = screenSeats.find((seat) => seat.seatType === 'VIP')?.price ?? standard;
-        const occupiedSeats = screenSeats.filter((seat) => seat.status.toUpperCase() !== 'AVAILABLE').map((seat) => seat.seatNumber);
-        
-        const start = new Date(show.startTime);
-        let dateStr = show.startTime ? show.startTime.slice(0, 10) : '';
-        let timeStr = show.startTime || '';
+    const authenticated = Boolean(localStorage.getItem('token'));
+    catalogRequest = (async () => {
+      try {
+        const [apiMovies, apiShows, seats, screens, theaters] = await Promise.all([
+          movieAdminService.list(),
+          showService.list(),
+          authenticated ? seatService.list() : Promise.resolve([]),
+          authenticated ? screenService.list() : Promise.resolve([]),
+          theaterService.list(),
+        ]);
+        const movies = apiMovies.map(toMovie);
+        const screenById = new Map(screens.map((screen) => [screen.id, screen]));
+        const theaterById = new Map(theaters.map((theater) => [theater.id, theater]));
+        const showtimes = apiShows.map((show): Showtime => {
+          const screen = screenById.get(show.screenId);
+          const theater = screen ? theaterById.get(screen.theaterId) : undefined;
+          const screenSeats = seats.filter((seat) => seat.screenId === show.screenId);
+          const standard = screenSeats.find((seat) => seat.seatType === 'STANDARD')?.price ?? show.ticketPrice;
+          const vip = screenSeats.find((seat) => seat.seatType === 'VIP')?.price ?? standard;
+          const occupiedSeats = screenSeats.filter((seat) => seat.status.toUpperCase() !== 'AVAILABLE').map((seat) => seat.seatNumber);
 
-        if (!Number.isNaN(start.getTime())) {
-          const yyyy = start.getFullYear();
-          const mm = String(start.getMonth() + 1).padStart(2, '0');
-          const dd = String(start.getDate()).padStart(2, '0');
-          dateStr = `${yyyy}-${mm}-${dd}`;
+          const { date, time } = getCinemaDateTime(show.startTime);
 
-          const hh = String(start.getHours()).padStart(2, '0');
-          const min = String(start.getMinutes()).padStart(2, '0');
-          timeStr = `${hh}:${min}`;
-        }
+          const rawScreenType = (screen?.screenType || '2D').toUpperCase();
+          let normalizedFormat: Showtime['format'] = '2D';
+          if (rawScreenType === '3D') normalizedFormat = '3D';
+          else if (rawScreenType === 'IMAX') normalizedFormat = 'IMAX';
+          else if (rawScreenType === '4DX') normalizedFormat = '4DX';
+          else if (rawScreenType === 'VIP') normalizedFormat = 'VIP';
+          else if (rawScreenType === 'DOLBY' || rawScreenType === 'DOLBY ATMOS') normalizedFormat = 'Dolby';
+          else normalizedFormat = '2D'; // STANDARD, 2D, DIGITAL, etc.
 
-        const rawScreenType = (screen?.screenType || '2D').toUpperCase();
-        let normalizedFormat: Showtime['format'] = '2D';
-        if (rawScreenType === '3D') normalizedFormat = '3D';
-        else if (rawScreenType === 'IMAX') normalizedFormat = 'IMAX';
-        else if (rawScreenType === '4DX') normalizedFormat = '4DX';
-        else if (rawScreenType === 'VIP') normalizedFormat = 'VIP';
-        else if (rawScreenType === 'DOLBY' || rawScreenType === 'DOLBY ATMOS') normalizedFormat = 'Dolby';
-        else normalizedFormat = '2D'; // STANDARD, 2D, DIGITAL, etc.
-
-        return {
-          id: `st-${show.id}`,
-          movieId: `m-${show.movieId}`,
-          cinemaId: theater ? `c-${theater.id}` : `theater-${screen?.theaterId ?? 0}`,
-          cinemaName: theater?.name ?? 'Cinema',
-          hallName: screen?.name ?? 'Screen',
-          date: dateStr,
-          time: timeStr,
-          format: normalizedFormat,
-          price: standard,
-          vipPrice: vip,
-          occupiedSeats,
-        };
-      });
-      set({ movies, showtimes });
-    } finally {
-      set({ loading: false });
-    }
+          return {
+            id: `st-${show.id}`,
+            movieId: `m-${show.movieId}`,
+            cinemaId: theater ? `c-${theater.id}` : '',
+            cinemaName: theater?.name ?? 'Sign in to view cinema',
+            hallName: screen?.name ?? '',
+            startTime: show.startTime,
+            endTime: show.endTime,
+            status: show.status,
+            date,
+            time,
+            format: normalizedFormat,
+            price: standard,
+            vipPrice: vip,
+            occupiedSeats,
+          };
+        });
+        set({ movies, showtimes, catalogRequiresSignIn: !authenticated });
+        } finally {
+        catalogRequest = null;
+        set({ loading: false });
+      }
+    })();
+    return catalogRequest;
   },
 
   fetchBookings: async () => {
@@ -157,7 +157,7 @@ export const useMovieStore = create<MovieState>((set, get) => ({
   setSelectedCategory: (category) => set({ selectedCategory: category }),
   setSearchQuery: (query) => set({ searchQuery: query }),
   getMovieById: (id) => get().movies.find((movie) => movie.id === id || movie.slug === id),
-  getShowtimesByMovieId: (movieId) => get().showtimes.filter((showtime) => showtime.movieId === movieId),
+  getShowtimesByMovieId: (movieId) => get().showtimes.filter((showtime) => showtime.movieId === movieId && isUpcomingShowtime(showtime)),
   cancelBooking: async (bookingId) => {
     await bookingAdminService.remove(Number(bookingId));
     await get().fetchBookings();

@@ -37,9 +37,16 @@ Products use multipart/form-data for create/update because an optional image fil
 - Backend errors are mapped to user-facing messages by getApiErrorMessage.
 - A 429 response is temporary; do not retry aggressively.
 
+## Public cinema browsing
+
+- `/theaters` and `/locations` are public reads. `cinemaStore` joins them by `locationId`; cinema selections use `c-{theaterId}` in the shared store and `/cinemas?cinema=c-1` links.
+- The current backend requires authentication for `/screens`, `/seats`, `/products`, and `/product-categories`. Guest pages show locations and a sign-in action instead of requesting those resources and triggering a redirect.
+- Show timestamps without offsets represent Cambodia time (`Asia/Phnom_Penh`, UTC+7). An `ACTIVE` show can still be in the past. Public booking entry points use `src/lib/showtime.ts` for date, status, and booking-cutoff checks.
+- `VITE_BOOKING_HOLD_MINUTES` defaults to 5 and must match backend `BOOKING_HOLD_TTL_MINUTES`. Online booking closes that many minutes before the show starts.
+- The backend currently has no promotions or redemption API. `/promotion` shows this availability state and the real concessions menu. Saved menu items are a device-local shortlist, not a claimed discount or reservation.
+
 ## Service pattern
 
 A page obtains data through its domain store. A store calls a service such as movieService, paymentService, or productService; the service calls apiClient. Keep endpoint paths and request/response mapping in the service/type layer.
 
 For the complete endpoint and role matrix, see src/docs/APIEndpoint.md.
-

@@ -1,591 +1,280 @@
-import React, { useState, useEffect } from 'react';
-import { Sparkles, ArrowRight, HelpCircle, Check, BookOpen, ChevronDown, ChevronUp, QrCode } from 'lucide-react';
-import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import {
+  ArrowRight, Bookmark, Check, ChevronDown, CircleAlert, Coffee,
+  MapPin, Popcorn, RefreshCw, Search, Ticket, X,
+} from 'lucide-react';
+import { productService } from '@/services/productService';
+import { productCategoryService } from '@/services/productCategoryService';
+import { useAuthStore } from '@/store/authStore';
+import { formatCurrency } from '@/utils/formatDate';
+import type { Product } from '@/types/product';
+import type { ProductCategory } from '@/types/productCategory';
+import { SnackImage } from '../Booking/SnackImage';
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.05 }
+const SAVED_ITEMS_KEY = 'cinematique_saved_menu_items_v1';
+const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background';
+const PRIMARY_BUTTON = `inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 ${FOCUS}`;
+
+function readSavedItems(): number[] {
+  try {
+    const value: unknown = JSON.parse(localStorage.getItem(SAVED_ITEMS_KEY) || '[]');
+    return Array.isArray(value)
+      ? [...new Set(value.filter((id): id is number => Number.isInteger(id) && id > 0))]
+      : [];
+  } catch {
+    return [];
   }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut' as const } }
-};
-
-interface OfferDetail {
-  id: string;
-  badge: string;
-  title: string;
-  discount: string;
-  image: string;
-  code: string;
-  expDate: string;
-  steps: {
-    title: string;
-    description: string;
-  }[];
-  terms: {
-    validity: string;
-    eligibility: string;
-    limits: string;
-  };
 }
 
-export const OffersPage: React.FC = () => {
-  const shouldReduceMotion = useReducedMotion();
-  // Offers database
-  const offersList: OfferDetail[] = [
-    {
-      id: 'off-1',
-      badge: 'LIMITED TIME OFFER',
-      title: 'Gourmet Double Combo',
-      discount: '30% Off Signature Combos',
-      image: 'https://images.unsplash.com/photo-1578849278619-e73505e9610f?auto=format&fit=crop&w=1200&q=80',
-      code: 'CINEMA-492-910',
-      expDate: '31 Dec 2024',
-      steps: [
-        {
-          title: 'Claim Offer',
-          description: "Click the 'Claim' button to link this offer to your digital wallet or member account."
-        },
-        {
-          title: 'Visit Theatre',
-          description: 'Head to any participating Cinematique location and present your digital QR code.'
-        },
-        {
-          title: 'Enjoy!',
-          description: 'The 30% discount will be applied automatically at checkout for your Gourmet Combo.'
-        }
-      ],
-      terms: {
-        validity: 'This offer is valid until December 31, 2024. Offer must be redeemed at least 30 minutes before showtime. Limit one redemption per member per day. Not valid in conjunction with any other discount or promotion.',
-        eligibility: 'Open to all registered Cinematique rewards club members. Membership status must be active at the time of redemption.',
-        limits: 'Redeemable only at the concessions counter. F&B combos cannot be exchanged for cash or movie tickets.'
-      }
-    },
-    {
-      id: 'off-2',
-      badge: 'MEMBERSHIP EXCLUSIVE',
-      title: 'Free Large Soda Upgrade',
-      discount: 'Free upgrade from Medium to Large Soda',
-      image: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=1200&q=80',
-      code: 'CINEMA-772-104',
-      expDate: '31 Dec 2024',
-      steps: [
-        {
-          title: 'Claim Offer',
-          description: 'Claim the soda upgrade token in your member rewards hub.'
-        },
-        {
-          title: 'Visit Theatre',
-          description: 'Present your digital pass when buying any regular-sized soda combo.'
-        },
-        {
-          title: 'Enjoy!',
-          description: 'Enjoy a free upgrade to a large soda with your popcorn meal combo.'
-        }
-      ],
-      terms: {
-        validity: 'Valid until Dec 31, 2024. Food purchase is required to apply the upgrade to a large soda.',
-        eligibility: 'Gold and Platinum rewards tier membership levels only.',
-        limits: 'One soda upgrade per customer transaction. Cannot be combined with other free offers.'
-      }
-    },
-    {
-      id: 'off-3',
-      badge: 'FLASH SALE',
-      title: '2-for-1 Midnight Screenings',
-      discount: 'Buy 1 Get 1 Free for Late Night Shows',
-      image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80',
-      code: 'CINEMA-884-210',
-      expDate: '15 Nov 2024',
-      steps: [
-        {
-          title: 'Claim Offer',
-          description: 'Add 2 tickets for any midnight screening (after 11 PM) to your online checkout cart.'
-        },
-        {
-          title: 'Apply Code',
-          description: 'Use your claimed digital pass code during the payment step.'
-        },
-        {
-          title: 'Enjoy!',
-          description: 'The price of the second ticket is automatically discounted to $0.'
-        }
-      ],
-      terms: {
-        validity: 'Applicable only for Friday and Saturday night shows starting after 23:00.',
-        eligibility: 'Available to all registered user accounts online.',
-        limits: 'Max 1 free ticket per booking transaction. Not valid for VIP or IMAX screenings.'
-      }
-    },
-    {
-      id: 'off-4',
-      badge: 'EXPERIENCE UPGRADE',
-      title: 'Complimentary VIP Lounge',
-      discount: 'Access VIP pre-show lounges',
-      image: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=1200&q=80',
-      code: 'CINEMA-902-155',
-      expDate: '31 Dec 2024',
-      steps: [
-        {
-          title: 'Claim Offer',
-          description: 'Activate the VIP lounge pass token on your digital account.'
-        },
-        {
-          title: 'Visit Lounge',
-          description: 'Show your active QR pass at the entrance of any participating Cinematique VIP lounge.'
-        },
-        {
-          title: 'Enjoy!',
-          description: 'Enjoy complimentary premium appetizers, drinks, and plush recliners before your show.'
-        }
-      ],
-      terms: {
-        validity: 'Valid for single lounge entry on the day of your ticketed showtime.',
-        eligibility: 'Requires a valid same-day ticket for any movie.',
-        limits: 'Subject to lounge capacity limits. First come, first served entry applies.'
-      }
-    },
-    {
-      id: 'off-5',
-      badge: 'FAMILY SUNDAY',
-      title: 'Kids Eat Free Sundays',
-      discount: 'Free Kids F&B Combo with adult ticket purchase',
-      image: 'https://images.unsplash.com/photo-1505686994434-e3cc5abf1330?auto=format&fit=crop&w=1200&q=80',
-      code: 'CINEMA-120-449',
-      expDate: '29 Dec 2024',
-      steps: [
-        {
-          title: 'Claim Offer',
-          description: 'Claim the Kids F&B ticket via the offers dashboard portal.'
-        },
-        {
-          title: 'Visit Concession',
-          description: 'Order any Adult movie ticket and F&B combo on a Sunday.'
-        },
-        {
-          title: 'Enjoy!',
-          description: 'Present the QR code at concessions to receive a free junior popcorn and juice box combo.'
-        }
-      ],
-      terms: {
-        validity: 'Valid on Sundays only. Requires purchase of at least one adult F&B combo.',
-        eligibility: 'Applicable for families with kids aged 12 and under.',
-        limits: 'Limit one free Kids Combo per family per cinema visit.'
-      }
-    }
-  ];
+function imageCategory(name: string): 'Popcorn' | 'Drink' | 'Combo' | 'Snacks' {
+  const category = name.toLowerCase();
+  if (category.includes('popcorn')) return 'Popcorn';
+  if (category.includes('drink') || category.includes('beverage')) return 'Drink';
+  if (category.includes('combo')) return 'Combo';
+  return 'Snacks';
+}
 
-  // Active Offer State
-  const [activeOffer, setActiveOffer] = useState<OfferDetail>(offersList[0]);
-  const [claimedOffers, setClaimedOffers] = useState<string[]>([]);
-  const [savedOffers, setSavedOffers] = useState<string[]>([]);
-  const [expandedSection, setExpandedSection] = useState<'VALIDITY' | 'ELIGIBILITY' | 'LIMITS' | null>('VALIDITY');
+export function OffersPage() {
+  const { pathname, search } = useLocation();
+  const isFoodPage = pathname === '/fnb';
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [loading, setLoading] = useState(isAuthenticated);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [refresh, setRefresh] = useState(0);
+  const [savedIds, setSavedIds] = useState(readSavedItems);
+  const [savedOnly, setSavedOnly] = useState(false);
+  const [query, setQuery] = useState('');
+  const [categoryId, setCategoryId] = useState('all');
+  const [sort, setSort] = useState('name');
+  const [announcement, setAnnouncement] = useState('');
 
-  // Load claimed/saved state from LocalStorage
   useEffect(() => {
-    const savedClaimed = localStorage.getItem('cinematique_claimed_offers');
-    const savedSaved = localStorage.getItem('cinematique_saved_offers');
-    if (savedClaimed) setClaimedOffers(JSON.parse(savedClaimed));
-    if (savedSaved) setSavedOffers(JSON.parse(savedSaved));
-  }, []);
-
-  const handleClaimOffer = (id: string) => {
-    if (claimedOffers.includes(id)) return;
-    const updated = [...claimedOffers, id];
-    setClaimedOffers(updated);
-    localStorage.setItem('cinematique_claimed_offers', JSON.stringify(updated));
-  };
-
-  const handleSaveOffer = (id: string) => {
-    let updated = [...savedOffers];
-    if (savedOffers.includes(id)) {
-      updated = updated.filter((item) => item !== id);
-    } else {
-      updated.push(id);
+    let cancelled = false;
+    if (!isAuthenticated) {
+      setProducts([]);
+      setCategories([]);
+      setLoading(false);
+      setLoadFailed(false);
+      return;
     }
-    setSavedOffers(updated);
-    localStorage.setItem('cinematique_saved_offers', JSON.stringify(updated));
-  };
 
-  const isClaimed = claimedOffers.includes(activeOffer.id);
-  const isSaved = savedOffers.includes(activeOffer.id);
+    setLoading(true);
+    setLoadFailed(false);
+    void Promise.all([productService.list(), productCategoryService.list()])
+      .then(([nextProducts, nextCategories]) => {
+        if (cancelled) return;
+        const inactiveCategories = new Set(nextCategories.filter((category) => !category.isActive).map((category) => category.id));
+        setProducts(nextProducts.filter((product) => product.isAvailable
+          && product.stockQuantity > 0
+          && Number.isFinite(product.price)
+          && product.price >= 0
+          && !inactiveCategories.has(product.productCategoryId)));
+        setCategories(nextCategories.filter((category) => category.isActive));
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setProducts([]);
+        setCategories([]);
+        setLoadFailed(true);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
 
-  const toggleSection = (section: 'VALIDITY' | 'ELIGIBILITY' | 'LIMITS') => {
-    if (expandedSection === section) {
-      setExpandedSection(null);
-    } else {
-      setExpandedSection(section);
+    return () => { cancelled = true; };
+  }, [isAuthenticated, refresh]);
+
+  const categoryMap = useMemo(() => new Map(categories.map((category) => [category.id, category])), [categories]);
+  const menuCategories = categories.filter((category) => products.some((product) => product.productCategoryId === category.id));
+  const savedCount = products.filter((product) => savedIds.includes(product.id)).length;
+  const visibleProducts = useMemo(() => {
+    const term = query.trim().toLowerCase();
+    return products.filter((product) => (!savedOnly || savedIds.includes(product.id))
+      && (categoryId === 'all' || String(product.productCategoryId) === categoryId)
+      && (!term || `${product.name} ${categoryMap.get(product.productCategoryId)?.name || ''}`.toLowerCase().includes(term)))
+      .sort((first, second) => {
+        if (sort === 'price-low') return first.price - second.price || first.name.localeCompare(second.name);
+        if (sort === 'price-high') return second.price - first.price || first.name.localeCompare(second.name);
+        return first.name.localeCompare(second.name);
+      });
+  }, [products, savedOnly, savedIds, categoryId, query, sort, categoryMap]);
+
+  function toggleSaved(product: Product) {
+    const alreadySaved = savedIds.includes(product.id);
+    const next = alreadySaved ? savedIds.filter((id) => id !== product.id) : [...savedIds, product.id];
+    setSavedIds(next);
+    try {
+      localStorage.setItem(SAVED_ITEMS_KEY, JSON.stringify(next));
+      setAnnouncement(alreadySaved ? `${product.name} removed from saved items.` : `${product.name} saved on this device.`);
+    } catch {
+      setAnnouncement('Your selection is saved for this visit. This browser could not save it for next time.');
     }
-  };
+  }
 
-  const handleSelectOffer = (offer: OfferDetail) => {
-    setActiveOffer(offer);
-    // Reset accordion to default validity
-    setExpandedSection('VALIDITY');
-    // Scroll smoothly to top hero section
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  function resetFilters() {
+    setQuery('');
+    setCategoryId('all');
+    setSavedOnly(false);
+  }
 
   return (
-    <div className="pb-24 bg-background min-h-screen text-foreground selection:bg-[#E50914]">
-      {/* 1. Main Hero Offer Section */}
-      <section className="relative w-full overflow-hidden bg-gradient-to-b from-muted/70 to-transparent dark:from-zinc-900 dark:to-[#0f0f10] border-b border-border py-12">
-        {/* Background Image of concessions */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src={activeOffer.image}
-            alt={activeOffer.title}
-            className="w-full h-full object-cover object-center opacity-15 filter grayscale brightness-50"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-card via-card/90 to-transparent dark:from-[#0f0f10] dark:via-[#0f0f10]/95 dark:to-transparent" />
-        </div>
-
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row gap-12 items-center">
-          {/* F&B Text Details */}
-          <motion.div 
-            key={activeOffer.id}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, ease: 'easeOut' }}
-            className="flex-1 space-y-6"
-          >
-            <div className="flex items-center gap-2">
-              <span className="px-3 py-1 rounded-md bg-[#E50914] text-white text-[9px] font-black uppercase tracking-widest shadow-md shadow-[#E50914]/25">
-                {activeOffer.badge}
-              </span>
+    <div className="min-h-screen bg-background pb-20 text-foreground">
+      <section className="overflow-hidden border-b border-border bg-card">
+        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-10 sm:px-6 sm:py-14 lg:grid-cols-[1.25fr_1fr] lg:items-center lg:gap-16 lg:px-8">
+          <div>
+            <p className="mb-5 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-primary">
+              {isFoodPage ? <Popcorn className="h-4 w-4" aria-hidden="true" /> : <Ticket className="h-4 w-4" aria-hidden="true" />}
+              {isFoodPage ? 'Food & drinks' : 'Offers & extras'}
+            </p>
+            <h1 className="max-w-xl text-5xl font-black leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
+              Big screen.<br /><span className="text-primary">Little extras.</span>
+            </h1>
+            <p className="mt-6 max-w-md text-sm leading-7 text-muted-foreground sm:text-base">
+              A popcorn to share. Something cold to sip. Explore the menu, save your favourites, and make your next movie night your own.
+            </p>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <a href="#food-menu" className={PRIMARY_BUTTON}>Explore the menu <ArrowRight className="h-4 w-4" aria-hidden="true" /></a>
+              <Link to="/cinemas" className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border px-5 py-3 text-sm font-semibold hover:bg-muted ${FOCUS}`}>
+                Find a showtime <Ticket className="h-4 w-4" aria-hidden="true" />
+              </Link>
             </div>
-            
-            <div className="space-y-2">
-              <h1 className="text-4xl sm:text-6xl font-black text-foreground uppercase tracking-tight leading-none">
-                {activeOffer.title}
-              </h1>
-              <p className="text-lg sm:text-xl font-bold text-[#E50914]">
-                {activeOffer.discount}
-              </p>
+          </div>
+
+          <div className="relative rounded-3xl border border-border bg-background p-6 sm:p-8">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">The perfect pairing</p>
+                <h2 className="mt-2 text-2xl font-bold tracking-tight">Your movie-night plan</h2>
+              </div>
+              <Popcorn className="h-10 w-10 shrink-0 text-primary" strokeWidth={1.35} aria-hidden="true" />
             </div>
-
-            {/* Actions Claim / Save */}
-            <div className="flex flex-wrap gap-4 pt-2">
-              <button
-                onClick={() => handleClaimOffer(activeOffer.id)}
-                className={`py-3 px-6 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-lg ${
-                  isClaimed
-                    ? 'bg-emerald-500 text-white shadow-emerald-500/20 cursor-default'
-                    : 'bg-[#E50914] hover:bg-[#ff1f2d] text-white shadow-[#E50914]/20 hover:scale-102 cursor-pointer'
-                }`}
-              >
-                {isClaimed ? (
-                  <>
-                    <Check className="w-4 h-4" />
-                    <span>Claimed & Saved</span>
-                  </>
-                ) : (
-                  <span>Claim Now</span>
-                )}
-              </button>
-
-              <button
-                onClick={() => handleSaveOffer(activeOffer.id)}
-                className={`py-3 px-6 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 ${
-                  isSaved
-                    ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400'
-                    : 'border-border hover:bg-muted text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <span>{isSaved ? 'Saved for Later' : 'Save for Later'}</span>
-              </button>
+            <ol className="mt-7 space-y-5">
+              {[
+                ['Pick your film', 'Choose a cinema and an upcoming showtime.'],
+                ['Choose your seats', 'Find your favourite spot in the auditorium.'],
+                ['Add the extras', 'Select snacks and drinks before checkout.'],
+              ].map(([title, description], index) => (
+                <li key={title} className="flex gap-4">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border font-mono text-xs text-primary">{index + 1}</span>
+                  <div><p className="text-sm font-bold">{title}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p></div>
+                </li>
+              ))}
+            </ol>
+            <div className="relative mt-7 border-t border-dashed border-border pt-5">
+              <span className="absolute -left-8 -top-2 hidden h-4 w-4 rounded-full border-r border-border bg-card sm:block" aria-hidden="true" />
+              <span className="absolute -right-8 -top-2 hidden h-4 w-4 rounded-full border-l border-border bg-card sm:block" aria-hidden="true" />
+              <p className="flex items-center gap-2 text-xs text-muted-foreground"><Bookmark className="h-4 w-4 shrink-0" aria-hidden="true" />Save favourites now. Add them when you book.</p>
             </div>
-          </motion.div>
-
-          {/* Large Concession Showcase Image */}
-          <div className="w-full lg:w-[480px] shrink-0 aspect-[16/10] sm:aspect-[16/9] lg:aspect-auto lg:h-72 rounded-3xl overflow-hidden border border-border shadow-2xl relative">
-            <img
-              src={activeOffer.image}
-              alt={activeOffer.title}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
           </div>
         </div>
       </section>
 
-      {/* 2. Middle Body Section (How it works & Digital Pass stub) */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start relative z-10">
-        
-        {/* Left column - 2 spans (How it works & Accordion) */}
-        <div className="lg:col-span-2 space-y-10">
-          {/* How it works grid */}
-          <div className="space-y-6">
-            <h3 className="text-lg font-black uppercase tracking-wider text-foreground flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-[#E50914]" />
-              How it Works
-            </h3>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {!isFoodPage && (
+          <section aria-label="Promotion availability" className="my-8 flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+            <div className="flex items-start gap-4">
+              <span className="rounded-xl bg-primary/10 p-3 text-primary"><Ticket className="h-5 w-5" aria-hidden="true" /></span>
+              <div><h2 className="text-sm font-bold">Online promotions are not available yet</h2><p className="mt-1 text-sm leading-6 text-muted-foreground">You can still explore current menu prices and plan your visit below.</p></div>
+            </div>
+            <Link to="/cinemas" className={`inline-flex shrink-0 items-center gap-2 self-start rounded-lg px-2 py-2 text-sm font-bold text-primary ${FOCUS}`}><MapPin className="h-4 w-4" aria-hidden="true" />Explore cinemas <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
+          </section>
+        )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {activeOffer.steps.map((step, idx) => (
-                <div key={idx} className="relative bg-card border border-border rounded-2xl p-5 overflow-hidden group hover:border-border transition-all">
-                  {/* Faded step number */}
-                  <span className="absolute -bottom-6 -right-2 text-7xl font-black text-foreground/5 font-mono select-none group-hover:text-foreground/10 transition-colors">
-                    {String(idx + 1).padStart(2, '0')}
-                  </span>
-                  
-                  <h4 className="text-sm font-bold text-foreground uppercase tracking-wider">
-                    {step.title}
-                  </h4>
-                  <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
-                    {step.description}
-                  </p>
+        <section id="food-menu" aria-labelledby="menu-title" className="scroll-mt-40 pt-8">
+          <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+            <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">At the concessions counter</p><h2 id="menu-title" className="mt-2 text-3xl font-bold tracking-tight">Find your cinema favourites</h2><p className="mt-2 text-sm text-muted-foreground">Current menu prices. Snacks are optional when you book.</p></div>
+            {isAuthenticated && !loading && !loadFailed && (
+              <button type="button" onClick={() => setRefresh((value) => value + 1)} className={`inline-flex min-h-11 items-center gap-2 self-start rounded-xl border border-border px-4 text-xs font-semibold hover:bg-muted ${FOCUS}`}><RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />Refresh menu</button>
+            )}
+          </div>
+
+          {!isAuthenticated ? (
+            <div className="rounded-2xl border border-border bg-card px-6 py-12 text-center">
+              <Coffee className="mx-auto mb-4 h-10 w-10 text-primary" strokeWidth={1.4} aria-hidden="true" />
+              <h3 className="text-xl font-bold">Sign in to see the food menu</h3>
+              <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-muted-foreground">Browse available snacks, compare prices, and save your favourites for your next movie night.</p>
+              <Link to={`/login?redirect=${encodeURIComponent(`${pathname}${search}`)}`} className={`${PRIMARY_BUTTON} mt-6`}>Sign in to browse <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
+              <p className="mt-4 text-xs text-muted-foreground">You can explore cinema locations without signing in.</p>
+            </div>
+          ) : loading ? (
+            <div role="status" aria-label="Loading food menu" className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3].map((id) => <div key={id} className="h-80 rounded-2xl border border-border bg-muted motion-safe:animate-pulse" />)}
+              <span className="sr-only">Loading food menu…</span>
+            </div>
+          ) : loadFailed ? (
+            <div role="alert" className="rounded-2xl border border-border bg-card p-10 text-center">
+              <CircleAlert className="mx-auto mb-4 h-8 w-8 text-primary" aria-hidden="true" /><h3 className="text-lg font-bold">We couldn't load the food menu</h3><p className="mt-2 text-sm text-muted-foreground">Try again in a moment to see current prices and availability.</p>
+              <button type="button" onClick={() => setRefresh((value) => value + 1)} className={`${PRIMARY_BUTTON} mt-6`}><RefreshCw className="h-4 w-4" aria-hidden="true" />Try again</button>
+            </div>
+          ) : (
+            <>
+              <div className="mb-6 space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-5">
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <div className="relative flex-1">
+                    <Search className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                    <label className="sr-only" htmlFor="menu-search">Search food and drinks</label>
+                    <input id="menu-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search popcorn, drinks, combos…" className={`h-11 w-full rounded-xl border border-border bg-background pl-10 pr-10 text-sm ${FOCUS}`} />
+                    {query && <button type="button" aria-label="Clear search" onClick={() => setQuery('')} className={`absolute right-1 top-1 rounded-lg p-2.5 text-muted-foreground ${FOCUS}`}><X className="h-4 w-4" aria-hidden="true" /></button>}
+                  </div>
+                  <label className="flex h-11 items-center gap-2 rounded-xl border border-border bg-background px-3 text-xs text-muted-foreground">Sort by
+                    <select value={sort} onChange={(event) => setSort(event.target.value)} className={`min-w-0 rounded bg-background py-2 text-sm text-foreground ${FOCUS}`}><option value="name">Name</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option></select>
+                  </label>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Terms & Conditions Accordion */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-black uppercase tracking-wider text-foreground flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-[#E50914]" />
-              Terms & Conditions
-            </h3>
-
-            <div className="border border-border rounded-2xl overflow-hidden divide-y divide-border bg-card">
-              {/* Validity & Expiration */}
-              <div>
-                <button
-                  onClick={() => toggleSection('VALIDITY')}
-                  className="w-full flex items-center justify-between p-5 text-left text-xs uppercase font-bold text-foreground hover:bg-muted/80 transition-colors focus:outline-none"
-                >
-                  <span>Validity & Expiration</span>
-                  {expandedSection === 'VALIDITY' ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-                </button>
-                <AnimatePresence initial={false}>
-                  {expandedSection === 'VALIDITY' && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="p-5 pt-0 text-[11px] text-muted-foreground leading-relaxed border-t border-border bg-muted/40 dark:bg-zinc-950/10 overflow-hidden"
-                    >
-                      {activeOffer.terms.validity}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button type="button" onClick={() => setCategoryId('all')} aria-pressed={categoryId === 'all'} className={`rounded-full border px-4 py-2 text-xs font-semibold ${categoryId === 'all' ? 'border-primary bg-primary text-primary-foreground' : 'border-border hover:bg-muted'} ${FOCUS}`}>All food & drinks</button>
+                  {menuCategories.map((category) => <button type="button" key={category.id} onClick={() => setCategoryId(String(category.id))} aria-pressed={categoryId === String(category.id)} className={`rounded-full border px-4 py-2 text-xs font-semibold ${categoryId === String(category.id) ? 'border-primary bg-primary text-primary-foreground' : 'border-border hover:bg-muted'} ${FOCUS}`}>{category.name}</button>)}
+                  <button type="button" onClick={() => setSavedOnly((value) => !value)} aria-pressed={savedOnly} className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold sm:ml-auto ${savedOnly ? 'border-primary bg-primary/10 text-primary' : 'border-border hover:bg-muted'} ${FOCUS}`}><Bookmark className="h-3.5 w-3.5" fill={savedOnly ? 'currentColor' : 'none'} aria-hidden="true" />Saved ({savedCount})</button>
+                </div>
               </div>
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground"><p aria-live="polite">{visibleProducts.length} {visibleProducts.length === 1 ? 'item' : 'items'}{savedOnly ? ' in your saved list' : ' to explore'}</p><p>Saved on this device · Add items during booking</p></div>
 
-              {/* Eligibility */}
-              <div>
-                <button
-                  onClick={() => toggleSection('ELIGIBILITY')}
-                  className="w-full flex items-center justify-between p-5 text-left text-xs uppercase font-bold text-foreground hover:bg-muted/80 transition-colors focus:outline-none"
-                >
-                  <span>Eligibility</span>
-                  {expandedSection === 'ELIGIBILITY' ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-                </button>
-                <AnimatePresence initial={false}>
-                  {expandedSection === 'ELIGIBILITY' && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="p-5 pt-0 text-[11px] text-muted-foreground leading-relaxed border-t border-border bg-muted/40 dark:bg-zinc-950/10 overflow-hidden"
-                    >
-                      {activeOffer.terms.eligibility}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Usage Limits */}
-              <div>
-                <button
-                  onClick={() => toggleSection('LIMITS')}
-                  className="w-full flex items-center justify-between p-5 text-left text-xs uppercase font-bold text-foreground hover:bg-muted/80 transition-colors focus:outline-none"
-                >
-                  <span>Usage Limits</span>
-                  {expandedSection === 'LIMITS' ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-                </button>
-                <AnimatePresence initial={false}>
-                  {expandedSection === 'LIMITS' && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="p-5 pt-0 text-[11px] text-muted-foreground leading-relaxed border-t border-border bg-muted/40 dark:bg-zinc-950/10 overflow-hidden"
-                    >
-                      {activeOffer.terms.limits}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right column - 1 span (Pass Stub & Support Card) */}
-        <div className="space-y-6">
-          {/* Digital Pass Stub matching mockup */}
-          <motion.div 
-            key={activeOffer.id + isClaimed}
-            initial={{ scale: 0.98, opacity: 0.9 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-            className="bg-card border border-border rounded-3xl p-6 text-center space-y-6 shadow-2xl relative overflow-hidden"
-          >
-            {/* Faux ticket jagged edges decor */}
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-8 bg-background rounded-r-full border-r border-border" />
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-8 bg-background rounded-l-full border-l border-border" />
-
-            <div className="flex items-center justify-between border-b border-border pb-4">
-              <div className="text-left">
-                <span className="text-sm font-bold text-foreground block uppercase tracking-wider">
-                  Your Digital Pass
-                </span>
-                <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest mt-0.5 block">
-                  Expires {activeOffer.expDate}
-                </span>
-              </div>
-              {/* Brand logo icon */}
-              <div className="w-7 h-7 rounded-lg bg-[#E50914]/10 text-[#E50914] flex items-center justify-center font-black text-xs border border-[#E50914]/20 animate-pulse">
-                C
-              </div>
-            </div>
-
-            {/* QR Card Container */}
-            <div className={`p-4 rounded-2xl bg-white border border-gray-200 aspect-square max-w-[200px] mx-auto flex items-center justify-center relative transition-all duration-500 ${
-              isClaimed ? 'shadow-2xl shadow-emerald-500/20 ring-4 ring-emerald-500/50 scale-102' : ''
-            }`}>
-              {isClaimed ? (
-                <div className="relative w-full h-full flex flex-col items-center justify-center gap-1 text-zinc-900">
-                  <QrCode className="w-36 h-36" />
-                  <span className="text-[9px] font-bold tracking-widest text-[#E50914] absolute -bottom-1">
-                    CLAIMED & SAVED
-                  </span>
+              {visibleProducts.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-border px-6 py-14 text-center">
+                  {savedOnly ? <Bookmark className="mx-auto mb-4 h-8 w-8 text-muted-foreground" aria-hidden="true" /> : <Popcorn className="mx-auto mb-4 h-8 w-8 text-muted-foreground" aria-hidden="true" />}
+                  <h3 className="text-lg font-bold">{products.length === 0 ? 'The menu is being prepared' : savedOnly && savedCount === 0 ? 'Start your movie-night shortlist' : 'No matching snacks or drinks'}</h3>
+                  <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">{products.length === 0 ? 'No food or drinks are available right now. You can still book your next film.' : savedOnly && savedCount === 0 ? 'Tap the bookmark on a menu item to keep it here for later.' : 'Try another category or a different search.'}</p>
+                  {products.length > 0 ? <button type="button" onClick={resetFilters} className={`${PRIMARY_BUTTON} mt-5`}>Show all food & drinks</button> : <Link to="/cinemas" className={`${PRIMARY_BUTTON} mt-5`}>Find a showtime <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>}
                 </div>
               ) : (
-                <div className="text-center text-zinc-800 space-y-2 select-none opacity-40">
-                  <QrCode className="w-28 h-28 mx-auto" />
-                  <span className="text-[9px] font-bold block tracking-widest uppercase">
-                    Unclaimed Pass
-                  </span>
+                <div className="grid items-start gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  {visibleProducts.map((product) => {
+                    const category = categoryMap.get(product.productCategoryId);
+                    const saved = savedIds.includes(product.id);
+                    return (
+                      <article key={product.id} className="overflow-hidden rounded-2xl border border-border bg-card">
+                        <div className="relative aspect-[16/10] bg-muted">
+                          <SnackImage key={`${product.id}:${product.imageUrl}`} name={product.name} category={imageCategory(category?.name || '')} src={product.imageUrl} />
+                          <button type="button" onClick={() => toggleSaved(product)} aria-label={`${saved ? 'Unsave' : 'Save'} ${product.name}`} aria-pressed={saved} className={`absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background/95 shadow-sm ${saved ? 'text-primary' : 'text-foreground hover:text-primary'} ${FOCUS}`}><Bookmark className="h-4 w-4" fill={saved ? 'currentColor' : 'none'} aria-hidden="true" /></button>
+                        </div>
+                        <div className="p-5">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{category?.name || 'Concessions'}</p>
+                          <div className="mt-2 flex items-start justify-between gap-3"><h3 className="text-lg font-bold leading-6 tracking-tight">{product.name}</h3><p className="shrink-0 font-mono text-lg font-bold text-primary">{formatCurrency(product.price)}</p></div>
+                          <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground"><Check className="h-3.5 w-3.5 text-emerald-500" aria-hidden="true" />Available to add during booking</p>
+                          <details className="group mt-5 border-t border-border pt-4">
+                            <summary className={`flex cursor-pointer list-none items-center justify-between rounded text-xs font-bold [&::-webkit-details-marker]:hidden ${FOCUS}`}>Item details <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180 motion-reduce:transition-none" aria-hidden="true" /></summary>
+                            <div className="pt-4 text-xs leading-6 text-muted-foreground">
+                              {category?.description && <p className="mb-2">{category.description}</p>}
+                              <p>Choose a showtime and your seats, then add this item in the snacks & drinks step. Price and availability are confirmed during booking.</p>
+                              <p className="mt-2">For ingredients and allergy information, check with your cinema before ordering.</p>
+                              <Link to="/cinemas" className={`mt-4 inline-flex items-center gap-2 rounded text-sm font-bold text-primary ${FOCUS}`}>Find a showtime <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
+                            </div>
+                          </details>
+                        </div>
+                      </article>
+                    );
+                  })}
                 </div>
               )}
-            </div>
+            </>
+          )}
+        </section>
 
-            {/* Code */}
-            <div className="space-y-1 pt-2 border-t border-border">
-              <span className="text-sm font-black tracking-widest text-foreground font-mono block">
-                {isClaimed ? activeOffer.code : '••••-••••-••••'}
-              </span>
-              <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-semibold block">
-                Scan at the concessions counter
-              </span>
-            </div>
-          </motion.div>
-
-          {/* Need Help? Card */}
-          <div className="bg-card border border-border rounded-3xl p-6 space-y-3 shadow-2xl">
-            <h4 className="text-xs font-black uppercase tracking-wider text-foreground flex items-center gap-1.5">
-              <HelpCircle className="w-4 h-4 text-[#E50914]" />
-              Need Help?
-            </h4>
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
-              Having trouble claiming your offer? Our support team is available 24/7.
-            </p>
-            <div>
-              <a
-                href="#support"
-                className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-[#E50914] hover:text-[#ff1f2d] hover:underline"
-              >
-                <span>Contact Support</span>
-                <ArrowRight className="w-3 h-3" />
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 3. Bottom Carousel (You might also like) */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 border-t border-border pt-12">
-        <div className="flex items-end justify-between mb-8">
-          <div className="space-y-1">
-            <h3 className="text-xl font-black uppercase tracking-tight text-foreground">
-              You might also like
-            </h3>
-            <p className="text-xs text-muted-foreground">
-              More exclusive rewards for your cinematic journey.
-            </p>
-          </div>
-          <button
-            onClick={() => handleSelectOffer(offersList[0])}
-            className="text-[10px] font-black uppercase tracking-widest text-[#E50914] hover:text-[#ff1f2d] transition-colors focus:outline-none"
-          >
-            Reset Spotlight
-          </button>
-        </div>
-
-        <motion.div 
-          variants={containerVariants}
-          initial="hidden"
-          animate="show"
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-        >
-          {offersList.map((item) => {
-            const active = activeOffer.id === item.id;
-            return (
-              <motion.div
-                key={item.id}
-                variants={itemVariants}
-                whileHover={shouldReduceMotion ? {} : { y: -4 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => handleSelectOffer(item)}
-                className={`group flex flex-col rounded-2xl overflow-hidden bg-card border transition-all duration-300 cursor-pointer h-full ${
-                  active
-                    ? 'border-[#E50914]/80 shadow-lg shadow-[#E50914]/10 scale-102'
-                    : 'border-border hover:border-border hover:scale-102'
-                }`}
-              >
-                {/* Card thumbnail image */}
-                <div className="aspect-[16/10] w-full overflow-hidden bg-muted dark:bg-zinc-950">
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    loading="lazy"
-                  />
-                </div>
-
-                {/* Card details */}
-                <div className="p-4 flex flex-col flex-1">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-[#E50914] block">
-                    {item.badge}
-                  </span>
-                  
-                  <h4 className="font-bold text-foreground text-sm uppercase mt-1 leading-tight group-hover:text-[#E50914] transition-colors">
-                    {item.title}
-                  </h4>
-
-                  <button
-                    className={`mt-6 w-full py-2.5 rounded-xl border text-[10px] font-black uppercase tracking-widest text-center transition-all ${
-                      active
-                        ? 'bg-[#E50914]/10 border-[#E50914] text-[#E50914]'
-                        : 'border-border hover:border-border text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    Details
-                  </button>
-                </div>
-              </motion.div>
-            );
-          })}
-        </motion.div>
-      </section>
+        <div className="mt-12 flex flex-col justify-between gap-4 border-t border-border pt-7 sm:flex-row sm:items-center"><div><h2 className="font-bold">Ready for the big screen?</h2><p className="mt-1 text-sm text-muted-foreground">Find your cinema, choose a film, and add the finishing touches.</p></div><Link to="/cinemas" className={PRIMARY_BUTTON}>Explore showtimes <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link></div>
+      </div>
+      <p role="status" aria-live="polite" className="sr-only">{announcement}</p>
     </div>
   );
-};
+}

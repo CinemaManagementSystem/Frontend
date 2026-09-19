@@ -1,6 +1,5 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
-import { motion } from 'motion/react';
 
 export interface DateItem {
   dateStr: string;
@@ -23,15 +22,26 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
   onSelectDate,
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const selectedButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    const button = selectedButtonRef.current;
+    if (!container || !button) return;
+    if (button.offsetLeft < container.scrollLeft || button.offsetLeft + button.offsetWidth > container.scrollLeft + container.clientWidth) {
+      container.scrollTo({ left: Math.max(0, button.offsetLeft - 8), behavior: 'auto' });
+    }
+  }, [selectedDate]);
 
   const handleScroll = (direction: 'left' | 'right') => {
     if (!scrollContainerRef.current) return;
     const scrollAmount = direction === 'left' ? -240 : 240;
-    scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: reduceMotion ? 'auto' : 'smooth' });
   };
 
   return (
-    <section className="bg-card/95 backdrop-blur-md border-b border-border py-3.5 sticky top-16 lg:top-20 z-20 shadow-md">
+    <section className="bg-card border-b border-border py-3.5" aria-label="Screening dates">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3">
           {/* Header Label */}
@@ -53,17 +63,18 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
           {/* Scrollable Date List */}
           <div
             ref={scrollContainerRef}
-            className="no-scrollbar flex items-center gap-2.5 overflow-x-auto py-1 scroll-smooth flex-1"
+            className="no-scrollbar relative flex items-center gap-2.5 overflow-x-auto py-1 flex-1"
           >
             {dateList.map((d) => {
               const active = selectedDate === d.dateStr;
               return (
-                <motion.button
+                <button
                   key={d.dateStr}
+                  ref={active ? selectedButtonRef : undefined}
                   type="button"
                   onClick={() => onSelectDate(d.dateStr)}
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.96 }}
+                  aria-pressed={active}
+                  aria-label={`${d.isToday ? 'Today, ' : ''}${d.dayName} ${d.monthName} ${d.dayNum}${d.hasShowtimes ? ', screenings available' : ', no upcoming screenings'}`}
                   className={`relative flex min-w-[72px] sm:min-w-[80px] flex-col items-center justify-center rounded-2xl border px-3 py-2.5 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914] ${
                     active
                       ? 'border-[#E50914] bg-[#E50914] font-bold text-white shadow-lg shadow-[#E50914]/30'
@@ -96,7 +107,7 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
                       }`}
                     />
                   )}
-                </motion.button>
+                </button>
               );
             })}
           </div>

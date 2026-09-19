@@ -11,24 +11,36 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import { useMovieStore } from '@/store/movieStore';
+import { useCinemaStore } from '@/store/cinemaStore';
 import { Badge } from '@/components/ui/Badge/Badge';
 import { Modal } from '@/components/ui/Modal/Modal';
 import { formatDuration, formatCurrency, formatDate } from '@/utils/formatDate';
+import { isUpcomingShowtime, parseShowtimeStart } from '@/lib/showtime';
+import { useShowtimeClock } from '@/hooks/useShowtimeClock';
 
 export const MovieDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getMovieById, getShowtimesByMovieId, fetchCatalog } = useMovieStore();
+  const { getMovieById, getShowtimesByMovieId, fetchCatalog, catalogRequiresSignIn } = useMovieStore();
+  const { cinemas, selectedCinemaId, selectCinema } = useCinemaStore();
+  const selectedCinema = cinemas.find((cinema) => cinema.id === selectedCinemaId);
+  const selectedCinemaName = selectedCinema?.name || 'your selected cinema';
   const [trailerOpen, setTrailerOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState('');
+  const now = useShowtimeClock();
 
   useEffect(() => {
     void fetchCatalog();
   }, [fetchCatalog]);
 
   const movie = getMovieById(id || '');
-  const showtimes = movie ? getShowtimesByMovieId(movie.id) : [];
+  const showtimes = movie ? getShowtimesByMovieId(movie.id)
+    .filter((showtime) => isUpcomingShowtime(showtime, now) &&
+      (selectedCinemaId === 'ALL' || showtime.cinemaId === selectedCinemaId))
+    .sort((a, b) => parseShowtimeStart(a.startTime) - parseShowtimeStart(b.startTime)) : [];
   const showDates = Array.from(new Set(showtimes.map((showtime) => showtime.date))).sort();
+  const activeDate = showDates.includes(selectedDate) ? selectedDate : showDates[0];
+  const displayedShowtimes = showtimes.filter((showtime) => showtime.date === activeDate);
 
   if (!movie) {
     return (
@@ -177,6 +189,10 @@ export const MovieDetailPage: React.FC = () => {
               <p className="text-xs text-muted-foreground mt-1">
                 Pick your preferred cinema hall, format, and time slot to reserve seats
               </p>
+              <div className="mt-3 flex flex-wrap items-center gap-3 text-xs">
+                <span className="inline-flex items-center gap-1.5 font-semibold text-foreground"><MapPin className="h-3.5 w-3.5 text-[#E50914]" />{selectedCinemaId === 'ALL' ? 'All cinemas' : selectedCinemaName}</span>
+                {selectedCinemaId !== 'ALL' && <button type="button" onClick={() => { selectCinema('ALL'); setSelectedDate(''); }} className="font-semibold text-[#E50914] underline underline-offset-4">View all cinemas</button>}
+              </div>
             </div>
 
             {/* Date Picker Buttons */}
@@ -186,12 +202,12 @@ export const MovieDetailPage: React.FC = () => {
                   key={d}
                   onClick={() => setSelectedDate(d)}
                   className={`shrink-0 rounded-2xl border px-3 py-2 text-xs font-bold transition-all ${
-                    selectedDate === d
+                    activeDate === d
                       ? 'border-red-600 bg-red-600 text-white shadow-md shadow-red-500/30'
                       : 'border-transparent bg-muted/50 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
                   }`}
                 >
-                  {formatDate(d)}
+                  {formatDate(`${d}T12:00:00`)}
                 </button>
               ))}
             </div>
@@ -199,8 +215,13 @@ export const MovieDetailPage: React.FC = () => {
 
           {/* Showtimes List */}
           <div className="space-y-4">
-            {showtimes.length > 0 ? (
-              showtimes.map((st) => (
+            {catalogRequiresSignIn ? (
+              <div className="rounded-2xl border border-border bg-card p-8 text-center space-y-3">
+                <p className="text-sm text-muted-foreground">Sign in to see cinema halls and reserve your seats.</p>
+                <Link to={`/login?redirect=${encodeURIComponent(`/movies/${movie.id}`)}`} className="inline-flex rounded-xl bg-[#E50914] px-5 py-3 text-sm font-bold text-white">Sign in to view showtimes</Link>
+              </div>
+            ) : displayedShowtimes.length > 0 ? (
+              displayedShowtimes.map((st) => (
                 <div
                   key={st.id}
                   className="p-5 rounded-2xl border border-border/80 bg-card flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors hover:border-red-500/80 hover:bg-red-500/5"
@@ -234,7 +255,10 @@ export const MovieDetailPage: React.FC = () => {
                     </div>
 
                     <button
-                      onClick={() => navigate(`/booking/${st.id}?movieId=${movie.id}`)}
+                      onClick={() => {
+                        if (isUpcomingShowtime(st)) navigate(`/booking/${st.id}?movieId=${movie.id}`);
+                        else void fetchCatalog();
+                      }}
                       className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#E50914] hover:bg-[#ff1f2d] text-white text-xs font-bold uppercase tracking-wider transition-all shadow-md shadow-[#E50914]/30"
                     >
                       <Ticket className="w-4 h-4" />
@@ -247,10 +271,10 @@ export const MovieDetailPage: React.FC = () => {
               <div className="p-8 text-center bg-card rounded-2xl border border-border space-y-2">
                 <Ticket className="w-8 h-8 text-muted-foreground mx-auto" />
                 <p className="text-sm font-semibold text-foreground">
-                  No showtimes currently available for this date
+                  {selectedCinemaId === 'ALL' ? 'No upcoming showtimes currently available' : `No upcoming showtimes at ${selectedCinemaName}`}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Please check back shortly or select another date.
+                  {selectedCinemaId === 'ALL' ? 'Please check back shortly for new screenings.' : 'Choose All cinemas above to check other locations.'}
                 </p>
               </div>
             )}

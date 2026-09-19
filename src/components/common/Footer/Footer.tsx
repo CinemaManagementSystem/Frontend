@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useCinemaStore } from '@/store/cinemaStore';
 import {
   Film,
   MapPin,
@@ -33,15 +34,9 @@ const MOVIE_LINKS = [
   { name: 'Exclusive Premieres', to: '/premiere' },
 ];
 
-const CINEMA_LINKS = [
-  { name: 'Grand Hall IMAX', to: '/cinemas' },
-  { name: 'Downtown Dolby Screen', to: '/cinemas' },
-  { name: 'VIP Dine-In Lounge', to: '/cinemas' },
-  { name: 'Ticket Booking History', to: '/history' },
-];
-
 export const Footer: React.FC = () => {
   const [email, setEmail] = useState('');
+  const cinemas = useCinemaStore((state) => state.cinemas);
 
   const handleSubscribe = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -107,9 +102,9 @@ export const Footer: React.FC = () => {
               Experience the pinnacle of cinema. IMAX, 3D Laser, and Dolby Atmos audio with premium
               VIP reclining suites.
             </p>
-            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <MapPin className="h-3.5 w-3.5 text-[#E50914]" /> Grand Avenue, Metropolis
-            </p>
+            <Link to="/cinemas?cinema=ALL" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
+              <MapPin className="h-3.5 w-3.5 text-[#E50914]" /> Find your cinema
+            </Link>
           </div>
 
           {/* Movies */}
@@ -134,13 +129,15 @@ export const Footer: React.FC = () => {
               Cinemas
             </h4>
             <ul className="space-y-2.5 text-xs">
-              {CINEMA_LINKS.map((link) => (
-                <li key={link.name}>
-                  <Link to={link.to} className="transition-colors hover:text-foreground">
-                    {link.name}
+              {cinemas.map((cinema) => (
+                <li key={cinema.id}>
+                  <Link to={`/cinemas?cinema=${cinema.id}`} className="transition-colors hover:text-foreground">
+                    {cinema.name}
                   </Link>
                 </li>
               ))}
+              <li><Link to="/cinemas?cinema=ALL" className="transition-colors hover:text-foreground">All cinema locations</Link></li>
+              <li><Link to="/history" className="transition-colors hover:text-foreground">Ticket booking history</Link></li>
             </ul>
           </div>
         </div>

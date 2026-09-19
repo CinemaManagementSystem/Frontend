@@ -54,6 +54,7 @@ describe('backend seat map', () => {
     openBooking();
     expect(await screen.findByRole('alert')).toHaveTextContent('Seat service unavailable');
     expect(screen.queryByRole('button', { name: /^A1,/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reload seat map' })).toBeInTheDocument();
   });
 
   it('shows an empty state when no seats belong to the show screen', async () => {
@@ -68,5 +69,24 @@ describe('backend seat map', () => {
     openBooking();
     expect(await screen.findByRole('alert')).toHaveTextContent('choose an upcoming showtime');
     expect(screen.queryByRole('button', { name: /^A1,/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Reload seat map' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Choose another showtime' })).toBeInTheDocument();
+    expect(screen.getByText(/1 Jan 2000|Jan 1, 2000/)).toBeInTheDocument();
+    expect(seatService.list).not.toHaveBeenCalled();
+  });
+
+  it('offers the seat map for a future scheduled screening', async () => {
+    vi.mocked(showService.getById).mockResolvedValue({ ...show, status: 'SCHEDULED' });
+    openBooking();
+    expect(await screen.findByRole('button', { name: 'A1, available, STANDARD' })).toBeInTheDocument();
+  });
+
+  it('offers another showtime without a reload action for a cancelled screening', async () => {
+    vi.mocked(showService.getById).mockResolvedValue({ ...show, status: 'CANCELLED' });
+    openBooking();
+    expect(await screen.findByRole('alert')).toHaveTextContent('not open for booking');
+    expect(screen.queryByRole('button', { name: 'Reload seat map' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^A1,/ })).not.toBeInTheDocument();
+    expect(seatService.list).not.toHaveBeenCalled();
   });
 });

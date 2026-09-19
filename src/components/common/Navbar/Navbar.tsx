@@ -3,7 +3,6 @@ import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   Bell,
   CalendarDays,
-  Check,
   ChevronDown,
   Clapperboard,
   Crown,
@@ -25,7 +24,7 @@ import {
 import { useTheme } from '@/context/ThemeContext';
 import { AnimatePresence, motion } from 'motion/react';
 import { useAuthStore } from '@/store/authStore';
-import { useLocationStore } from '@/store/locationStore';
+import { useCinemaStore } from '@/store/cinemaStore';
 import { canAccessAdmin } from '@/lib/authRole';
 import { cn } from '@/lib/utils';
 import { SearchAutocomplete } from './SearchAutocomplete';
@@ -172,19 +171,64 @@ const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
   );
 };
 
+interface CinemaSelectorProps {
+  onSelect: () => void;
+  mobile?: boolean;
+}
+
+const CinemaSelector: React.FC<CinemaSelectorProps> = ({ onSelect, mobile = false }) => {
+  const navigate = useNavigate();
+  const { cinemas, selectedCinemaId, loading, error, fetchCinemas, selectCinema } = useCinemaStore();
+
+  useEffect(() => { void fetchCinemas(); }, [fetchCinemas]);
+
+  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    selectCinema(event.target.value);
+    onSelect();
+    navigate(`/cinemas?cinema=${encodeURIComponent(event.target.value)}`);
+  };
+
+  return (
+    <div className={cn('cinema-nav-picker', mobile && 'cinema-nav-picker--mobile')}>
+      <div className="cinema-nav-picker-control">
+        <MapPin className="h-3.5 w-3.5 shrink-0 text-[#E50914]" aria-hidden="true" />
+        <select
+          aria-label="Choose a cinema"
+          value={cinemas.some((cinema) => cinema.id === selectedCinemaId) ? selectedCinemaId : 'ALL'}
+          onChange={handleChange}
+          disabled={loading && cinemas.length === 0}
+        >
+          <option value="ALL">{loading && cinemas.length === 0 ? 'Loading cinemas...' : 'All Cinemas'}</option>
+          {cinemas.map((cinema) => (
+            <option key={cinema.id} value={cinema.id}>
+              {cinema.name}{cinema.city ? ` (${cinema.city})` : ''}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" aria-hidden="true" />
+      </div>
+      {error && (
+        <p role="status" className="cinema-nav-picker-error">
+          Cinema list unavailable. <button type="button" onClick={() => void fetchCinemas(true)} disabled={loading}>{loading ? 'Loading...' : 'Retry'}</button>
+        </p>
+      )}
+      {!loading && !error && cinemas.length === 0 && (
+        <p className="cinema-nav-picker-error" role="status">No cinemas available yet.</p>
+      )}
+    </div>
+  );
+};
+
 export const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const { user, isAuthenticated } = useAuthStore();
-  const { locations, selectedLocationId, selectLocation, loading: locationsLoading } = useLocationStore();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [moviesDropdownOpen, setMoviesDropdownOpen] = useState(false);
-  const [cinemaDropdownOpen, setCinemaDropdownOpen] = useState(false);
 
-  const selectedCinema = locations.find((item) => item.id === selectedLocationId);
   const isMoviesActive =
     location.pathname.startsWith('/movies') ||
     location.pathname === '/coming-soon' ||
@@ -193,13 +237,11 @@ export const Navbar: React.FC = () => {
   useEffect(() => {
     setMobileMenuOpen(false);
     setMoviesDropdownOpen(false);
-    setCinemaDropdownOpen(false);
   }, [location.pathname]);
 
   const closeMenus = () => {
     setMobileMenuOpen(false);
     setMoviesDropdownOpen(false);
-    setCinemaDropdownOpen(false);
   };
 
   const handleSearchSubmit = (query: string) => {
@@ -386,74 +428,7 @@ export const Navbar: React.FC = () => {
             </div>
           </nav>
 
-          {/* Cinema Location Selector (Far Right) */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setCinemaDropdownOpen((open) => !open)}
-              className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1 text-xs font-bold text-foreground transition hover:border-[#E50914]/50 hover:bg-muted dark:border-zinc-800 dark:bg-zinc-900/90 dark:text-zinc-200 dark:hover:bg-zinc-800"
-            >
-              <MapPin className="h-3.5 w-3.5 shrink-0 text-[#E50914]" />
-              <span className="max-w-[150px] truncate">{selectedCinema?.name ?? 'All Cinemas'}</span>
-              <ChevronDown className={cn('h-3 w-3 shrink-0 text-muted-foreground transition-transform', cinemaDropdownOpen && 'rotate-180')} />
-            </button>
-
-            <AnimatePresence>
-              {cinemaDropdownOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setCinemaDropdownOpen(false)} />
-                  <motion.div
-                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute right-0 top-full mt-2 z-50 w-64 rounded-2xl border border-border bg-card p-2 text-foreground shadow-2xl dark:border-zinc-800 dark:bg-zinc-950 dark:text-white"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => {
-                        selectLocation(null);
-                        setCinemaDropdownOpen(false);
-                      }}
-                      className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-bold text-foreground hover:bg-muted dark:text-white dark:hover:bg-zinc-800"
-                    >
-                      <span className="flex items-center gap-2">
-                        <MapPin className="h-3.5 w-3.5 text-[#E50914]" />
-                        All Cinemas
-                      </span>
-                      {selectedLocationId === null && <Check className="h-3.5 w-3.5 text-[#E50914]" />}
-                    </button>
-
-                    {locations.map((cinema) => {
-                      const isSelected = cinema.id === selectedLocationId;
-
-                      return (
-                        <button
-                          key={cinema.id}
-                          type="button"
-                          onClick={() => {
-                            selectLocation(cinema.id);
-                            setCinemaDropdownOpen(false);
-                          }}
-                          className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs text-foreground hover:bg-muted dark:text-white dark:hover:bg-zinc-800"
-                        >
-                          <span className="min-w-0">
-                            <span className="block truncate font-bold">{cinema.name}</span>
-                            <span className="block truncate text-[10px] text-muted-foreground">{cinema.city}</span>
-                          </span>
-                          {isSelected && <Check className="h-3.5 w-3.5 shrink-0 text-[#E50914]" />}
-                        </button>
-                      );
-                    })}
-
-                    {locations.length === 0 && !locationsLoading && (
-                      <p className="px-3 py-1.5 text-xs text-muted-foreground">No cinemas available.</p>
-                    )}
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
-          </div>
+          <CinemaSelector onSelect={closeMenus} />
         </div>
       </div>
 
@@ -478,38 +453,9 @@ export const Navbar: React.FC = () => {
               />
             </div>
 
-            {/* Cinema Location */}
-            <div className="mb-3">
-              <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Cinema</p>
-              <div className="grid gap-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    selectLocation(null);
-                    setMobileMenuOpen(false);
-                  }}
-                  className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-bold text-foreground hover:bg-muted dark:text-white dark:hover:bg-zinc-800"
-                >
-                  <MapPin className="h-3.5 w-3.5 text-[#E50914]" />
-                  <span className="flex-1 truncate">All Cinemas</span>
-                  {selectedLocationId === null && <Check className="h-3.5 w-3.5 text-[#E50914]" />}
-                </button>
-                {locations.map((cinema) => (
-                  <button
-                    key={cinema.id}
-                    type="button"
-                    onClick={() => {
-                      selectLocation(cinema.id);
-                      setMobileMenuOpen(false);
-                    }}
-                    className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-semibold text-foreground hover:bg-muted dark:text-white dark:hover:bg-zinc-800"
-                  >
-                    <MapPin className="h-3.5 w-3.5 text-[#E50914]" />
-                    <span className="flex-1 truncate">{cinema.name}</span>
-                    {cinema.id === selectedLocationId && <Check className="h-3.5 w-3.5 text-[#E50914]" />}
-                  </button>
-                ))}
-              </div>
+            <div className="mb-4">
+              <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Choose a cinema</p>
+              <CinemaSelector onSelect={closeMenus} mobile />
             </div>
 
             {/* Links */}

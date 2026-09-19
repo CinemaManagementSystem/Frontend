@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { Clock, Compass, Play, Search, Star, Ticket } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useMovieStore } from '@/store/movieStore';
+import { useCinemaStore } from '@/store/cinemaStore';
 import { MovieCard } from '@/components/ui/Card/MovieCard';
 import { Badge } from '@/components/ui/Badge/Badge';
 import { Modal } from '@/components/ui/Modal/Modal';
 import { formatDuration } from '@/utils/formatDate';
 import type { Movie } from '@/types/movie';
+import { isUpcomingShowtime, parseShowtimeStart } from '@/lib/showtime';
 
 type ListingTab = 'NOW_SHOWING' | 'COMING_SOON';
 
@@ -19,7 +21,8 @@ const getMovieStatusLabel = (status: Movie['status']) => {
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
-  const { movies, showtimes, searchQuery, setSearchQuery, fetchCatalog } = useMovieStore();
+  const { movies, showtimes, searchQuery, setSearchQuery, fetchCatalog, catalogRequiresSignIn } = useMovieStore();
+  const { selectedCinemaId } = useCinemaStore();
   const [trailerModalOpen, setTrailerModalOpen] = useState(false);
   const [activeTrailerUrl, setActiveTrailerUrl] = useState('');
   const [activeSlide, setActiveSlide] = useState(0);
@@ -93,7 +96,11 @@ export const HomePage: React.FC = () => {
   };
 
   const getBookingPath = (movieId: string) => {
-    const matchingShowtime = showtimes.find((showtime) => showtime.movieId === movieId);
+    if (catalogRequiresSignIn) return `/movies/${movieId}`;
+    const matchingShowtime = showtimes
+      .filter((showtime) => showtime.movieId === movieId && showtime.cinemaId &&
+        (selectedCinemaId === 'ALL' || showtime.cinemaId === selectedCinemaId) && isUpcomingShowtime(showtime))
+      .sort((a, b) => parseShowtimeStart(a.startTime) - parseShowtimeStart(b.startTime))[0];
     return matchingShowtime ? `/booking/${matchingShowtime.id}?movieId=${movieId}` : `/movies/${movieId}`;
   };
 

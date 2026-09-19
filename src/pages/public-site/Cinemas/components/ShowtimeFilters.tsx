@@ -12,22 +12,24 @@ interface ShowtimeFiltersProps {
   onSelectFormat: (format: string) => void;
   onSelectTimeFilter: (timeFilter: string) => void;
   onClearFilters: () => void;
+  availableFormats?: string[];
 }
 
-export const FORMAT_OPTIONS = [
+const FORMAT_OPTIONS = [
   { id: 'ALL', label: 'All Formats' },
-  { id: 'IMAX', label: 'IMAX 3D Laser' },
+  { id: 'IMAX', label: 'IMAX' },
   { id: 'DOLBY', label: 'Dolby Atmos' },
-  { id: 'VIP', label: 'VIP Director Suite' },
-  { id: '3D', label: 'Standard 3D' },
-  { id: '2D', label: 'Standard Digital' },
+  { id: 'VIP', label: 'VIP' },
+  { id: '3D', label: '3D' },
+  { id: '4DX', label: '4DX' },
+  { id: '2D', label: '2D' },
 ];
 
-export const TIME_OPTIONS = [
+const TIME_OPTIONS = [
   { id: 'ALL', label: 'All Showtimes' },
   { id: 'MORNING', label: 'Morning (Before 12:00 PM)' },
   { id: 'AFTERNOON', label: 'Afternoon (12:00 PM - 5:00 PM)' },
-  { id: 'EVENING', label: 'Evening (After 5:00 PM)' },
+  { id: 'EVENING', label: 'Evening (5:00 PM onward)' },
 ];
 
 export const ShowtimeFilters: React.FC<ShowtimeFiltersProps> = ({
@@ -36,11 +38,12 @@ export const ShowtimeFilters: React.FC<ShowtimeFiltersProps> = ({
   onSelectFormat,
   onSelectTimeFilter,
   onClearFilters,
+  availableFormats,
 }) => {
   const activeCount = (selectedFormat !== 'ALL' ? 1 : 0) + (selectedTimeFilter !== 'ALL' ? 1 : 0);
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 space-y-6 shadow-xl sticky top-40">
+    <div className="bg-card border border-border rounded-xl p-4 space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between pb-4 border-b border-border">
         <h3 className="text-sm font-black uppercase tracking-wider text-foreground flex items-center gap-2">
@@ -71,13 +74,14 @@ export const ShowtimeFilters: React.FC<ShowtimeFiltersProps> = ({
           Format
         </span>
         <div className="flex flex-col gap-1.5">
-          {FORMAT_OPTIONS.map((fmt) => {
+          {FORMAT_OPTIONS.filter((fmt) => fmt.id === 'ALL' || !availableFormats || availableFormats.includes(fmt.id) || selectedFormat === fmt.id).map((fmt) => {
             const isSelected = selectedFormat === fmt.id;
             return (
               <button
                 key={fmt.id}
                 type="button"
                 onClick={() => onSelectFormat(fmt.id)}
+                aria-pressed={isSelected}
                 className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all border cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914] ${
                   isSelected
                     ? 'bg-[#E50914] text-white border-transparent shadow-md shadow-[#E50914]/20 font-bold'
@@ -104,6 +108,7 @@ export const ShowtimeFilters: React.FC<ShowtimeFiltersProps> = ({
                 key={t.id}
                 type="button"
                 onClick={() => onSelectTimeFilter(t.id)}
+                aria-pressed={isSelected}
                 className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all border cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914] ${
                   isSelected
                     ? 'bg-[#E50914] text-white border-transparent shadow-md shadow-[#E50914]/20 font-bold'

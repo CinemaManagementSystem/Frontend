@@ -1,218 +1,75 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Star, Clock } from 'lucide-react';
-import { motion } from 'motion/react';
+﻿import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowUpRight, Clock, Film, MapPin, Star } from 'lucide-react';
 import type { Movie, Showtime } from '@/types/movie';
+import { isUpcomingShowtime } from '@/lib/showtime';
+import { formatCurrency } from '@/utils/formatCurrency';
 
 interface ShowtimeResultsProps {
   showtimesByMovie: Record<string, Showtime[]>;
   movies: Movie[];
+  showCinemaName?: boolean;
+  onShowtimeExpired?: () => void;
 }
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08 },
-  },
+const formatTime12h = (time24: string): string => {
+  const [hour, minute] = time24.split(':').map(Number);
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) return time24;
+  return `${hour % 12 || 12}:${String(minute).padStart(2, '0')} ${hour >= 12 ? 'PM' : 'AM'}`;
 };
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 16 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.35, ease: 'easeOut' as const },
-  },
-};
-
-export const formatTime12h = (time24: string): string => {
-  if (!time24 || !time24.includes(':')) return time24;
-  const parts = time24.split(':');
-  const hour = parseInt(parts[0], 10);
-  const minute = parts[1] || '00';
-  if (Number.isNaN(hour)) return time24;
-  const ampm = hour >= 12 ? 'PM' : 'AM';
-  const hour12 = hour % 12 === 0 ? 12 : hour % 12;
-  return `${hour12}:${minute} ${ampm}`;
-};
-
-export const ShowtimeResults: React.FC<ShowtimeResultsProps> = ({
-  showtimesByMovie,
-  movies,
-}) => {
+export const ShowtimeResults = ({ showtimesByMovie, movies, showCinemaName = false, onShowtimeExpired }: ShowtimeResultsProps) => {
   const navigate = useNavigate();
+  const [notice, setNotice] = useState('');
+  const bookShowtime = (show: Showtime) => {
+    if (!isUpcomingShowtime(show)) {
+      setNotice('Booking has closed for that screening. Please choose another time.');
+      onShowtimeExpired?.();
+      return;
+    }
+    navigate(`/booking/${show.id}?movieId=${show.movieId}`);
+  };
 
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="show"
-      className="space-y-6 w-full"
-    >
+    <div className="space-y-4">
+      {notice && <p role="alert" className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">{notice}</p>}
       {Object.entries(showtimesByMovie).map(([movieId, movieShowtimes]) => {
-        const movie = movies.find((m) => m.id === movieId);
+        const movie = movies.find((item) => item.id === movieId);
         if (!movie) return null;
-
-        // Group showtimes of this movie by Hall/Format combo
-        const formatGroups: Record<
-          string,
-          { formatName: string; list: Showtime[] }
-        > = {};
-
-        movieShowtimes.forEach((st) => {
-          const formatLabel = st.format === '2D' ? 'Standard Digital' : st.format === 'Dolby' ? 'Dolby Atmos' : st.format;
-          const groupKey = `${formatLabel}-${st.hallName}`;
-          if (!formatGroups[groupKey]) {
-            formatGroups[groupKey] = {
-              formatName: `${formatLabel} • ${st.hallName}`,
-              list: [],
-            };
-          }
-          formatGroups[groupKey].list.push(st);
-        });
-
+        const groups = movieShowtimes.reduce<Record<string, Showtime[]>>((result, show) => {
+          (result[`${show.cinemaId}-${show.hallName}-${show.format}`] ??= []).push(show);
+          return result;
+        }, {});
         return (
-          <motion.div
-            key={movie.id}
-            variants={itemVariants}
-            className="bg-card border border-border/80 rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col md:flex-row gap-6 hover:border-[#E50914]/40 transition-all duration-300 group/card"
-          >
-            {/* Movie Poster & Meta */}
-            <div className="w-full md:w-44 shrink-0 space-y-3">
-              <div
-                onClick={() => navigate(`/movies/${movie.id}`)}
-                className="relative overflow-hidden rounded-xl border border-border shadow-lg shadow-black/40 cursor-pointer aspect-[2/3]"
-              >
-                <img
-                  src={movie.posterUrl}
-                  alt={movie.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105"
-                />
-              </div>
-
-              <div className="space-y-1.5 hidden md:block">
-                <div className="flex items-center gap-1.5 text-xs text-amber-400 font-bold">
-                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                  <span>{movie.rating ? movie.rating.toFixed(1) : '8.5'} / 10</span>
+          <article key={movie.id} className="overflow-hidden rounded-2xl border border-border bg-card p-4 sm:p-5">
+            <div className="grid grid-cols-[76px_minmax(0,1fr)] gap-x-4 sm:grid-cols-[120px_minmax(0,1fr)] sm:gap-x-5">
+              <Link to={`/movies/${movie.id}`} className="row-span-2 self-start overflow-hidden rounded-lg bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label={`View ${movie.title}`}>
+                {movie.posterUrl ? <img src={movie.posterUrl} alt="" loading="lazy" className="aspect-[2/3] w-full object-cover" /> : <span className="flex aspect-[2/3] items-center justify-center"><Film className="h-8 w-8 text-muted-foreground" /></span>}
+              </Link>
+              <div className="min-w-0">
+                <Link to={`/movies/${movie.id}`} className="inline-flex items-start gap-2 hover:text-primary"><h3 className="text-lg font-black tracking-tight sm:text-2xl">{movie.title}</h3><ArrowUpRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" /></Link>
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                  {movie.durationMinutes > 0 && <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{movie.durationMinutes} min</span>}
+                  {movie.genres.length > 0 && <span>{movie.genres.join(' · ')}</span>}
+                  {movie.rating > 0 && <span className="inline-flex items-center gap-1 text-amber-400"><Star className="h-3 w-3" />{movie.rating.toFixed(1)}</span>}
                 </div>
-                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
-                  <Clock className="w-3.5 h-3.5" />
-                  <span>{movie.durationMinutes} mins</span>
-                </div>
+                {movie.description && <p className="mt-3 hidden text-xs leading-relaxed text-muted-foreground sm:line-clamp-2">{movie.description}</p>}
               </div>
-            </div>
-
-            {/* Movie Details & Showtimes */}
-            <div className="flex-1 space-y-5 flex flex-col justify-between">
-              <div>
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h4
-                      onClick={() => navigate(`/movies/${movie.id}`)}
-                      className="text-xl sm:text-2xl font-black text-foreground hover:text-[#E50914] cursor-pointer transition-colors uppercase tracking-tight"
-                    >
-                      {movie.title}
-                    </h4>
-                    <p className="text-xs mt-1 uppercase font-bold tracking-wider text-[#E50914]">
-                      {movie.genres.join(' • ')}
-                    </p>
-                  </div>
-                </div>
-
-                {movie.description && (
-                  <p className="text-xs text-muted-foreground mt-2.5 line-clamp-2 leading-relaxed">
-                    {movie.description}
-                  </p>
-                )}
-              </div>
-
-              {/* Showtimes by Format Groups */}
-              <div className="space-y-4 pt-3 border-t border-border/60">
-                {Object.values(formatGroups).map((group) => (
-                  <div key={group.formatName} className="space-y-2">
-                    <span className="inline-flex items-center rounded-md border border-border bg-muted/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                      {group.formatName}
-                    </span>
-
-                    <div className="flex flex-wrap gap-2.5">
-                      {group.list
-                        .sort((a, b) => a.time.localeCompare(b.time))
-                        .map((st) => {
-                          const totalSeats = 80;
-                          const occupiedCount = st.occupiedSeats?.length || 0;
-                          const occupancyPercent = (occupiedCount / totalSeats) * 100;
-                          const isSoldOut = occupiedCount >= totalSeats;
-
-                          let statusColor = 'bg-emerald-500';
-                          let occupancyLabel = 'Available';
-
-                          if (isSoldOut) {
-                            statusColor = 'bg-rose-500';
-                            occupancyLabel = 'SOLD OUT';
-                          } else if (occupancyPercent >= 75) {
-                            statusColor = 'bg-amber-500';
-                            occupancyLabel = 'ALMOST FULL';
-                          }
-
-                          return (
-                            <motion.button
-                              key={st.id}
-                              disabled={isSoldOut}
-                              onClick={() =>
-                                navigate(`/booking/${st.id}?movieId=${movie.id}`)
-                              }
-                              whileHover={isSoldOut ? {} : { scale: 1.05 }}
-                              whileTap={isSoldOut ? {} : { scale: 0.95 }}
-                              className={`group/btn relative flex min-w-[100px] sm:min-w-[110px] flex-col items-center justify-center rounded-2xl border p-3 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914] ${
-                                isSoldOut
-                                  ? 'cursor-not-allowed border-transparent bg-muted/30 opacity-40'
-                                  : 'cursor-pointer border-border/80 bg-card hover:border-[#E50914] hover:bg-[#E50914]/5 shadow-sm'
-                              }`}
-                              title={`${occupancyLabel} (${occupiedCount}/${totalSeats} seats) - $${st.price.toFixed(2)}`}
-                            >
-                              {isSoldOut ? (
-                                <>
-                                  <span className="text-sm font-black text-muted-foreground line-through">
-                                    {formatTime12h(st.time)}
-                                  </span>
-                                  <span className="text-[8px] font-bold text-rose-500 mt-1 tracking-wider">
-                                    SOLD OUT
-                                  </span>
-                                </>
-                              ) : (
-                                <>
-                                  <span className="text-sm font-black text-foreground group-hover/btn:text-[#E50914] transition-colors">
-                                    {formatTime12h(st.time)}
-                                  </span>
-                                  <div className="flex items-center gap-1.5 mt-1.5">
-                                    <span className="text-[10px] font-bold text-muted-foreground">
-                                      ${st.price.toFixed(2)}
-                                    </span>
-                                  </div>
-
-                                  {/* Occupancy Indicator Bar */}
-                                  <div className="w-12 h-1 bg-muted rounded-full mt-1.5 overflow-hidden">
-                                    <div
-                                      className={`h-full ${statusColor}`}
-                                      style={{
-                                        width: `${Math.max(15, occupancyPercent)}%`,
-                                      }}
-                                    />
-                                  </div>
-                                </>
-                              )}
-                            </motion.button>
-                          );
-                        })}
+              <div className="col-span-2 mt-4 space-y-4 border-t border-border pt-4 sm:col-span-1 sm:col-start-2">
+                {Object.entries(groups).map(([key, shows]) => {
+                  const first = shows[0];
+                  return <div key={key}>
+                    <p className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">{showCinemaName && <span className="inline-flex items-center gap-1 font-semibold text-foreground"><MapPin className="h-3 w-3 text-primary" />{first.cinemaName}</span>}<span>{first.hallName}</span><span className="rounded border border-border px-1.5 py-0.5 text-[10px] font-bold">{first.format === 'Dolby' ? 'Dolby Atmos' : first.format}</span></p>
+                    <div className="flex flex-wrap gap-2">
+                      {[...shows].sort((a, b) => a.time.localeCompare(b.time)).map((show) => <button type="button" key={show.id} onClick={() => bookShowtime(show)} aria-label={`Book ${movie.title} at ${formatTime12h(show.time)}, ${show.cinemaName}, ${show.hallName}`} className="min-w-[112px] rounded-lg border border-primary/35 bg-primary/5 px-4 py-2.5 text-left transition-colors hover:border-primary hover:bg-primary/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><span className="block text-sm font-bold tabular-nums">{formatTime12h(show.time)}</span><span className="mt-0.5 block text-[11px] text-muted-foreground">From {formatCurrency(show.price)}</span></button>)}
                     </div>
-                  </div>
-                ))}
+                  </div>;
+                })}
               </div>
             </div>
-          </motion.div>
+          </article>
         );
       })}
-    </motion.div>
+    </div>
   );
 };

@@ -2,14 +2,15 @@ import React from 'react';
 
 export const ShowtimeSkeleton: React.FC = () => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4" role="status" aria-label="Loading screenings">
+      <span className="sr-only">Loading screenings…</span>
       {[1, 2].map((i) => (
         <div
           key={i}
-          className="bg-card border border-border rounded-2xl p-5 shadow-xl flex flex-col md:flex-row gap-6 animate-pulse"
+          className="bg-card border border-border rounded-2xl p-4 sm:p-5 flex gap-4 sm:gap-5 motion-safe:animate-pulse"
         >
           {/* Poster Skeleton */}
-          <div className="w-full md:w-44 shrink-0 bg-muted rounded-xl aspect-[2/3]" />
+          <div className="w-[76px] sm:w-[120px] self-start shrink-0 bg-muted rounded-lg aspect-[2/3]" />
 
           {/* Details Skeleton */}
           <div className="flex-1 space-y-4">

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Search,
@@ -12,9 +12,12 @@ import {
 } from 'lucide-react';
 import { useMovieAdminStore } from '@/store/movieAdminStore';
 import { useCategoryStore } from '@/store/categoryStore';
-import { useShowStore } from '@/store/showStore';
+import { useMovieStore } from '@/store/movieStore';
+import { useCinemaStore } from '@/store/cinemaStore';
 import { Badge } from '@/components/ui/Badge/Badge';
-import { formatDuration, formatDateTime, formatDate } from '@/utils/formatDate';
+import { formatDuration, formatDate } from '@/utils/formatDate';
+import { isUpcomingShowtime, parseShowtimeStart } from '@/lib/showtime';
+import { useShowtimeClock } from '@/hooks/useShowtimeClock';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -30,18 +33,21 @@ export const ShowcasePage: React.FC = () => {
   const navigate = useNavigate();
   const { movies, loading, fetchAll } = useMovieAdminStore();
   const { categories, fetchAll: fetchCategories } = useCategoryStore();
-  const { shows, fetchAll: fetchShows } = useShowStore();
+  const { showtimes, fetchCatalog, catalogRequiresSignIn } = useMovieStore();
+  const { cinemas, selectedCinemaId, selectCinema } = useCinemaStore();
+  const selectedCinemaName = cinemas.find((cinema) => cinema.id === selectedCinemaId)?.name || 'your selected cinema';
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [categoryFilter, setCategoryFilter] = useState<number | 'ALL'>('ALL');
   const [activeMovie, setActiveMovie] = useState<number | null>(null);
+  const now = useShowtimeClock();
 
   useEffect(() => {
     void fetchAll();
     void fetchCategories();
-    void fetchShows();
-  }, [fetchAll, fetchCategories, fetchShows]);
+    void fetchCatalog();
+  }, [fetchAll, fetchCategories, fetchCatalog]);
 
   const categoryName = (id: number) => categories.find((c) => c.id === id)?.name ?? `#${id}`;
 
@@ -59,7 +65,9 @@ export const ShowcasePage: React.FC = () => {
   }, [movies, search, statusFilter, categoryFilter]);
 
   const movieShows = (movieId: number) =>
-    shows.filter((s) => s.movieId === movieId && s.status !== 'CANCELLED');
+    showtimes.filter((s) => s.movieId === `m-${movieId}` && isUpcomingShowtime(s, now) &&
+      (selectedCinemaId === 'ALL' || s.cinemaId === selectedCinemaId))
+      .sort((a, b) => parseShowtimeStart(a.startTime) - parseShowtimeStart(b.startTime));
 
   const statusOptions = [
     { value: 'ALL', label: 'All Status' },
@@ -90,6 +98,10 @@ export const ShowcasePage: React.FC = () => {
 
       {/* Filters */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4">
+        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-300">
+          <span>Showtimes: {selectedCinemaId === 'ALL' ? 'All cinemas' : selectedCinemaName}</span>
+          {selectedCinemaId !== 'ALL' && <button type="button" onClick={() => selectCinema('ALL')} className="font-semibold text-red-400 underline underline-offset-4">View all cinemas</button>}
+        </div>
         <div className="flex flex-col md:flex-row gap-3 md:items-center justify-between">
           <div className="relative w-full md:w-80">
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
@@ -218,7 +230,9 @@ export const ShowcasePage: React.FC = () => {
                     </p>
 
                     <div className="flex items-center gap-2 pt-4 mt-4 border-t border-white/5">
-                      {hasShows ? (
+                      {catalogRequiresSignIn ? (
+                        <Link to={`/login?redirect=${encodeURIComponent('/showcase')}`} className="text-xs font-semibold text-red-400 underline underline-offset-4">Sign in to view showtimes</Link>
+                      ) : hasShows ? (
                         <button
                           onClick={() => setActiveMovie(activeMovie === movie.id ? null : movie.id)}
                           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#E50914] hover:bg-[#ff1f2d] text-white text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-[#E50914]/30"
@@ -228,13 +242,13 @@ export const ShowcasePage: React.FC = () => {
                         </button>
                       ) : (
                         <span className="text-[11px] text-gray-500 italic">
-                          No active showtimes yet
+                          {selectedCinemaId === 'ALL' ? 'No upcoming showtimes yet' : `No upcoming showtimes at ${selectedCinemaName}`}
                         </span>
                       )}
                     </div>
 
                     <AnimatePresence>
-                      {activeMovie === movie.id && (
+                      {activeMovie === movie.id && !catalogRequiresSignIn && (
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
@@ -246,11 +260,15 @@ export const ShowcasePage: React.FC = () => {
                             {showList.map((s) => (
                               <button
                                 key={s.id}
-                                onClick={() => navigate(`/booking/${s.id}?movieId=${movie.id}`)}
+                                onClick={() => {
+                                  if (isUpcomingShowtime(s)) navigate(`/booking/${s.id}?movieId=m-${movie.id}`);
+                                  else void fetchCatalog();
+                                }}
                                 className="w-full flex items-center justify-between gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-[#E50914]/40 hover:bg-white/10 transition-all"
                               >
                                 <span className="text-xs text-gray-300">
-                                  {formatDateTime(s.startTime)}
+                                  {formatDate(`${s.date}T12:00:00`)} at {s.time}
+                                  <span className="mt-1 block text-[10px] text-gray-400">{s.cinemaName} · {s.hallName}</span>
                                 </span>
                                 <Badge variant={s.status === 'IN_PROGRESS' ? 'warning' : 'outline'} size="sm">
                                   {s.status.replace('_', ' ')}

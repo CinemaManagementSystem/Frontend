@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Lock, LogIn } from 'lucide-react';
 import { Input } from '@/components/ui/Input/Input';
 import { Button } from '@/components/ui/Button/Button';
@@ -14,8 +14,16 @@ function getErrorMessage(error: unknown): string {
   return 'Unable to sign in. Please try again.';
 }
 
+function safeReturnPath(value: string | null): string | null {
+  if (!value || !value.startsWith('/') || value.startsWith('//') || value.includes('\\')) return null;
+  // Browsers can remove control characters from URLs before interpreting them.
+  if ([...value].some((character) => character.charCodeAt(0) < 32 || character.charCodeAt(0) === 127)) return null;
+  return value;
+}
+
 export const LoginForm: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login, isAuthLoading } = useAuthStore();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -32,7 +40,8 @@ export const LoginForm: React.FC = () => {
     try {
       const user = await login(identifier.trim(), password);
       const isStaff = user.role === 'ADMIN' || user.role === 'STAFF';
-      navigate(isStaff ? '/admin/dashboard' : '/');
+      const returnPath = safeReturnPath(searchParams.get('redirect'));
+      navigate(returnPath ?? (isStaff ? '/admin/dashboard' : '/'), { replace: true });
     } catch (err) {
       setError(getErrorMessage(err));
     }

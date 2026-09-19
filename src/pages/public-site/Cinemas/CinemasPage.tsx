@@ -1,468 +1,155 @@
-import React, { useState, useEffect } from "react";
-import {
-  MapPin,
-  ChevronDown,
-  Sparkles,
-  Filter,
-  Building2,
-} from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
-import { useMovieStore } from "@/store/movieStore";
-import { theaterService } from "@/services/theaterService";
-import { getApiErrorMessage } from "@/services/apiClient";
-import { DateSelector, DateItem } from "./components/DateSelector";
-import { ShowtimeFilters } from "./components/ShowtimeFilters";
-import { ShowtimeResults } from "./components/ShowtimeResults";
-import { ShowtimeSkeleton } from "./components/ShowtimeSkeleton";
-import { ShowtimeEmptyState } from "./components/ShowtimeEmptyState";
+﻿import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { ArrowUpRight, Building2, Check, Clock3, Filter, MapPin, Navigation, Phone, RefreshCw, Search, Ticket, X } from 'lucide-react';
+import { useMovieStore } from '@/store/movieStore';
+import { useCinemaStore } from '@/store/cinemaStore';
+import { useShowtimeClock } from '@/hooks/useShowtimeClock';
+import { getApiErrorMessage } from '@/services/apiClient';
+import { getCinemaDate, isUpcomingShowtime } from '@/lib/showtime';
+import { DateSelector, type DateItem } from './components/DateSelector';
+import { ShowtimeFilters } from './components/ShowtimeFilters';
+import { ShowtimeResults } from './components/ShowtimeResults';
+import { ShowtimeSkeleton } from './components/ShowtimeSkeleton';
+import { ShowtimeEmptyState } from './components/ShowtimeEmptyState';
+import type { Showtime } from '@/types/movie';
 
-interface CinemaLocation {
-  id: string;
-  name: string;
-  address: string;
-  phone: string;
+function dateLabel(date: string, options: Intl.DateTimeFormatOptions) {
+  return new Intl.DateTimeFormat('en-US', { ...options, timeZone: 'UTC' }).format(new Date(`${date}T12:00:00Z`));
 }
 
-export const CinemasPage: React.FC = () => {
-  const { movies, showtimes, loading, fetchCatalog } = useMovieStore();
-
-  const [allTheaters, setAllTheaters] = useState<CinemaLocation[]>([]);
-  const [selectedCinema, setSelectedCinema] = useState<CinemaLocation | null>(null);
-  const [locationDropdownOpen, setLocationDropdownOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<string>("");
-  const [timeframe, setTimeframe] = useState<"TODAY" | "THIS_WEEK">("TODAY");
-  const [selectedFormat, setSelectedFormat] = useState<string>("ALL");
-  const [selectedTimeFilter, setSelectedTimeFilter] = useState<string>("ALL");
+export const CinemasPage = () => {
+  const { movies, showtimes, loading, fetchCatalog, catalogRequiresSignIn } = useMovieStore();
+  const { cinemas, selectedCinemaId, selectCinema, fetchCinemas, loading: cinemasLoading, error: cinemaError, locationError } = useCinemaStore();
+  const [params, setParams] = useSearchParams();
+  const clock = useShowtimeClock();
+  const [recheckTime, setRecheckTime] = useState(0);
+  const now = Math.max(clock, recheckTime);
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedFormat, setSelectedFormat] = useState('ALL');
+  const [selectedTimeFilter, setSelectedTimeFilter] = useState('ALL');
+  const [search, setSearch] = useState('');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [catalogLoaded, setCatalogLoaded] = useState(false);
+  const cinemaQuery = params.get('cinema');
+  const today = getCinemaDate(now);
+  const selectedCinema = cinemas.find((cinema) => cinema.id === selectedCinemaId);
 
-  // Derive cinemas from showtimes as fallback
-  const derivedCinemas = Array.from(
-    new Map(
-      showtimes.map((st) => [
-        st.cinemaId,
-        {
-          id: st.cinemaId,
-          name: st.cinemaName,
-          address: "Central Cinema Hub",
-          phone: "+855 23 999 888",
-        },
-      ]),
-    ).values(),
-  );
-
-  const cinemasList = allTheaters.length > 0 ? allTheaters : derivedCinemas;
-
-  // Initialize data from API
-  const loadData = async () => {
+  const loadCatalog = useCallback(async () => {
     setFetchError(null);
-    try {
-      await fetchCatalog();
-      const theaterData = await theaterService.list().catch(() => []);
-      if (theaterData && theaterData.length > 0) {
-        const mapped: CinemaLocation[] = theaterData.map((t) => ({
-          id: `c-${t.id}`,
-          name: t.name,
-          address: t.address || "Main Cinema Complex",
-          phone: t.phone || "+855 23 999 888",
-        }));
-        setAllTheaters(mapped);
-      }
-    } catch (err) {
-      setFetchError(getApiErrorMessage(err, "showtimes"));
-    }
-  };
-
-  useEffect(() => {
-    void loadData();
+    try { await fetchCatalog(); }
+    catch (error) { setFetchError(getApiErrorMessage(error, 'showtimes')); }
+    finally { setCatalogLoaded(true); }
   }, [fetchCatalog]);
 
-  // Set default cinema once loaded
+  useEffect(() => { void loadCatalog(); void fetchCinemas(); }, [loadCatalog, fetchCinemas]);
   useEffect(() => {
-    if (!selectedCinema && cinemasList.length > 0) {
-      setSelectedCinema(cinemasList[0]);
-    }
-  }, [cinemasList, selectedCinema]);
-
-  // Generate date list with ONLY dates that have movies/showtimes for the selected cinema
-  const [dateList, setDateList] = useState<DateItem[]>([]);
-
+    if (cinemaQuery === 'ALL' || cinemas.some((cinema) => cinema.id === cinemaQuery)) selectCinema(cinemaQuery!);
+  }, [cinemaQuery, cinemas, selectCinema]);
   useEffect(() => {
-    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const months = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-    ];
+    setSelectedDate('');
+    setSelectedFormat('ALL');
+  }, [selectedCinemaId]);
 
-    const todayDate = new Date();
-    const todayStr = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, "0")}-${String(todayDate.getDate()).padStart(2, "0")}`;
-
-    // Extract unique dates for showtimes at the selected cinema
-    const cinemaShowtimes = showtimes.filter(
-      (st) => !selectedCinema || st.cinemaId === selectedCinema.id,
-    );
-
-    const uniqueDates = Array.from(
-      new Set(cinemaShowtimes.map((st) => st.date)),
-    )
-      .filter(Boolean)
-      .sort();
-
-    let list: DateItem[] = [];
-
-    if (uniqueDates.length > 0) {
-      list = uniqueDates.map((dateStr) => {
-        const parts = dateStr.split("-").map(Number);
-        const d =
-          parts.length === 3
-            ? new Date(parts[0], parts[1] - 1, parts[2])
-            : new Date();
-        return {
-          dateStr,
-          dayName: days[d.getDay()],
-          dayNum: String(d.getDate()),
-          monthName: months[d.getMonth()],
-          isToday: dateStr === todayStr,
-          hasShowtimes: true,
-        };
-      });
-    } else {
-      // Fallback: if no showtimes exist for this cinema, show today as placeholder
-      const d = new Date();
-      list = [
-        {
-          dateStr: todayStr,
-          dayName: days[d.getDay()],
-          dayNum: String(d.getDate()),
-          monthName: months[d.getMonth()],
-          isToday: true,
-          hasShowtimes: false,
-        },
-      ];
-    }
-
-    setDateList(list);
-
-    // Auto-select first date with showtimes if current selectedDate is not in the list
-    if (
-      list.length > 0 &&
-      (!selectedDate || !list.some((item) => item.dateStr === selectedDate))
-    ) {
-      setSelectedDate(list[0].dateStr);
-    }
-  }, [showtimes, selectedCinema]);
-
-  // Actions
-  const handleSelectCinema = (cinema: CinemaLocation) => {
-    setSelectedCinema(cinema);
-    setLocationDropdownOpen(false);
-  };
-
-  const handleClearFilters = () => {
-    setSelectedFormat("ALL");
-    setSelectedTimeFilter("ALL");
-  };
-
-  const handleTimeframeChange = (nextTimeframe: "TODAY" | "THIS_WEEK") => {
-    setTimeframe(nextTimeframe);
-    if (nextTimeframe === "TODAY" && dateList[0]) {
-      setSelectedDate(dateList[0].dateStr);
-    }
-  };
-
-  // Filter Showtimes
-  const filteredShowtimes = showtimes.filter((st) => {
-    // 1. Matches selected cinema
-    if (selectedCinema && st.cinemaId !== selectedCinema.id) return false;
-
-    // 2. Matches date
-    if (st.date !== selectedDate) return false;
-
-    // 3. Matches format filter
-    if (selectedFormat !== "ALL") {
-      const fmt = (st.format || "2D").toUpperCase();
-      if (selectedFormat === "IMAX" && fmt !== "IMAX") return false;
-      if (selectedFormat === "DOLBY" && fmt !== "DOLBY" && fmt !== "DOLBY ATMOS") return false;
-      if (selectedFormat === "VIP" && fmt !== "VIP") return false;
-      if (selectedFormat === "3D" && fmt !== "3D") return false;
-      if (selectedFormat === "2D" && fmt !== "2D" && fmt !== "STANDARD") return false;
-    }
-
-    // 4. Matches time filter
-    if (selectedTimeFilter !== "ALL") {
-      let hour = 12;
-      if (st.time && st.time.includes(":")) {
-        hour = parseInt(st.time.split(":")[0], 10);
-      }
-      if (Number.isNaN(hour)) hour = 12;
-
-      if (selectedTimeFilter === "MORNING" && hour >= 12) return false;
-      if (selectedTimeFilter === "AFTERNOON" && (hour < 12 || hour >= 17)) return false;
-      if (selectedTimeFilter === "EVENING" && hour < 17) return false;
-    }
-
-    return true;
+  const upcoming = useMemo(() => showtimes.filter((show) => {
+    const cinema = cinemas.find((item) => item.id === show.cinemaId);
+    return isUpcomingShowtime(show, now) && cinema?.status.toUpperCase() === 'OPEN';
+  }).sort((a, b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`)), [showtimes, cinemas, now]);
+  const cinemaShows = upcoming.filter((show) => selectedCinemaId === 'ALL' || show.cinemaId === selectedCinemaId);
+  const activeDate = selectedDate && selectedDate >= today ? selectedDate : cinemaShows[0]?.date || today;
+  const availableDates = [...new Set(cinemaShows.map((show) => show.date))];
+  const dateList: DateItem[] = [...new Set([
+    ...Array.from({ length: 7 }, (_, index) => {
+      const day = new Date(`${today}T12:00:00Z`);
+      day.setUTCDate(day.getUTCDate() + index);
+      return day.toISOString().slice(0, 10);
+    }),
+    ...availableDates,
+  ])].sort().map((date) => ({
+    dateStr: date, dayName: dateLabel(date, { weekday: 'short' }), dayNum: dateLabel(date, { day: 'numeric' }),
+    monthName: dateLabel(date, { month: 'short' }), isToday: date === today, hasShowtimes: availableDates.includes(date),
+  }));
+  const dateShows = cinemaShows.filter((show) => show.date === activeDate);
+  const formatOptions = [...new Set(cinemaShows.map((show) => show.format.toUpperCase()))].sort();
+  const filteredShows = dateShows.filter((show) => {
+    if (selectedFormat !== 'ALL' && show.format.toUpperCase() !== selectedFormat) return false;
+    const hour = Number(show.time.split(':')[0]);
+    if (selectedTimeFilter === 'MORNING' && hour >= 12) return false;
+    if (selectedTimeFilter === 'AFTERNOON' && (hour < 12 || hour >= 17)) return false;
+    if (selectedTimeFilter === 'EVENING' && hour < 17) return false;
+    const movie = movies.find((item) => item.id === show.movieId);
+    return movie && `${movie.title} ${movie.genres.join(' ')}`.toLowerCase().includes(search.trim().toLowerCase());
   });
-
-  // Group showtimes by Movie
-  const showtimesByMovie: Record<string, typeof filteredShowtimes> = {};
-  filteredShowtimes.forEach((st) => {
-    if (!showtimesByMovie[st.movieId]) {
-      showtimesByMovie[st.movieId] = [];
-    }
-    showtimesByMovie[st.movieId].push(st);
-  });
-
-  // Check next available date with showtimes
-  const tomorrowItem = dateList.find((d) => d.hasShowtimes && d.dateStr > selectedDate);
-  const tomorrowDateStr = tomorrowItem ? tomorrowItem.dateStr : undefined;
-
-  const hasAnyShowtimeForCinemaAndDate = showtimes.some(
-    (st) => (!selectedCinema || st.cinemaId === selectedCinema.id) && st.date === selectedDate,
-  );
-
-  const activeFiltersCount = (selectedFormat !== "ALL" ? 1 : 0) + (selectedTimeFilter !== "ALL" ? 1 : 0);
+  const showtimesByMovie = filteredShows.reduce<Record<string, Showtime[]>>((groups, show) => {
+    (groups[show.movieId] ??= []).push(show);
+    return groups;
+  }, {});
+  const nextDate = availableDates.find((date) => date > activeDate);
+  const activeFiltersCount = Number(selectedFormat !== 'ALL') + Number(selectedTimeFilter !== 'ALL') + Number(Boolean(search));
+  const clearFilters = () => { setSelectedFormat('ALL'); setSelectedTimeFilter('ALL'); setSearch(''); };
+  const chooseCinema = (id: string) => {
+    selectCinema(id);
+    setParams((previous) => { const next = new URLSearchParams(previous); next.set('cinema', id); return next; }, { replace: true });
+    setSelectedDate(''); setSelectedFormat('ALL');
+  };
+  const retry = () => { void loadCatalog(); void fetchCinemas(true); };
+  const busy = loading || !catalogLoaded || cinemasLoading;
+  const filters = <ShowtimeFilters selectedFormat={selectedFormat} selectedTimeFilter={selectedTimeFilter} onSelectFormat={setSelectedFormat} onSelectTimeFilter={setSelectedTimeFilter} onClearFilters={clearFilters} availableFormats={formatOptions} />;
 
   return (
-    <div className="pb-24 bg-background min-h-screen text-foreground selection:bg-[#E50914]">
-      {/* Glassmorphic Hero Section */}
-      <section className="relative w-full py-10 sm:py-14 overflow-hidden border-b border-border bg-gradient-to-b from-muted/70 to-transparent dark:from-zinc-900 dark:to-transparent">
-        <div className="absolute inset-0 z-0">
-          <img
-            src="https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1400&q=80"
-            alt="Cinema Background"
-            className="w-full h-full object-cover object-center opacity-10 filter grayscale brightness-50"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-        </div>
-
-        <div className="relative z-10 max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <span className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#E50914]/15 border border-[#E50914]/30 text-[#E50914] text-[10px] font-black uppercase tracking-widest shadow-sm">
-                <Sparkles className="w-3.5 h-3.5" />
-                SHOWTIMES & TICKETS
-              </span>
+    <div className="min-h-screen bg-background pb-20 text-foreground">
+      <section className="border-b border-border bg-card">
+        <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+          <div className="flex flex-wrap items-end justify-between gap-5">
+            <div>
+              <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-primary"><Ticket className="h-4 w-4" /> Cinemas & showtimes</p>
+              <h1 className="text-3xl font-black tracking-tight sm:text-5xl">Your next big-screen moment.</h1>
+              <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">Choose your cinema, find a screening, and make it a movie night.</p>
             </div>
-
-            {/* Cinema Location Title Selector */}
-            <div className="relative inline-block text-left">
-              <button
-                type="button"
-                onClick={() => setLocationDropdownOpen(!locationDropdownOpen)}
-                className="flex items-center gap-3 text-3xl sm:text-4xl lg:text-5xl font-black text-foreground uppercase tracking-tight text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914] rounded-lg cursor-pointer group"
-              >
-                <span>{selectedCinema ? selectedCinema.name : "Select Cinema"}</span>
-                <ChevronDown className="w-7 h-7 sm:w-8 sm:h-8 text-[#E50914] group-hover:translate-y-0.5 transition-transform shrink-0" />
-              </button>
-
-              <AnimatePresence>
-                {locationDropdownOpen && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-20 cursor-default"
-                      onClick={() => setLocationDropdownOpen(false)}
-                    />
-                    <motion.div
-                      initial={{ opacity: 0, y: -8, scale: 0.98 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -8, scale: 0.98 }}
-                      transition={{ duration: 0.15 }}
-                      className="absolute left-0 mt-3 w-80 sm:w-96 rounded-2xl bg-popover border border-border p-2 shadow-2xl z-30 origin-top-left"
-                    >
-                      <div className="px-3 py-2 text-[10px] uppercase font-bold tracking-wider text-muted-foreground border-b border-border mb-1 flex items-center justify-between">
-                        <span>Choose Cinema Location</span>
-                        <Building2 className="w-3.5 h-3.5" />
-                      </div>
-                      {cinemasList.map((cinema) => (
-                        <button
-                          key={cinema.id}
-                          type="button"
-                          onClick={() => handleSelectCinema(cinema)}
-                          className={`w-full text-left p-3 rounded-xl transition-all flex flex-col gap-0.5 hover:bg-muted cursor-pointer ${
-                            selectedCinema?.id === cinema.id
-                              ? "bg-[#E50914]/10 text-foreground border border-[#E50914]/30"
-                              : "text-muted-foreground hover:text-foreground"
-                          }`}
-                        >
-                          <span className="text-sm font-bold text-foreground">
-                            {cinema.name}
-                          </span>
-                          <span className="text-[11px] text-muted-foreground line-clamp-1">
-                            {cinema.address}
-                          </span>
-                        </button>
-                      ))}
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
+            <button type="button" onClick={retry} disabled={busy} className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-xs font-semibold hover:bg-muted disabled:opacity-50"><RefreshCw className={`h-3.5 w-3.5 ${busy ? 'animate-spin' : ''}`} /> Refresh listings</button>
+          </div>
+          <div className="mt-8 flex items-center justify-between gap-3">
+            <h2 className="flex items-center gap-2 text-sm font-bold"><MapPin className="h-4 w-4 text-primary" /> Choose a cinema <span className="font-normal text-muted-foreground">{cinemas.length > 0 && `(${cinemas.length})`}</span></h2>
+            <button type="button" onClick={() => chooseCinema('ALL')} aria-pressed={selectedCinemaId === 'ALL'} className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${selectedCinemaId === 'ALL' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:text-foreground'}`}>All cinemas</button>
+          </div>
+          {cinemaError ? <div role="alert" className="mt-4 rounded-xl border border-destructive/30 p-4 text-sm"><p>{cinemaError}</p><button type="button" onClick={() => void fetchCinemas(true)} className="mt-2 font-semibold text-primary underline">Retry locations</button></div> : cinemasLoading && !cinemas.length ? <p role="status" className="py-6 text-sm text-muted-foreground">Loading cinema locations…</p> : !cinemas.length ? <p className="py-6 text-sm text-muted-foreground">Cinema locations will appear here when they are available.</p> : (
+            <div className="mt-3 grid gap-3 md:grid-cols-3" aria-label="Cinema locations">
+              {cinemas.map((cinema) => {
+                const selected = selectedCinemaId === cinema.id;
+                const count = upcoming.filter((show) => show.cinemaId === cinema.id).length;
+                return <button type="button" key={cinema.id} onClick={() => chooseCinema(cinema.id)} aria-pressed={selected} className={`relative flex flex-col rounded-xl border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${selected ? 'border-primary bg-primary/5' : 'border-border bg-background hover:border-primary/50'}`}>
+                  <span className="mb-3 flex w-full items-center justify-between gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"><span>{cinema.city || cinema.locationName || 'Cinema'}</span>{selected ? <Check className="h-4 w-4 text-primary" /> : <Building2 className="h-4 w-4" />}</span>
+                  <span className="font-bold">{cinema.name}</span>
+                  <span className="mt-1 text-xs leading-relaxed text-muted-foreground">{cinema.address || 'Address not listed'}</span>
+                  <span className="mt-4 border-t border-border pt-3 text-xs text-muted-foreground">{cinema.status.toUpperCase() !== 'OPEN' ? 'Currently closed' : catalogRequiresSignIn ? 'View cinema details' : `${count} upcoming ${count === 1 ? 'screening' : 'screenings'}`}</span>
+                </button>;
+              })}
             </div>
-
-            {/* Address */}
-            {selectedCinema && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <MapPin className="w-4 h-4 text-[#E50914] shrink-0" />
-                <span className="font-semibold">{selectedCinema.address}</span>
-                {selectedCinema.phone && (
-                  <>
-                    <span>•</span>
-                    <span>{selectedCinema.phone}</span>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Timeframe Toggle */}
-          <div className="flex bg-muted/80 border border-border p-1 rounded-xl shadow-inner max-w-xs shrink-0 self-start md:self-end relative overflow-hidden">
-            <button
-              type="button"
-              onClick={() => handleTimeframeChange("TODAY")}
-              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all relative z-10 cursor-pointer ${
-                timeframe === "TODAY" ? "text-white" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {timeframe === "TODAY" && (
-                <motion.div
-                  layoutId="activeTimeframe"
-                  className="absolute inset-0 bg-[#E50914] rounded-lg shadow-md shadow-[#E50914]/30 z-0"
-                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                />
-              )}
-              <span className="relative z-10">Today</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleTimeframeChange("THIS_WEEK")}
-              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all relative z-10 cursor-pointer ${
-                timeframe === "THIS_WEEK" ? "text-white" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {timeframe === "THIS_WEEK" && (
-                <motion.div
-                  layoutId="activeTimeframe"
-                  className="absolute inset-0 bg-[#E50914] rounded-lg shadow-md shadow-[#E50914]/30 z-0"
-                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                />
-              )}
-              <span className="relative z-10">This Week</span>
-            </button>
-          </div>
+          )}
+          {locationError && <p role="status" className="mt-3 text-xs text-muted-foreground">Map details are temporarily unavailable. <button onClick={() => void fetchCinemas(true)} className="underline">Retry</button></p>}
+          {selectedCinema && <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted/50 px-4 py-3">
+            <p className="flex items-center gap-2 text-xs text-muted-foreground"><MapPin className="h-4 w-4 shrink-0 text-primary" />{selectedCinema.address || selectedCinema.locationName || selectedCinema.name}</p>
+            <div className="flex items-center gap-5 text-xs font-semibold">
+              {selectedCinema.phone && <a href={`tel:${selectedCinema.phone.replace(/[^+\d]/g, '')}`} className="inline-flex items-center gap-1.5 hover:text-primary"><Phone className="h-3.5 w-3.5" />{selectedCinema.phone}</a>}
+              {selectedCinema.googleMapsUrl && <a href={selectedCinema.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-primary"><Navigation className="h-3.5 w-3.5" />Directions<ArrowUpRight className="h-3.5 w-3.5" /></a>}
+            </div>
+          </div>}
         </div>
       </section>
-
-      {/* Date Picker Carousel */}
-      <DateSelector
-        dateList={dateList}
-        selectedDate={selectedDate}
-        onSelectDate={(d) => setSelectedDate(d)}
-      />
-
-      {/* Main Content Layout */}
-      <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-6">
-        {/* Mobile Filter Trigger Bar */}
-        <div className="lg:hidden flex items-center justify-between mb-4 bg-card border border-border rounded-xl p-3 shadow-sm">
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
-            <Filter className="w-4 h-4 text-[#E50914]" />
-            <span>Filters</span>
-            {activeFiltersCount > 0 && (
-              <span className="px-2 py-0.5 rounded-full bg-[#E50914] text-white text-[10px] font-bold">
-                {activeFiltersCount}
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2">
-            {activeFiltersCount > 0 && (
-              <button
-                type="button"
-                onClick={handleClearFilters}
-                className="text-[11px] font-bold text-[#E50914] hover:underline uppercase"
-              >
-                Clear
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
-              className="px-3 py-1.5 rounded-lg bg-[#E50914] text-white text-xs font-bold uppercase tracking-wider cursor-pointer"
-            >
-              {mobileFilterOpen ? "Hide" : "Filter"}
-            </button>
-          </div>
+      <DateSelector dateList={dateList} selectedDate={activeDate} onSelectDate={setSelectedDate} />
+      <section className="mx-auto mt-7 max-w-[1440px] px-4 sm:px-6 lg:px-8">
+        <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div><h2 className="text-xl font-bold tracking-tight">{activeDate === today ? 'Today' : dateLabel(activeDate, { weekday: 'long', month: 'short', day: 'numeric' })}<span className="ml-2 text-sm font-normal text-muted-foreground">at {selectedCinema?.name || 'all cinemas'}</span></h2><p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground"><Clock3 className="h-3.5 w-3.5" /> Cambodia time (UTC+7) · Upcoming screenings only</p></div>
+          <label className="relative w-full sm:max-w-xs"><Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><input aria-label="Search movies or genres" placeholder="Search movies or genres" value={search} onChange={(event) => setSearch(event.target.value)} className="w-full rounded-lg border border-border bg-card py-2.5 pl-9 pr-9 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />{search && <button type="button" onClick={() => setSearch('')} aria-label="Clear movie search" className="absolute right-3 top-3 text-muted-foreground"><X className="h-4 w-4" /></button>}</label>
         </div>
-
-        {/* Mobile Filter Collapsible */}
-        {mobileFilterOpen && (
-          <div className="lg:hidden mb-6">
-            <ShowtimeFilters
-              selectedFormat={selectedFormat}
-              selectedTimeFilter={selectedTimeFilter}
-              onSelectFormat={(fmt) => {
-                setSelectedFormat(fmt);
-                setMobileFilterOpen(false);
-              }}
-              onSelectTimeFilter={(tf) => {
-                setSelectedTimeFilter(tf);
-                setMobileFilterOpen(false);
-              }}
-              onClearFilters={() => {
-                handleClearFilters();
-                setMobileFilterOpen(false);
-              }}
-            />
-          </div>
-        )}
-
-        {/* Desktop 2-Column Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)] gap-6 items-start">
-          {/* Desktop Filter Sidebar */}
-          <div className="hidden lg:block w-[260px] shrink-0">
-            <ShowtimeFilters
-              selectedFormat={selectedFormat}
-              selectedTimeFilter={selectedTimeFilter}
-              onSelectFormat={setSelectedFormat}
-              onSelectTimeFilter={setSelectedTimeFilter}
-              onClearFilters={handleClearFilters}
-            />
-          </div>
-
-          {/* Results Area */}
-          <div className="w-full flex-1">
-            {loading ? (
-              <ShowtimeSkeleton />
-            ) : fetchError ? (
-              <ShowtimeEmptyState
-                type="ERROR"
-                cinemaName={selectedCinema?.name || "Cinema"}
-                selectedDate={selectedDate}
-                errorMessage={fetchError}
-                onResetFilters={handleClearFilters}
-                onRetry={loadData}
-              />
-            ) : Object.keys(showtimesByMovie).length > 0 ? (
-              <ShowtimeResults
-                showtimesByMovie={showtimesByMovie}
-                movies={movies}
-              />
-            ) : !hasAnyShowtimeForCinemaAndDate ? (
-              <ShowtimeEmptyState
-                type="NO_SHOWTIMES"
-                cinemaName={selectedCinema?.name || "Selected Cinema"}
-                selectedDate={selectedDate}
-                tomorrowDateStr={tomorrowDateStr}
-                onResetFilters={handleClearFilters}
-                onSelectTomorrow={(nextDate) => setSelectedDate(nextDate)}
-              />
-            ) : (
-              <ShowtimeEmptyState
-                type="FILTER_EMPTY"
-                cinemaName={selectedCinema?.name || "Selected Cinema"}
-                selectedDate={selectedDate}
-                onResetFilters={handleClearFilters}
-              />
-            )}
+        <button type="button" onClick={() => setMobileFilterOpen(!mobileFilterOpen)} aria-expanded={mobileFilterOpen} aria-controls="mobile-showtime-filters" className="mb-4 flex w-full items-center justify-between rounded-lg border border-border bg-card px-4 py-3 text-sm lg:hidden"><span className="flex items-center gap-2"><Filter className="h-4 w-4 text-primary" />Format & time{activeFiltersCount > 0 && ` (${activeFiltersCount})`}</span><span>{mobileFilterOpen ? 'Hide' : 'Show'}</span></button>
+        {mobileFilterOpen && <div id="mobile-showtime-filters" className="mb-5 lg:hidden">{filters}</div>}
+        <div className="grid items-start gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
+          <aside className="hidden lg:block">{filters}<p className="px-2 pt-4 text-xs leading-relaxed text-muted-foreground">Pick a time to view the seat map. Seat availability is confirmed when you book.</p><Link to="/promotion" className="mt-5 flex items-center justify-between rounded-lg border border-border px-4 py-3 text-xs font-semibold hover:border-primary">Plan your snacks<ArrowUpRight className="h-4 w-4 text-primary" /></Link></aside>
+          <div className="min-w-0">
+            {busy ? <ShowtimeSkeleton /> : fetchError ? <ShowtimeEmptyState type="ERROR" cinemaName={selectedCinema?.name || 'all cinemas'} selectedDate={activeDate} errorMessage={fetchError} onResetFilters={clearFilters} onRetry={retry} /> : catalogRequiresSignIn ? (
+              <div className="rounded-2xl border border-border bg-card px-6 py-14 text-center"><Ticket className="mx-auto mb-4 h-8 w-8 text-primary" /><h3 className="text-xl font-bold">Sign in to see available screenings</h3><p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">Explore our cinema locations above, then sign in to choose your screen and seats.</p><Link to={`/login?redirect=${encodeURIComponent(`/cinemas?cinema=${selectedCinemaId}`)}`} className="mt-6 inline-flex rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white">Sign in to continue</Link></div>
+            ) : filteredShows.length ? <><p role="status" className="mb-3 text-xs text-muted-foreground">{Object.keys(showtimesByMovie).length} {Object.keys(showtimesByMovie).length === 1 ? 'movie' : 'movies'} · {filteredShows.length} {filteredShows.length === 1 ? 'screening' : 'screenings'}</p><ShowtimeResults showtimesByMovie={showtimesByMovie} movies={movies} showCinemaName={selectedCinemaId === 'ALL'} onShowtimeExpired={() => setRecheckTime(Date.now())} /></> : <ShowtimeEmptyState type={dateShows.length ? 'FILTER_EMPTY' : 'NO_SHOWTIMES'} cinemaName={selectedCinema?.name || 'all cinemas'} selectedDate={activeDate} tomorrowDateStr={nextDate} onResetFilters={clearFilters} onSelectTomorrow={(date) => { setSelectedDate(date); clearFilters(); }} onShowAllCinemas={selectedCinemaId === 'ALL' ? undefined : () => chooseCinema('ALL')} />}
           </div>
         </div>
       </section>

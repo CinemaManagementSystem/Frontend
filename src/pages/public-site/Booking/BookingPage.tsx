@@ -47,6 +47,8 @@ import { SnackImage } from './SnackImage';
 import { parseShowId, seatLabel, seatsForScreen, showUnavailableReason } from '@/lib/bookingSeats';
 import type { Seat as ApiSeat } from '@/types/seat';
 import type { Show } from '@/types/show';
+import { getCinemaDateTime } from '@/lib/showtime';
+import { useShowtimeClock } from '@/hooks/useShowtimeClock';
 
 type FlowStepId = 'seats' | 'concessions' | 'checkout' | 'confirmation';
 type BookingPaymentMethod = 'CREDIT_CARD' | 'QR_CODE';
@@ -124,6 +126,7 @@ const BookingFlow: React.FC = () => {
   const navigate = useNavigate();
   const { showtimes, getMovieById, fetchCatalog } = useMovieStore();
   const { user } = useAuthStore();
+  const now = useShowtimeClock();
 
   const backendShowId = parseShowId(searchParams.get('showId') ?? showtimeId);
   const showtime = showtimes.find((show) => parseShowId(show.id) === backendShowId);
@@ -208,14 +211,16 @@ const BookingFlow: React.FC = () => {
     const loadSeats = async () => {
       setSeatsLoading(true);
       setSeatsError('');
+      setLoadedShow(null);
+      setScreenSeats([]);
       try {
         if (!backendShowId) throw new Error('This showtime link is invalid. Please select a showtime again.');
-        const [show, seats] = await Promise.all([
-          showService.getById(backendShowId),
-          seatService.list(),
-        ]);
+        const show = await showService.getById(backendShowId);
         if (cancelled) return;
         setLoadedShow(show);
+        if (showUnavailableReason(show)) return;
+        const seats = await seatService.list();
+        if (cancelled) return;
         setScreenSeats(seatsForScreen(seats, show.screenId));
       } catch (error) {
         if (!cancelled) setSeatsError(getApiErrorMessage(error, 'seats'));
@@ -1507,15 +1512,41 @@ const BookingFlow: React.FC = () => {
     return renderConfirmation();
   };
 
-  const unavailable = loadedShow ? showUnavailableReason(loadedShow) : '';
+  const unavailable = loadedShow && step !== 'confirmation' ? showUnavailableReason(loadedShow, now) : '';
   if (seatsLoading || seatsError || unavailable || !screenSeats.length) {
+    const schedule = loadedShow ? getCinemaDateTime(loadedShow.startTime) : null;
+    const anotherShowtimePath = showtime?.cinemaId
+      ? `/cinemas?cinema=${encodeURIComponent(showtime.cinemaId)}`
+      : '/cinemas';
     return (
-      <div className="mx-auto max-w-3xl space-y-5 px-6 py-20 text-center">
-        <p role={seatsLoading ? 'status' : 'alert'}>
-          {seatsLoading ? 'Loading seats…' : seatsError || unavailable || 'No seats are configured for this screen yet.'}
-        </p>
-        {!seatsLoading && <button type="button" onClick={() => setReloadSeats((value) => value + 1)} className={PRIMARY_CTA}>Reload seat map</button>}
-        <button type="button" onClick={() => navigate('/cinemas')} className="block mx-auto text-sm underline">Choose another showtime</button>
+      <div className="mx-auto max-w-2xl px-6 py-16 sm:py-24">
+        <div className="rounded-3xl border border-border bg-card p-7 text-center sm:p-10">
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#E50914]/10 text-[#E50914]">
+            {seatsLoading ? <LoaderCircle className="h-6 w-6 animate-spin" /> : <Clock3 className="h-6 w-6" />}
+          </div>
+          <h1 className="text-2xl font-bold text-foreground">{seatsLoading ? 'Getting your seats ready' : unavailable ? 'Choose a new showtime' : 'Seat map unavailable'}</h1>
+          {!seatsLoading && schedule?.date && (
+            <p className="mt-3 text-sm font-medium text-foreground">
+              {movie?.title && `${movie.title} · `}{formatDate(`${schedule.date}T12:00:00`)} at {schedule.time}
+              <span className="mt-1 block text-xs font-normal text-muted-foreground">Cinema local time (Cambodia)</span>
+            </p>
+          )}
+          <p role={seatsLoading ? 'status' : 'alert'} className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
+            {seatsLoading ? 'Loading seats…' : unavailable || seatsError || 'No seats are configured for this screen yet.'}
+          </p>
+          {!seatsLoading && (
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+              {unavailable || !backendShowId ? (
+                <button type="button" onClick={() => navigate(anotherShowtimePath)} className={PRIMARY_CTA}>Choose another showtime <ArrowRight className="h-4 w-4" /></button>
+              ) : (
+                <>
+                  <button type="button" onClick={() => setReloadSeats((value) => value + 1)} className={PRIMARY_CTA}>Reload seat map</button>
+                  <button type="button" onClick={() => navigate(anotherShowtimePath)} className="rounded-xl border border-border px-4 py-3 text-sm font-semibold text-foreground hover:bg-muted">Choose another showtime</button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     );
   }
