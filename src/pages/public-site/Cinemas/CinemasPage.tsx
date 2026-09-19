@@ -39,33 +39,19 @@ const itemVariants = {
 
 export const CinemasPage: React.FC = () => {
   const navigate = useNavigate();
-  const { movies, showtimes, seedShowtimesForDate } = useMovieStore();
+  const { movies, showtimes, fetchCatalog } = useMovieStore();
 
-  const cinemas: CinemaLocation[] = [
-    {
-      id: "c-1",
-      name: "Cinematique Grand Central",
-      address: "42nd St & Park Ave, New York, NY",
-      phone: "+1 (212) 555-0199",
-    },
-    {
-      id: "c-2",
-      name: "Cinematique City Center",
-      address: "700 5th Ave, Seattle, WA",
-      phone: "+1 (206) 555-0144",
-    },
-    {
-      id: "c-3",
-      name: "Cinematique Sunset Strip",
-      address: "8500 Sunset Blvd, West Hollywood, CA",
-      phone: "+1 (310) 555-0188",
-    },
-  ];
+  const cinemas = Array.from(
+    new Map(showtimes.map((showtime) => [showtime.cinemaId, {
+      id: showtime.cinemaId,
+      name: showtime.cinemaName,
+      address: '',
+      phone: '',
+    }])).values(),
+  );
 
   // State
-  const [selectedCinema, setSelectedCinema] = useState<CinemaLocation>(
-    cinemas[0],
-  );
+  const [selectedCinema, setSelectedCinema] = useState<CinemaLocation | null>(null);
   const [locationDropdownOpen, setLocationDropdownOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [timeframe, setTimeframe] = useState<"TODAY" | "THIS_WEEK">("TODAY");
@@ -123,12 +109,17 @@ export const CinemasPage: React.FC = () => {
     }
   }, []);
 
-  // Whenever selectedDate changes, seed the showtimes in the store if they don't exist
   useEffect(() => {
-    if (selectedDate) {
-      seedShowtimesForDate(selectedDate);
-    }
-  }, [selectedDate, seedShowtimesForDate]);
+    void fetchCatalog();
+  }, [fetchCatalog]);
+
+  useEffect(() => {
+    if (!selectedCinema && cinemas.length > 0) setSelectedCinema(cinemas[0]);
+  }, [cinemas, selectedCinema]);
+
+  if (!selectedCinema) {
+    return <div className="px-6 py-24 text-center text-muted-foreground">Loading cinemas from the server…</div>;
+  }
 
   // Handle location selector change
   const handleSelectCinema = (cinema: CinemaLocation) => {
@@ -152,7 +143,7 @@ export const CinemasPage: React.FC = () => {
   // Filter showtimes
   const filteredShowtimes = showtimes.filter((st) => {
     // 1. Matches selected cinema
-    if (st.cinemaId !== selectedCinema.id) return false;
+    if (!selectedCinema || st.cinemaId !== selectedCinema.id) return false;
 
     // 2. Matches date
     if (st.date !== selectedDate) return false;

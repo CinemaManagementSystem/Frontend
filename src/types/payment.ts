@@ -1,5 +1,5 @@
 export type PaymentMethod = 'CASH' | 'KHQR';
-export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED';
+export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'EXPIRED';
 
 export interface Payment {
   id: number;

@@ -70,7 +70,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie, className = '' }) =
           <button
             onClick={(e) => {
               e.stopPropagation();
-              navigate(`/booking/st-1?movieId=${movie.id}`);
+              navigate(`/movies/${movie.id}`);
             }}
             className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-[#E50914] hover:bg-[#ff1f2d] text-white text-xs font-bold uppercase tracking-wider transition-colors shadow-lg shadow-[#E50914]/40"
           >

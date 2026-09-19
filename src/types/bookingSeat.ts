@@ -7,8 +7,8 @@ export interface BookingSeat {
 }
 
 export interface BookingSeatInput {
-  price: number;
-  status: string;
   bookingId: number;
   seatId: number;
+  price?: number; 
+  status?: string;
 }

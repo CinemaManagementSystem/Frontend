@@ -19,13 +19,17 @@ const getMovieStatusLabel = (status: Movie['status']) => {
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
-  const { movies, showtimes, searchQuery, setSearchQuery } = useMovieStore();
+  const { movies, showtimes, searchQuery, setSearchQuery, fetchCatalog } = useMovieStore();
   const [trailerModalOpen, setTrailerModalOpen] = useState(false);
   const [activeTrailerUrl, setActiveTrailerUrl] = useState('');
   const [activeSlide, setActiveSlide] = useState(0);
   const [isHeroPaused, setIsHeroPaused] = useState(false);
   const [activeListingTab, setActiveListingTab] = useState<ListingTab>('NOW_SHOWING');
   const [activeDateIndex, setActiveDateIndex] = useState(0);
+
+  useEffect(() => {
+    void fetchCatalog();
+  }, [fetchCatalog]);
 
   const featuredMovies = useMemo(() => {
     const priority = ['FEATURED', 'NOW_SHOWING', 'COMING_SOON'] as const;
@@ -90,7 +94,7 @@ export const HomePage: React.FC = () => {
 
   const getBookingPath = (movieId: string) => {
     const matchingShowtime = showtimes.find((showtime) => showtime.movieId === movieId);
-    return `/booking/${matchingShowtime?.id ?? 'st-1'}?movieId=${movieId}`;
+    return matchingShowtime ? `/booking/${matchingShowtime.id}?movieId=${movieId}` : `/movies/${movieId}`;
   };
 
   return (

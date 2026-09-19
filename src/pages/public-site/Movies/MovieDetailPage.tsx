@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   Star,
@@ -18,12 +18,17 @@ import { formatDuration, formatCurrency, formatDate } from '@/utils/formatDate';
 export const MovieDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getMovieById, getShowtimesByMovieId } = useMovieStore();
+  const { getMovieById, getShowtimesByMovieId, fetchCatalog } = useMovieStore();
   const [trailerOpen, setTrailerOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState('2026-08-21');
+  const [selectedDate, setSelectedDate] = useState('');
+
+  useEffect(() => {
+    void fetchCatalog();
+  }, [fetchCatalog]);
 
   const movie = getMovieById(id || '');
   const showtimes = movie ? getShowtimesByMovieId(movie.id) : [];
+  const showDates = Array.from(new Set(showtimes.map((showtime) => showtime.date))).sort();
 
   if (!movie) {
     return (
@@ -176,7 +181,7 @@ export const MovieDetailPage: React.FC = () => {
 
             {/* Date Picker Buttons */}
             <div className="no-scrollbar flex items-center gap-2.5 overflow-x-auto py-2">
-              {['2026-08-21', '2026-08-22', '2026-08-23'].map((d) => (
+              {showDates.map((d) => (
                 <button
                   key={d}
                   onClick={() => setSelectedDate(d)}

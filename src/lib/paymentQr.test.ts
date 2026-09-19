@@ -38,10 +38,9 @@ describe('resolvePaymentQrDisplay', () => {
     expect(result?.qrImageSrc).toBe('https://example.test/qr.png');
   });
 
-  it('falls back to the transaction id when the payment response has no QR payload', () => {
+  it('does not display a transaction reference as a scannable payment QR', () => {
     const result = resolvePaymentQrDisplay(basePayment);
 
-    expect(result?.qrPayload).toBe('TXN-KHQR-OLD');
-    expect(result?.qrImageSrc).toContain(encodeURIComponent('TXN-KHQR-OLD'));
+    expect(result).toBeNull();
   });
 });

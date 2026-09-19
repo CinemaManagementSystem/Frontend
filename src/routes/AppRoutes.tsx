@@ -59,6 +59,8 @@ import { CreateUserPage } from '@/pages/admin/Users/CreateUserPage';
 import { AuditLogsPage } from '@/pages/admin/AuditLogs/AuditLogsPage';
 import { SettingsPage as AdminSettingsPage } from '@/pages/admin/Settings';
 import { ShowcasePage } from '@/pages/public-site/Showcase/ShowcasePage';
+import { PaymentGatewayPage } from '@/pages/public-site/Payment/PaymentGatewayPage';
+import { OrderConfirmationPage } from '@/pages/public-site/Payment/OrderConfirmationPage';
 import { useAuthStore } from '@/store/authStore';
 import { canAccessAdmin } from '@/lib/authRole';
 
@@ -98,6 +100,8 @@ export const AppRoutes: React.FC = () => {
         <Route path="/membership" element={<PremierePage />} />
         <Route path="/premiere-circle" element={<PremierePage />} />
         <Route path="/coming-soon" element={<PremierePage />} />
+        <Route path="/payment-gateway" element={<PaymentGatewayPage />} />
+        <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
       </Route>
 
       {/* Authentication Layout & Routes */}

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import {
@@ -26,16 +26,27 @@ import {
 } from 'lucide-react';
 import { useMovieStore } from '@/store/movieStore';
 import { useAuthStore } from '@/store/authStore';
+import { useCheckoutCartStore } from '@/store/checkoutCartStore';
 import { Badge } from '@/components/ui/Badge/Badge';
 import { formatCurrency, formatDate } from '@/utils/formatDate';
 import { bookingAdminService } from '@/services/bookingAdminService';
 import { getApiErrorMessage } from '@/services/apiClient';
 import { paymentService } from '@/services/paymentService';
 import { paymentTransactionService } from '@/services/paymentTransactionService';
+import { showService } from '@/services/showService';
+import { seatService } from '@/services/seatService';
+import { bookingSeatService } from '@/services/bookingSeatService';
+import { productService } from '@/services/productService';
+import { productCategoryService } from '@/services/productCategoryService';
+import { orderService } from '@/services/orderService';
+import { syncCheckoutOrder, type CheckoutOrderDraft } from '@/services/checkoutOrderService';
 import { resolvePaymentQrDisplay, type PaymentQrDisplay } from '@/lib/paymentQr';
 import type { Payment as ApiPayment } from '@/types/payment';
 import type { PaymentTransaction } from '@/types/paymentTransaction';
 import { SnackImage } from './SnackImage';
+import { parseShowId, seatLabel, seatsForScreen, showUnavailableReason } from '@/lib/bookingSeats';
+import type { Seat as ApiSeat } from '@/types/seat';
+import type { Show } from '@/types/show';
 
 type FlowStepId = 'seats' | 'concessions' | 'checkout' | 'confirmation';
 type BookingPaymentMethod = 'CREDIT_CARD' | 'QR_CODE';
@@ -49,7 +60,7 @@ interface CheckoutPayment {
 interface SnackItem {
   id: string;
   name: string;
-  category: 'Popcorn' | 'Drink' | 'Combo' | 'Snacks';
+  category: string;
   price: number;
   imageUrl: string;
 }
@@ -63,25 +74,16 @@ const FLOW_STEPS = [
 
 type FlowStep = (typeof FLOW_STEPS)[number];
 
-const SNACKS: SnackItem[] = [
-  { id: 'classic-popcorn', name: 'Classic Popcorn', category: 'Popcorn', price: 4, imageUrl: 'https://images.unsplash.com/photo-1585647347483-22b66260dfff?auto=format&fit=crop&w=500&q=80' },
-  { id: 'caramel-popcorn', name: 'Caramel Popcorn', category: 'Popcorn', price: 5, imageUrl: 'https://images.unsplash.com/photo-1625848198401-6f2b5a1a5f9f?auto=format&fit=crop&w=500&q=80' },
-  { id: 'large-soda', name: 'Large Soda', category: 'Drink', price: 3, imageUrl: 'https://images.unsplash.com/photo-1581636625402-29b2a704ef13?auto=format&fit=crop&w=500&q=80' },
-  { id: 'nachos', name: 'Nachos', category: 'Snacks', price: 4.5, imageUrl: 'https://images.unsplash.com/photo-1513456852971-30c0b8199d4d?auto=format&fit=crop&w=500&q=80' },
-  { id: 'chocolate', name: 'Chocolate', category: 'Snacks', price: 3.5, imageUrl: 'https://images.unsplash.com/photo-1575377427642-087cf684f04d?auto=format&fit=crop&w=500&q=80' },
-  { id: 'combo-set', name: 'Combo Set', category: 'Combo', price: 8, imageUrl: 'https://images.unsplash.com/photo-1578926288207-a90a5366759d?auto=format&fit=crop&w=500&q=80' },
-];
+const DEFAULT_SNACK_CATEGORIES = ['All'];
+type SnackCategoryId = string;
 
-const SNACK_CATEGORIES = ['All', 'Popcorn', 'Drink', 'Combo', 'Snacks'] as const;
-
-type SnackCategoryId = (typeof SNACK_CATEGORIES)[number];
-
-const SNACK_CATEGORY_ICONS: Record<SnackCategoryId, typeof Popcorn> = {
-  All: Utensils,
-  Popcorn,
-  Drink: GlassWater,
-  Combo: Coffee,
-  Snacks: Cookie,
+const categoryIcon = (category: string) => {
+  const normalized = category.toLowerCase();
+  if (normalized.includes('popcorn')) return Popcorn;
+  if (normalized.includes('drink') || normalized.includes('beverage')) return GlassWater;
+  if (normalized.includes('combo')) return Coffee;
+  if (normalized.includes('snack')) return Cookie;
+  return Utensils;
 };
 
 const PAYMENT_METHODS: { id: BookingPaymentMethod; name: string; description: string; icon: typeof CreditCard }[] = [
@@ -100,14 +102,6 @@ function parsePositiveId(value: string | null | undefined): number | null {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
-function parseDemoShowId(value: string | null | undefined): number | null {
-  if (!value) return null;
-  const direct = parsePositiveId(value);
-  if (direct) return direct;
-  const match = value.match(/^st-(\d+)$/i);
-  return match ? parsePositiveId(match[1]) : null;
-}
-
 function formatCardNumber(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 16);
   return digits.replace(/(\d{4})(?=\d)/g, '$1 ');
@@ -120,19 +114,27 @@ function formatExpiry(value: string): string {
 
 export const BookingPage: React.FC = () => {
   const { showtimeId } = useParams<{ showtimeId: string }>();
+  const [params] = useSearchParams();
+  return <BookingFlow key={`${showtimeId}:${params.toString()}`} />;
+};
+
+const BookingFlow: React.FC = () => {
+  const { showtimeId } = useParams<{ showtimeId: string }>();
   const [searchParams] = useSearchParams();
-  const movieId = searchParams.get('movieId');
   const navigate = useNavigate();
-  const { showtimes, getMovieById, addBooking } = useMovieStore();
+  const { showtimes, getMovieById, fetchCatalog } = useMovieStore();
   const { user } = useAuthStore();
 
-  const showtime = showtimes.find((show) => show.id === showtimeId) || showtimes[0];
-  const movie = getMovieById(movieId || showtime?.movieId || 'm-1');
+  const backendShowId = parseShowId(searchParams.get('showId') ?? showtimeId);
+  const showtime = showtimes.find((show) => parseShowId(show.id) === backendShowId);
+  const movie = getMovieById(showtime?.movieId ?? '');
 
   const [step, setStep] = useState<FlowStepId>('seats');
   const [maxStepIndex, setMaxStepIndex] = useState(0);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [snackCategory, setSnackCategory] = useState<SnackCategoryId>('All');
+  const [snacks, setSnacks] = useState<SnackItem[]>([]);
+  const [snackCategories, setSnackCategories] = useState<string[]>(DEFAULT_SNACK_CATEGORIES);
   const [snackQuantities, setSnackQuantities] = useState<Record<string, number>>({});
   const [paymentMethod, setPaymentMethod] = useState<BookingPaymentMethod>('QR_CODE');
   const [confirmedBookingId, setConfirmedBookingId] = useState('');
@@ -148,51 +150,119 @@ export const BookingPage: React.FC = () => {
   const [cardNumber, setCardNumber] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCvc, setCardCvc] = useState('');
+  const [screenSeats, setScreenSeats] = useState<ApiSeat[]>([]);
+  const [loadedShow, setLoadedShow] = useState<Show | null>(null);
+  const [seatsLoading, setSeatsLoading] = useState(true);
+  const [seatsError, setSeatsError] = useState('');
+  const [reloadSeats, setReloadSeats] = useState(0);
   const backendOrderId = parsePositiveId(searchParams.get('orderId'));
+  const checkoutBusy = useRef(false);
+  const paymentStatusRequest = useRef(false);
+  const checkoutPaymentRef = useRef<CheckoutPayment | null>(null);
+  const orderDraft = useRef<CheckoutOrderDraft>({ id: backendOrderId, orderNumber: '' });
 
-  const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
-  const seatsPerRow = 10;
+  useEffect(() => {
+    void fetchCatalog().catch((error) => setSeatsError(getApiErrorMessage(error, 'showtimes')));
+  }, [fetchCatalog]);
+
+  useEffect(() => {
+    checkoutPaymentRef.current = checkoutPayment;
+  }, [checkoutPayment]);
+
+  useEffect(() => {
+    const loadConcessions = async () => {
+      try {
+        const [products, categories] = await Promise.all([productService.list(), productCategoryService.list()]);
+        const categoryNames = new Map(categories.map((category) => [category.id, category.name]));
+        const availableProducts = products.filter((product) => product.isAvailable && product.stockQuantity > 0);
+        const toSnackCategory = (name: string): SnackItem['category'] => {
+          const normalized = name.toLowerCase();
+          if (normalized.includes('popcorn')) return 'Popcorn';
+          if (normalized.includes('drink') || normalized.includes('beverage')) return 'Drink';
+          if (normalized.includes('combo')) return 'Combo';
+          return 'Snacks';
+        };
+        setSnacks(availableProducts.map((product) => ({
+          id: String(product.id),
+          name: product.name,
+          category: toSnackCategory(categoryNames.get(product.productCategoryId) || 'Snacks'),
+          price: product.price,
+          imageUrl: product.imageUrl || '',
+        })));
+        setSnackCategories([
+          'All',
+          ...Array.from(new Set(availableProducts.map((product) => toSnackCategory(categoryNames.get(product.productCategoryId) || 'Snacks')))),
+        ]);
+      } catch {
+        setSnacks([]);
+        setSnackCategories(DEFAULT_SNACK_CATEGORIES);
+      }
+    };
+    void loadConcessions();
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadSeats = async () => {
+      setSeatsLoading(true);
+      setSeatsError('');
+      try {
+        if (!backendShowId) throw new Error('This showtime link is invalid. Please select a showtime again.');
+        const [show, seats] = await Promise.all([
+          showService.getById(backendShowId),
+          seatService.list(),
+        ]);
+        if (cancelled) return;
+        setLoadedShow(show);
+        setScreenSeats(seatsForScreen(seats, show.screenId));
+      } catch (error) {
+        if (!cancelled) setSeatsError(getApiErrorMessage(error, 'seats'));
+      } finally {
+        if (!cancelled) setSeatsLoading(false);
+      }
+    };
+
+    void loadSeats();
+    return () => {
+      cancelled = true;
+    };
+  }, [backendShowId, reloadSeats]);
+
+  const rows = Array.from(new Set(screenSeats.map((seat) => seat.rowName)));
+  const seatsByLabel = new Map(screenSeats.map((seat) => [seatLabel(seat), seat]));
   const stepIndex = FLOW_STEPS.findIndex((flowStep) => flowStep.id === step);
   const currentFlowStep: FlowStep = FLOW_STEPS[stepIndex] ?? FLOW_STEPS[0];
   const isQrStep = paymentMethod === 'QR_CODE';
   const showQrPanel = isQrStep && checkoutPayment !== null;
 
-  const getSeatType = (row: string): 'STANDARD' | 'VIP' | 'COUPLE' => {
-    if (row === 'H') return 'COUPLE';
-    if (row === 'F' || row === 'G') return 'VIP';
-    return 'STANDARD';
-  };
-
-  const getSeatPrice = (row: string): number => {
-    const type = getSeatType(row);
-    if (type === 'COUPLE') return (showtime?.vipPrice || 22) + 8;
-    if (type === 'VIP') return showtime?.vipPrice || 22;
-    return showtime?.price || 15;
-  };
-
-  const isSeatOccupied = (seatId: string) => showtime?.occupiedSeats.includes(seatId) || false;
+  const getSeatType = (label: string) => seatsByLabel.get(label)?.seatType.toUpperCase() ?? '';
+  const getSeatPrice = (label: string) => Number(seatsByLabel.get(label)?.price ?? 0);
+  const isSeatOccupied = (label: string) => !seatsByLabel.has(label) || seatsByLabel.get(label)?.status.toUpperCase() !== 'AVAILABLE';
 
   const filteredSnacks = useMemo(
-    () => SNACKS.filter((snack) => snackCategory === 'All' || snack.category === snackCategory),
-    [snackCategory],
+    () => snacks.filter((snack) => snackCategory === 'All' || snack.category === snackCategory),
+    [snackCategory, snacks],
   );
 
   const selectedSnackItems = useMemo(
-    () => SNACKS.filter((snack) => (snackQuantities[snack.id] ?? 0) > 0),
-    [snackQuantities],
+    () => snacks.filter((snack) => (snackQuantities[snack.id] ?? 0) > 0),
+    [snackQuantities, snacks],
   );
 
   const snackItemCount = Object.values(snackQuantities).reduce((sum, qty) => sum + qty, 0);
 
-  const ticketSubtotal = selectedSeats.reduce((total, seatId) => total + getSeatPrice(seatId[0]), 0);
+  const ticketSubtotal = selectedSeats.reduce((total, seatId) => total + getSeatPrice(seatId), 0);
   const snacksSubtotal = selectedSnackItems.reduce(
     (total, snack) => total + snack.price * (snackQuantities[snack.id] ?? 0),
     0,
   );
-  const serviceFee = selectedSeats.length > 0 ? 2.5 : 0;
+  // The backend has no convenience-fee field; payment totals must match its ticket/order totals.
+  const serviceFee = 0;
   const grandTotal = ticketSubtotal + snacksSubtotal + serviceFee;
 
   const updateSnackQuantity = (snackId: string, change: number) => {
+    if (checkoutBusy.current || checkoutPayment) return;
     setSnackQuantities((current) => ({
       ...current,
       [snackId]: Math.max(0, (current[snackId] ?? 0) + change),
@@ -200,6 +270,7 @@ export const BookingPage: React.FC = () => {
   };
 
   const handleSeatClick = (seatId: string) => {
+    if (checkoutBusy.current || checkoutPayment) return;
     if (isSeatOccupied(seatId)) return;
     setSelectedSeats((current) => {
       if (current.includes(seatId)) return current.filter((seat) => seat !== seatId);
@@ -209,6 +280,7 @@ export const BookingPage: React.FC = () => {
   };
 
   const goToStep = (nextStepId: FlowStepId) => {
+    if (checkoutBusy.current || checkoutPayment) return;
     if (step === 'confirmation') return;
     if (nextStepId === 'concessions' && selectedSeats.length === 0) return;
     const nextIndex = FLOW_STEPS.findIndex((flowStep) => flowStep.id === nextStepId);
@@ -243,19 +315,38 @@ export const BookingPage: React.FC = () => {
     return true;
   };
 
-  const ensureBackendBookingId = async (): Promise<number | null> => {
-    if (backendBookingId) return backendBookingId;
-    if (backendOrderId) return null;
+  const ensureBackendShowId = async (): Promise<number> => {
+    if (!backendShowId || !loadedShow || seatsLoading || seatsError) {
+      throw new Error('Please wait for the seat map to load or choose a showtime again.');
+    }
+    return backendShowId;
+  };
+
+  const ensureBackendBookingId = async (): Promise<{ id: number | null; total: number | null }> => {
+    if (backendOrderId && !backendBookingId) return { id: null, total: null };
     if (!user) throw new Error('Please sign in before creating a payment.');
 
-    const showId = parseDemoShowId(showtimeId) ?? parseDemoShowId(showtime?.id);
-    if (!showId) {
-      throw new Error(
-        'This showtime does not have a backend show id yet. Open booking from a backend showtime or pass bookingId/orderId in the URL.',
-      );
+    const showId = await ensureBackendShowId();
+
+    const [freshShow, seats] = await Promise.all([showService.getById(showId), seatService.list()]);
+    const unavailable = showUnavailableReason(freshShow);
+    if (unavailable) throw new Error(unavailable);
+    const showSeats = seatsForScreen(seats, freshShow.screenId);
+    const backendSeats = selectedSeats.map((label) => {
+      const displayed = seatsByLabel.get(label);
+      const seat = showSeats.find((candidate) => candidate.id === displayed?.id);
+      if (!seat || seatLabel(seat) !== label || seat.status.toUpperCase() !== 'AVAILABLE') {
+        throw new Error(`Seat ${label} is no longer available. Please return to seat selection and reload the map.`);
+      }
+      return seat;
+    });
+    // Validate the selected records before creating an empty booking.
+    const existingBooking = backendBookingId ? await bookingAdminService.getById(backendBookingId) : null;
+    if (existingBooking && existingBooking.showId !== showId) {
+      throw new Error('This booking belongs to a different showtime. Please reopen its original showtime.');
     }
 
-    const booking = await bookingAdminService.create({
+    const booking = existingBooking ?? await bookingAdminService.create({
       bookingCode: `BK-${Date.now()}`,
       bookedAt: new Date().toISOString().slice(0, 19),
       status: 'PENDING',
@@ -263,89 +354,137 @@ export const BookingPage: React.FC = () => {
       customerId: user.id,
       showId,
     });
+    setBackendBookingId(booking.id);
+    setConfirmedBookingId(booking.bookingCode);
+
+    const reserved = (await bookingSeatService.list()).filter((seat) => seat.bookingId === booking.id && seat.status !== 'CANCELLED');
+    for (const seat of reserved) {
+      if (!backendSeats.some((selected) => selected.id === seat.seatId)) await bookingSeatService.remove(seat.id);
+    }
+    for (const seat of backendSeats) {
+      if (!reserved.some((saved) => saved.seatId === seat.id)) {
+        await bookingSeatService.create({ bookingId: booking.id, seatId: seat.id });
+      }
+    }
 
     setBackendBookingId(booking.id);
     setConfirmedBookingId(booking.bookingCode);
-    return booking.id;
+    return { id: booking.id, total: backendSeats.reduce((sum, seat) => sum + seat.price, 0) };
+  };
+
+  const createBackendOrder = async (bookingId: number): Promise<number | null> => {
+    if (!user) throw new Error('Please sign in before checkout.');
+    if (!orderDraft.current.orderNumber) orderDraft.current.orderNumber = `ORDER-${crypto.randomUUID()}`;
+    return syncCheckoutOrder(orderDraft.current, bookingId, user.id, selectedSnackItems.map((snack) => ({
+      productId: Number(snack.id), quantity: snackQuantities[snack.id] ?? 0, unitPrice: snack.price,
+    })));
   };
 
   const startBackendPayment = async () => {
-    if (paymentLoading || !isQrStep) return;
+    if (checkoutBusy.current || paymentLoading || !isQrStep || selectedSeats.length === 0) return;
     if (!validateBilling()) return;
+    checkoutBusy.current = true;
     setPaymentError('');
 
     try {
       setPaymentLoading(true);
       if (!user) throw new Error('Please sign in before creating a KHQR payment.');
 
-      const bookingId = await ensureBackendBookingId();
-      const payment = await paymentService.create({
-        amount: Number(grandTotal.toFixed(2)),
-        paymentMethod: 'KHQR',
-        customerId: user.id,
-        bookingId,
-        orderId: backendOrderId,
-      });
-      const transactions = await paymentTransactionService.listByPayment(payment.id).catch(() => []);
-      const display = resolvePaymentQrDisplay(payment, transactions);
-
-      if (!display) throw new Error('The payment API did not return QR data for this KHQR payment.');
-
-      setCheckoutPayment({ payment, transactions, display });
+      const booking = await ensureBackendBookingId();
+      const orderId = booking.id ? await createBackendOrder(booking.id) : backendOrderId;
+      const [savedBooking, savedOrder] = await Promise.all([
+        booking.id ? bookingAdminService.getById(booking.id) : null,
+        orderId ? orderService.getById(orderId) : null,
+      ]);
+      const amount = Number((Number(savedBooking?.totalAmount ?? 0) + Number(savedOrder?.totalAmount ?? 0)).toFixed(2));
+      if (Math.round(amount * 100) !== Math.round(grandTotal * 100)) {
+        throw new Error('Prices have changed. Please reload and review your order before paying.');
+      }
+      if (booking.id) useCheckoutCartStore.getState().setCheckout(booking.id, selectedSnackItems.map((snack) => ({
+        productId: Number(snack.id), quantity: snackQuantities[snack.id] ?? 0, unitPrice: snack.price,
+      })));
+      navigate('/payment-gateway', { state: {
+        bookingId: booking.id, orderId, totalAmount: amount, paymentMethod: 'KHQR',
+        formData: { name: billingName, email: billingEmail },
+      } });
     } catch (error) {
       setPaymentError(getApiErrorMessage(error, 'payment'));
     } finally {
+      checkoutBusy.current = false;
       setPaymentLoading(false);
     }
   };
+
+  const completePaidCheckout = useCallback((payment: ApiPayment) => {
+    setCheckoutPayment((current) => current ? { ...current, payment } : current);
+    setConfirmedBookingId((current) => current || String(payment.bookingId ?? backendBookingId ?? payment.id));
+    setMaxStepIndex(FLOW_STEPS.length - 1);
+    setStep('confirmation');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [backendBookingId]);
+
+  const refreshPaymentStatus = useCallback(async (showPendingMessage: boolean) => {
+    const activeCheckout = checkoutPaymentRef.current;
+    if (!activeCheckout || paymentStatusRequest.current) return;
+    paymentStatusRequest.current = true;
+    try {
+      const payment = await paymentService.checkStatus(activeCheckout.payment.id);
+      const transactions = await paymentTransactionService
+        .listByPayment(payment.id)
+        .catch(() => activeCheckout.transactions);
+      const display = resolvePaymentQrDisplay(payment, transactions) ?? activeCheckout.display;
+      setCheckoutPayment({ payment, transactions, display });
+
+      if (payment.status === 'PAID') {
+        setPaymentError('');
+        completePaidCheckout(payment);
+      } else if (payment.status === 'FAILED' || payment.status === 'EXPIRED') {
+        setPaymentError(`Payment ${payment.status.toLowerCase()}. Please generate a new QR code and try again.`);
+      } else if (showPendingMessage) {
+        setPaymentError('Payment is still pending. The page will confirm your booking automatically once payment is received.');
+      }
+    } catch (error) {
+      if (showPendingMessage) setPaymentError(getApiErrorMessage(error, 'payment status'));
+    } finally {
+      paymentStatusRequest.current = false;
+    }
+  }, [completePaidCheckout]);
+
+  const pendingPaymentId = checkoutPayment?.payment.status === 'PENDING' ? checkoutPayment.payment.id : null;
+
+  useEffect(() => {
+    if (!isQrStep || !pendingPaymentId || step !== 'checkout') return;
+
+    const poll = () => void refreshPaymentStatus(false);
+    poll();
+    const timer = window.setInterval(poll, 4_000);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') poll();
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isQrStep, pendingPaymentId, refreshPaymentStatus, step]);
 
   const confirmBooking = async () => {
     if (selectedSeats.length === 0) return;
     setPaymentError('');
 
     if (isQrStep && checkoutPayment) {
-      try {
-        setPaymentLoading(true);
-        const payment = await paymentService.checkStatus(checkoutPayment.payment.id);
-        const transactions = await paymentTransactionService
-          .listByPayment(payment.id)
-          .catch(() => checkoutPayment.transactions);
-        const display = resolvePaymentQrDisplay(payment, transactions) ?? checkoutPayment.display;
-        setCheckoutPayment({ payment, transactions, display });
-
-        if (payment.status !== 'PAID') {
-          setPaymentError(
-            'Payment is still pending. Scan the QR code and wait for the backend payment status to become PAID.',
-          );
-          return;
-        }
-      } catch (error) {
-        setPaymentError(getApiErrorMessage(error, 'payment status'));
-        return;
-      } finally {
-        setPaymentLoading(false);
-      }
+      setPaymentLoading(true);
+      await refreshPaymentStatus(true);
+      setPaymentLoading(false);
+      return;
     }
 
-    const booking = addBooking({
-      userId: user ? String(user.id) : 'u-guest',
-      userName: billingName.trim() || user?.username || 'Guest User',
-      userEmail: billingEmail.trim() || user?.email || 'guest@example.com',
-      movieId: movie?.id || 'm-1',
-      movieTitle: movie?.title || 'Unknown Movie',
-      moviePoster: movie?.posterUrl || '',
-      showtimeId: showtime?.id || 'st-1',
-      cinemaName: showtime?.cinemaName || 'Cinematique Grand Hall',
-      hallName: showtime?.hallName || 'IMAX Screen 1',
-      showDate: showtime?.date || '2026-08-21',
-      showTime: showtime?.time || '14:30',
-      seats: selectedSeats,
-      totalAmount: grandTotal,
-      paymentMethod,
-      status: 'CONFIRMED',
-    });
+    if (!backendBookingId) {
+      setPaymentError('This payment method is not connected to the backend yet. Please use QR Pay.');
+      return;
+    }
 
-    setConfirmedBookingId((current) => current || booking.id);
+    setConfirmedBookingId((current) => current || String(backendBookingId));
     setMaxStepIndex(FLOW_STEPS.length - 1);
     setStep('confirmation');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -543,14 +682,14 @@ export const BookingPage: React.FC = () => {
 
         <div className="space-y-3 overflow-x-auto pb-4 scrollbar-none">
           {rows.map((row) => {
-            const seatType = getSeatType(row);
-            const price = getSeatPrice(row);
             return (
               <div key={row} className="flex min-w-[500px] items-center justify-center gap-2 sm:gap-3">
                 <span className="w-6 text-center text-xs font-bold text-muted-foreground">{row}</span>
                 <div className="flex items-center gap-1.5 sm:gap-2">
-                  {Array.from({ length: seatsPerRow }, (_, index) => {
-                    const seatId = `${row}${index + 1}`;
+                  {screenSeats.filter((seat) => seat.rowName === row).map((seat) => {
+                    const seatId = seatLabel(seat);
+                    const seatType = getSeatType(seatId);
+                    const price = getSeatPrice(seatId);
                     const occupied = isSeatOccupied(seatId);
                     const selected = selectedSeats.includes(seatId);
                     let seatClass = 'cursor-pointer border border-border bg-muted text-muted-foreground';
@@ -588,7 +727,7 @@ export const BookingPage: React.FC = () => {
                         title={`${seatId} (${seatType} - ${formatCurrency(price)})`}
                         aria-label={`${seatId}, ${occupied ? 'occupied' : selected ? 'selected' : 'available'}, ${seatType}`}
                       >
-                        {!occupied && index + 1}
+                        {!occupied && seatId}
                       </motion.button>
                     );
                   })}
@@ -600,18 +739,22 @@ export const BookingPage: React.FC = () => {
         </div>
 
         <div className="mt-6 grid gap-3 border-t border-border pt-6 text-center sm:grid-cols-3">
-          <div className="rounded-xl bg-muted p-3">
-            <span className="block text-[11px] font-medium text-muted-foreground">Standard · Rows A-E</span>
-            <span className="text-sm font-bold text-foreground">{formatCurrency(showtime?.price || 15)}</span>
-          </div>
-          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
-            <span className="block text-[11px] font-medium text-amber-600 dark:text-amber-300">VIP Lounge · Rows F-G</span>
-            <span className="text-sm font-bold text-foreground">{formatCurrency(showtime?.vipPrice || 22)}</span>
-          </div>
-          <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3">
-            <span className="block text-[11px] font-medium text-rose-600 dark:text-rose-300">Couple Suite · Row H</span>
-            <span className="text-sm font-bold text-foreground">{formatCurrency((showtime?.vipPrice || 22) + 8)}</span>
-          </div>
+          {Array.from(new Set(screenSeats.map((seat) => seat.seatType))).map((type) => {
+            const typedSeats = screenSeats.filter((seat) => seat.seatType === type);
+            const prices = typedSeats.map((seat) => Number(seat.price));
+            const min = Math.min(...prices);
+            const max = Math.max(...prices);
+            return (
+              <div key={type} className="rounded-xl bg-muted p-3">
+                <span className="block text-[11px] font-medium text-muted-foreground">
+                  {type} · Rows {Array.from(new Set(typedSeats.map((seat) => seat.rowName))).join(', ')}
+                </span>
+                <span className="text-sm font-bold text-foreground">
+                  {formatCurrency(min)}{max !== min ? ` – ${formatCurrency(max)}` : ''}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -660,13 +803,13 @@ export const BookingPage: React.FC = () => {
 
   const renderSnackSelection = () => {
     const categoryCount = (category: SnackCategoryId) =>
-      category === 'All' ? SNACKS.length : SNACKS.filter((snack) => snack.category === category).length;
+      category === 'All' ? snacks.length : snacks.filter((snack) => snack.category === category).length;
 
     return (
       <div className="space-y-6">
         <div className="flex flex-wrap gap-2" role="group" aria-label="Filter snacks by category">
-          {SNACK_CATEGORIES.map((category) => {
-            const Icon = SNACK_CATEGORY_ICONS[category];
+          {snackCategories.map((category) => {
+            const Icon = categoryIcon(category);
             const active = snackCategory === category;
             return (
               <button
@@ -724,7 +867,7 @@ export const BookingPage: React.FC = () => {
                   className="group overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-shadow duration-300 hover:shadow-lg hover:shadow-[#E50914]/15 hover:ring-1 hover:ring-[#E50914]/40"
                 >
                   <div className="aspect-[1.15] overflow-hidden bg-muted">
-                    <SnackImage name={snack.name} category={snack.category} src={snack.imageUrl} />
+                    <SnackImage name={snack.name} category={snack.category as 'Popcorn' | 'Drink' | 'Combo' | 'Snacks'} src={snack.imageUrl} />
                   </div>
                   <div className="space-y-3 p-3">
                     <div className="flex items-start justify-between gap-2">
@@ -799,9 +942,9 @@ export const BookingPage: React.FC = () => {
       {selectedSeats.map((seatId) => (
         <div key={seatId} className="flex items-center justify-between text-xs text-muted-foreground">
           <span>
-            Seat {seatId} · {getSeatType(seatId[0])}
+            Seat {seatId} · {getSeatType(seatId)}
           </span>
-          <span>{formatCurrency(getSeatPrice(seatId[0]))}</span>
+          <span>{formatCurrency(getSeatPrice(seatId))}</span>
         </div>
       ))}
       {selectedSnackItems.length > 0 && (
@@ -850,7 +993,7 @@ export const BookingPage: React.FC = () => {
         <QrCode className="h-5 w-5 text-[#E50914]" />
         <div>
           <h2 className="text-lg font-black uppercase text-foreground">Scan to Pay</h2>
-          <p className="text-xs text-muted-foreground">Complete the payment in your banking app, then confirm below</p>
+          <p className="text-xs text-muted-foreground">Complete the payment in your banking app. Your booking confirms automatically when payment is received.</p>
         </div>
       </div>
       <div className="mx-auto mt-5 w-fit rounded-2xl bg-white p-4 shadow-xl">
@@ -1223,7 +1366,7 @@ export const BookingPage: React.FC = () => {
           ) : (
             <ShieldCheck className="h-4 w-4" aria-hidden="true" />
           )}
-          Confirm Booking <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          Check Payment Status <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </button>
       );
     }
@@ -1291,6 +1434,19 @@ export const BookingPage: React.FC = () => {
     if (step === 'checkout') return renderCheckout();
     return renderConfirmation();
   };
+
+  const unavailable = loadedShow ? showUnavailableReason(loadedShow) : '';
+  if (seatsLoading || seatsError || unavailable || !screenSeats.length) {
+    return (
+      <div className="mx-auto max-w-3xl space-y-5 px-6 py-20 text-center">
+        <p role={seatsLoading ? 'status' : 'alert'}>
+          {seatsLoading ? 'Loading seats…' : seatsError || unavailable || 'No seats are configured for this screen yet.'}
+        </p>
+        {!seatsLoading && <button type="button" onClick={() => setReloadSeats((value) => value + 1)} className={PRIMARY_CTA}>Reload seat map</button>}
+        <button type="button" onClick={() => navigate('/cinemas')} className="block mx-auto text-sm underline">Choose another showtime</button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-32">

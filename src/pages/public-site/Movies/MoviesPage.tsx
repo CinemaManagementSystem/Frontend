@@ -20,8 +20,12 @@ const itemVariants = {
 export const MoviesPage: React.FC = () => {
   const navigate = useNavigate();
   const shouldReduceMotion = useReducedMotion();
-  const { movies, searchQuery, setSearchQuery } = useMovieStore();
+  const { movies, searchQuery, setSearchQuery, fetchCatalog } = useMovieStore();
   const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    void fetchCatalog();
+  }, [fetchCatalog]);
 
   useEffect(() => {
     const query = searchParams.get('search');

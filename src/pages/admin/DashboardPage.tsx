@@ -138,7 +138,7 @@ function buildChartData(bookings: Booking[], range: ChartRange): ChartBucket[] {
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  const { movies, showtimes, bookings } = useMovieStore();
+  const { movies, showtimes, bookings, fetchCatalog, fetchBookings } = useMovieStore();
   const {
     bookings: adminBookings,
     loading: bookingsLoading,
@@ -155,7 +155,9 @@ export const DashboardPage: React.FC = () => {
 
   useEffect(() => {
     void fetchAdminBookings();
-  }, [fetchAdminBookings]);
+    void fetchCatalog();
+    void fetchBookings();
+  }, [fetchAdminBookings, fetchCatalog, fetchBookings]);
 
   const fetchOccupancyData = useCallback(async () => {
     setOccupancyLoading(true);

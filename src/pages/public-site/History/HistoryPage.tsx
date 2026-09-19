@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import {
@@ -27,7 +27,11 @@ const itemVariants = {
 };
 
 export const HistoryPage: React.FC = () => {
-  const { bookings, cancelBooking } = useMovieStore();
+  const { bookings, cancelBooking, fetchBookings } = useMovieStore();
+
+  useEffect(() => {
+    void fetchBookings();
+  }, [fetchBookings]);
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">

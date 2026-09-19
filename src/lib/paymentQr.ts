@@ -37,7 +37,7 @@ export function resolvePaymentQrDisplay(payment: Payment, transactions: PaymentT
 
   const reference = getString(latestTransaction?.reference) || getString(payment.transactionId) || `PAY-${payment.id}`;
   const imageUrl = pickFirstString(paymentRecord, imageKeys);
-  const qrPayload = pickFirstString(paymentRecord, payloadKeys) || imageUrl || reference;
+  const qrPayload = pickFirstString(paymentRecord, payloadKeys) || imageUrl;
 
   if (!qrPayload) return null;
 
