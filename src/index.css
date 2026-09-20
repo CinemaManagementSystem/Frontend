@@ -370,6 +370,19 @@ html.light .skeleton {
   @apply px-1.5 py-0.5 text-[10px] font-medium leading-none text-[#B4AFB1];
 }
 
+/* Home movie cards use a larger reading scale beneath the artwork. */
+.home-movie-card .movie-card-title {
+  @apply mt-2 text-lg font-medium leading-snug text-[#F5F5F5] md:text-xl;
+}
+
+.home-movie-card .movie-card-date {
+  @apply text-base font-normal text-[#AAA4A7] md:text-[17px];
+}
+
+.home-movie-card .movie-card-rating {
+  @apply px-1.5 py-0.5 text-xs font-medium leading-none text-[#B4AFB1];
+}
+
 /* Cinema accordion */
 .cinema-accordion-header {
   @apply flex items-center justify-between w-full px-4 py-4 text-left font-bold text-white hover:bg-white/[0.03] transition-colors;

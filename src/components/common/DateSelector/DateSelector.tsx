@@ -98,13 +98,13 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
                       : active ? 'date-card-selected' : 'date-card-unselected'
                   )}
                 >
-                  <span className="date-selector-day text-sm font-medium leading-none text-[#AAA4A7]">
+                  <span className="date-selector-day text-base font-medium leading-none text-[#AAA4A7]">
                     {d.isToday ? 'Today' : d.dayName}
                   </span>
-                  <span className="date-selector-number text-[22px] font-semibold leading-none text-[#F5F5F5]">
+                  <span className="date-selector-number text-2xl font-semibold leading-none text-[#F5F5F5]">
                     {d.dayNum}
                   </span>
-                  <span className="date-selector-month text-sm font-normal leading-none text-[#AAA4A7]">
+                  <span className="date-selector-month text-base font-normal leading-none text-[#AAA4A7]">
                     {d.monthName}
                   </span>
 

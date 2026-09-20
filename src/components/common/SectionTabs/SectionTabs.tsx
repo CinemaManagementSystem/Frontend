@@ -37,7 +37,7 @@ export const SectionTabs: React.FC<SectionTabsProps> = ({
             onClick={() => onTabChange(tab.id)}
             className={cn(
               variant === 'home'
-                ? 'flex items-center gap-2 whitespace-nowrap px-0 py-3 text-2xl font-semibold leading-none tracking-[-0.02em] transition-colors md:text-3xl lg:text-[34px]'
+                ? 'flex items-center gap-2 whitespace-nowrap px-0 py-3 text-3xl font-semibold leading-none tracking-[-0.02em] transition-colors md:text-4xl lg:text-[40px]'
                 : 'section-tab',
               variant === 'home'
                 ? activeTab === tab.id
@@ -59,7 +59,7 @@ export const SectionTabs: React.FC<SectionTabsProps> = ({
             )}
           </button>
           {index < tabs.length - 1 && (
-            <div className={variant === 'home' ? 'h-10 w-px bg-white/20' : 'section-tab-divider'} aria-hidden="true" />
+            <div className={variant === 'home' ? 'h-11 w-px bg-white/20' : 'section-tab-divider'} aria-hidden="true" />
           )}
         </React.Fragment>
       ))}
