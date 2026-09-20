@@ -9,12 +9,14 @@ import { bookingSeatService } from '@/services/bookingSeatService';
 import { screenService } from '@/services/screenService';
 import { theaterService } from '@/services/theaterService';
 import { getCinemaDateTime, isUpcomingShowtime } from '@/lib/showtime';
+import { getApiErrorMessage } from '@/services/apiClient';
 
 interface MovieState {
   movies: Movie[];
   showtimes: Showtime[];
   bookings: Booking[];
   loading: boolean;
+  error: string | null;
   catalogRequiresSignIn: boolean;
   selectedCategory: string;
   searchQuery: string;
@@ -54,13 +56,14 @@ export const useMovieStore = create<MovieState>((set, get) => ({
   showtimes: [],
   bookings: [],
   loading: false,
+  error: null,
   catalogRequiresSignIn: false,
   selectedCategory: 'ALL',
   searchQuery: '',
 
   fetchCatalog: () => {
     if (catalogRequest) return catalogRequest;
-    set({ loading: true });
+    set({ loading: true, error: null });
     const authenticated = Boolean(localStorage.getItem('token'));
     catalogRequest = (async () => {
       try {
@@ -110,8 +113,11 @@ export const useMovieStore = create<MovieState>((set, get) => ({
             occupiedSeats,
           };
         });
-        set({ movies, showtimes, catalogRequiresSignIn: !authenticated });
-        } finally {
+        set({ movies, showtimes, catalogRequiresSignIn: !authenticated, error: null });
+      } catch (error) {
+        set({ error: getApiErrorMessage(error, 'movie catalogue') });
+        throw error;
+      } finally {
         catalogRequest = null;
         set({ loading: false });
       }

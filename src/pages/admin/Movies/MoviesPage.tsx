@@ -37,6 +37,7 @@ type MovieFormState = {
   categoryId: string;
   description: string;
   posterUrl: string;
+  posterFile: File | null;
   genre: string;
   language: string;
   durationMinutes: string;
@@ -49,6 +50,7 @@ const emptyForm: MovieFormState = {
   categoryId: '',
   description: '',
   posterUrl: '',
+  posterFile: null,
   genre: '',
   language: '',
   durationMinutes: '',
@@ -84,6 +86,7 @@ function movieToForm(movie: ApiMovie): MovieFormState {
     categoryId: String(movie.categoryId),
     description: movie.description,
     posterUrl: movie.posterUrl,
+    posterFile: null,
     genre: movie.genre,
     language: movie.language,
     durationMinutes: String(movie.durationMinutes),
@@ -98,6 +101,7 @@ function toInput(values: MovieFormState): ApiMovieInput {
     categoryId: Number(values.categoryId),
     description: values.description.trim(),
     posterUrl: values.posterUrl.trim(),
+    posterFile: values.posterFile,
     genre: values.genre.trim(),
     language: values.language.trim(),
     durationMinutes: Number(values.durationMinutes),
@@ -247,6 +251,10 @@ export const MoviesPage: React.FC = () => {
 
   const setFieldValue = (name: keyof MovieFormState, value: string) => {
     setFormValues((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const setPosterFile = (file: File | null) => {
+    setFormValues((prev) => ({ ...prev, posterFile: file }));
   };
 
   const clearFilters = () => {
@@ -652,7 +660,7 @@ export const MoviesPage: React.FC = () => {
               required
               disabled={saving}
             />
-            <div className="space-y-1.5">
+      <div className="space-y-1.5">
               <label className="block text-xs font-medium text-muted-foreground">Category</label>
               <select
                 value={formValues.categoryId}
@@ -719,13 +727,25 @@ export const MoviesPage: React.FC = () => {
               </select>
             </div>
             <Input
-              label="Poster URL"
+              label="Poster URL (optional)"
               value={formValues.posterUrl}
               onChange={(event) => setFieldValue('posterUrl', event.target.value)}
               placeholder="https://.../poster.jpg"
-              required
               disabled={saving}
             />
+            <div className="space-y-1.5">
+              <label className="block text-xs font-medium text-muted-foreground">Or upload poster from disk</label>
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                disabled={saving}
+                onChange={(event) => setPosterFile(event.target.files?.[0] ?? null)}
+                className="block h-10 w-full rounded-lg border border-border bg-muted px-3 py-2 text-xs text-foreground file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-1 file:text-xs file:font-semibold file:text-primary-foreground"
+              />
+              <p className="text-xs text-muted-foreground">
+                {formValues.posterFile ? `${formValues.posterFile.name} selected; it will be uploaded to Cloudinary.` : 'Choose a file to upload it to Cloudinary. A URL may be used instead.'}
+              </p>
+            </div>
           </div>
 
           <div className="space-y-1.5">

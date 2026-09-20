@@ -1,26 +1,25 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, Clock, Star, Play, Plus, Check, ChevronDown, SlidersHorizontal, Sparkles, Film, X } from 'lucide-react';
-import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
+import { Search, ChevronDown, SlidersHorizontal, Sparkles, Film, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useMovieStore } from '@/store/movieStore';
+import { SectionTabs } from '@/components/common/SectionTabs/SectionTabs';
+import { DateSelector } from '@/components/common/DateSelector/DateSelector';
+import { MovieGrid } from '@/components/common/MovieGrid/MovieGrid';
+import { MovieCardSkeleton } from '@/components/common/Skeleton/Skeleton';
+import { getCinemaDate, isUpcomingShowtime, parseShowtimeStart } from '@/lib/showtime';
+import { cn } from '@/lib/utils';
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.04 }
-  }
-};
+type ListingTab = 'NOW_SHOWING' | 'COMING_SOON';
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut' as const } }
-};
+const dateFormatter = (date: string, options: Intl.DateTimeFormatOptions) =>
+  new Intl.DateTimeFormat('en-US', { ...options, timeZone: 'UTC' }).format(new Date(`${date}T12:00:00Z`));
+
+const getDateString = (date: Date) => date.toISOString().slice(0, 10);
 
 export const MoviesPage: React.FC = () => {
   const navigate = useNavigate();
-  const shouldReduceMotion = useReducedMotion();
-  const { movies, searchQuery, setSearchQuery, fetchCatalog } = useMovieStore();
+  const { movies, showtimes, searchQuery, setSearchQuery, fetchCatalog, loading } = useMovieStore();
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
@@ -34,67 +33,76 @@ export const MoviesPage: React.FC = () => {
     }
   }, [searchParams, setSearchQuery]);
 
-  // Filters State
+  const [activeListingTab, setActiveListingTab] = useState<ListingTab>('NOW_SHOWING');
+  const [selectedDate, setSelectedDate] = useState('');
   const [selectedGenre, setSelectedGenre] = useState<string>('ALL');
   const [sortBy, setSortBy] = useState<string>('POPULARITY');
-  const [watchlist, setWatchlist] = useState<string[]>([]);
   const [activeTrailerUrl, setActiveTrailerUrl] = useState<string | null>(null);
 
-  // Dropdown UI States
   const [genreOpen, setGenreOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
+
+  const today = getCinemaDate();
+
+  const upcomingShowtimes = useMemo(() => showtimes
+    .filter((showtime) => isUpcomingShowtime(showtime))
+    .sort((first, second) => parseShowtimeStart(first.startTime) - parseShowtimeStart(second.startTime)),
+  [showtimes]);
+
+  const availableDates = useMemo(() => [...new Set(upcomingShowtimes.map((showtime) => showtime.date))], [upcomingShowtimes]);
+
+  const dateCards = useMemo(() => {
+    const firstDate = new Date(`${today}T12:00:00Z`);
+    const dates = Array.from({ length: 7 }, (_, index) => {
+      const date = new Date(firstDate);
+      date.setUTCDate(firstDate.getUTCDate() + index);
+      return getDateString(date);
+    });
+    return [...new Set([...dates, ...availableDates])].sort().map((date) => ({
+      dateStr: date,
+      dayName: date === today ? 'Today' : dateFormatter(date, { weekday: 'short' }),
+      dayNum: dateFormatter(date, { day: 'numeric' }),
+      monthName: dateFormatter(date, { month: 'short' }),
+      isToday: date === today,
+      hasShowtimes: availableDates.includes(date),
+    }));
+  }, [availableDates, today]);
+
+  useEffect(() => {
+    const firstAvailableDate = availableDates.find((date) => date >= today) ?? today;
+    setSelectedDate((current) => dateCards.some((date) => date.dateStr === current) ? current : firstAvailableDate);
+  }, [availableDates, dateCards, today]);
+
+  const selectedDateShowtimes = useMemo(() => upcomingShowtimes.filter((showtime) => showtime.date === selectedDate), [selectedDate, upcomingShowtimes]);
+  const selectedMovieIds = useMemo(() => new Set(selectedDateShowtimes.map((showtime) => showtime.movieId)), [selectedDateShowtimes]);
 
   const genres = useMemo(
     () => ['ALL', ...Array.from(new Set(movies.flatMap((movie) => movie.genres))).sort()],
     [movies],
   );
 
-  // Load Watchlist from LocalStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('cinematique_watchlist');
-    if (saved) {
-      try {
-        setWatchlist(JSON.parse(saved));
-      } catch (e) {
-        console.error('Error parsing watchlist', e);
-      }
-    }
-  }, [])
+  const filteredMovies = useMemo(() => {
+    const normalizedSearch = searchQuery.trim().toLowerCase();
+    const hasDateListings = activeListingTab === 'NOW_SHOWING' && selectedDate !== '';
 
-  const toggleWatchlist = (e: React.MouseEvent, movieId: string) => {
-    e.stopPropagation();
-    let updated = [...watchlist];
-    if (watchlist.includes(movieId)) {
-      updated = updated.filter((id) => id !== movieId);
-    } else {
-      updated.push(movieId);
-    }
-    setWatchlist(updated);
-    localStorage.setItem('cinematique_watchlist', JSON.stringify(updated));
-  };
+    return movies
+      .filter((movie) => {
+        const matchesListing = movie.status === activeListingTab || (activeListingTab === 'NOW_SHOWING' && movie.status === 'FEATURED');
+        const matchesDate = !hasDateListings || selectedMovieIds.has(movie.id);
+        const matchesSearch =
+          !normalizedSearch ||
+          movie.title.toLowerCase().includes(normalizedSearch) ||
+          movie.genres.some((g) => g.toLowerCase().includes(normalizedSearch));
+        const matchesGenre = selectedGenre === 'ALL' || movie.genres.includes(selectedGenre);
 
-  // Filter and Sort movies
-  const filteredMovies = movies
-    .filter((movie) => {
-      // Category matches (we want NOW_SHOWING and COMING_SOON both, matching explore page)
-      const matchesSearch =
-        movie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        movie.genres.some((g) => g.toLowerCase().includes(searchQuery.toLowerCase()));
-
-      const matchesGenre = selectedGenre === 'ALL' || movie.genres.includes(selectedGenre);
-
-      return matchesSearch && matchesGenre;
-    })
-    .sort((a, b) => {
-      if (sortBy === 'RATING') {
-        return b.rating - a.rating;
-      }
-      if (sortBy === 'DURATION') {
-        return b.durationMinutes - a.durationMinutes;
-      }
-      // POPULARITY (by voteCount)
-      return b.voteCount - a.voteCount;
-    });
+        return matchesListing && matchesDate && matchesSearch && matchesGenre;
+      })
+      .sort((a, b) => {
+        if (sortBy === 'RATING') return b.rating - a.rating;
+        if (sortBy === 'DURATION') return b.durationMinutes - a.durationMinutes;
+        return b.voteCount - a.voteCount;
+      });
+  }, [activeListingTab, movies, searchQuery, selectedDate, selectedMovieIds, selectedGenre, sortBy]);
 
   const getSortLabel = (id: string) => {
     if (id === 'RATING') return 'Rating';
@@ -102,50 +110,43 @@ export const MoviesPage: React.FC = () => {
     return 'Popularity';
   };
 
+  const nowShowingCount = useMemo(() => movies.filter((m) => m.status === 'NOW_SHOWING' || m.status === 'FEATURED').length, [movies]);
+  const comingSoonCount = useMemo(() => movies.filter((m) => m.status === 'COMING_SOON').length, [movies]);
+
   return (
-    <div className="pb-24 bg-background min-h-screen text-foreground selection:bg-[#E50914]">
-      {/* Search & Header Section */}
-      <section className="relative pt-12 pb-6 bg-gradient-to-b from-muted/70 to-transparent dark:from-zinc-900/60 dark:to-transparent">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+    <div className="movie-listing-page pb-24 min-h-screen text-white">
+      {/* Header & Filter Toolbar */}
+      <section className="relative pt-12 pb-6">
+        <div className="container-main space-y-6">
           <div className="space-y-1">
-            <span className="flex items-center gap-1.5 text-[10px] font-black text-[#E50914] tracking-widest uppercase">
-              <Sparkles className="w-3.5 h-3.5" />
-              CINEMATIQUE IMMERSIVE
+            <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-[var(--primary)]">
+              <Sparkles className="h-3.5 w-3.5" />
+              Legend Cinema
             </span>
-            <h1 className="text-3xl sm:text-5xl font-black text-foreground uppercase tracking-tight">
-              Explore Movies
-            </h1>
+            <h1 className="text-3xl font-black uppercase tracking-tight sm:text-5xl">Explore Movies</h1>
           </div>
 
-          {/* Premium Filter Toolbar matching mockup */}
-          <div className="bg-muted/50 border border-border backdrop-blur-md rounded-2xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between shadow-2xl relative z-30 dark:bg-zinc-900/40">
-            {/* Find a movie search input */}
-            <div className="relative w-full md:flex-1 max-w-md">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4 backdrop-blur-md md:flex-row md:items-center md:justify-between">
+            <div className="relative w-full md:max-w-md">
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/50" />
               <input
                 type="text"
                 placeholder="Find a movie..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-input border border-border text-foreground text-xs rounded-xl pl-10 pr-4 py-2.5 outline-none focus:border-[#E50914] transition-all placeholder:text-muted-foreground"
+                className="w-full rounded-xl border border-white/10 bg-white/[0.03] py-2.5 pl-10 pr-4 text-xs outline-none transition-all placeholder:text-white/35 focus:border-[var(--primary)]"
               />
             </div>
 
-            {/* Selector Dropdowns */}
-            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-              {/* Genres Dropdown */}
+            <div className="flex flex-wrap items-center gap-3">
               <div className="relative">
                 <button
-                  onClick={() => {
-                    setGenreOpen(!genreOpen);
-                    setSortOpen(false);
-                  }}
-                  className="flex items-center gap-2 bg-input border border-border text-muted-foreground text-xs rounded-xl px-4 py-2.5 hover:border-border transition-all focus:outline-none"
+                  type="button"
+                  onClick={() => { setGenreOpen(!genreOpen); setSortOpen(false); }}
+                  className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-xs text-white/60 transition-all hover:border-white/25 focus:outline-none"
                 >
-                  <span className="font-semibold">
-                    {selectedGenre === 'ALL' ? 'All Genres' : selectedGenre}
-                  </span>
-                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  <span className="font-semibold">{selectedGenre === 'ALL' ? 'All Genres' : selectedGenre}</span>
+                  <ChevronDown className={cn('h-4 w-4 text-white/50', genreOpen && 'rotate-180')} />
                 </button>
                 <AnimatePresence>
                   {genreOpen && (
@@ -156,18 +157,17 @@ export const MoviesPage: React.FC = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -6, scale: 0.98 }}
                         transition={{ duration: 0.12 }}
-                        className="absolute right-0 mt-2 w-48 rounded-xl bg-popover border border-border p-1 shadow-2xl z-20 max-h-60 overflow-y-auto origin-top-right"
+                        className="absolute right-0 mt-2 w-48 origin-top-right overflow-y-auto rounded-xl border border-white/10 bg-black/95 p-1 shadow-2xl backdrop-blur-xl z-20 max-h-60"
                       >
                         {genres.map((g) => (
                           <button
                             key={g}
-                            onClick={() => {
-                              setSelectedGenre(g);
-                              setGenreOpen(false);
-                            }}
-                            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold hover:bg-muted ${
-                              selectedGenre === g ? 'text-[#E50914] bg-[#E50914]/5' : 'text-muted-foreground'
-                            }`}
+                            type="button"
+                            onClick={() => { setSelectedGenre(g); setGenreOpen(false); }}
+                            className={cn(
+                              'w-full rounded-lg px-3 py-2 text-left text-xs font-semibold transition-colors',
+                              selectedGenre === g ? 'bg-[var(--primary)]/10 text-[var(--primary)]' : 'text-white/60 hover:bg-white/5 hover:text-white'
+                            )}
                           >
                             {g === 'ALL' ? 'All Genres' : g}
                           </button>
@@ -178,18 +178,15 @@ export const MoviesPage: React.FC = () => {
                 </AnimatePresence>
               </div>
 
-              {/* Sort Dropdown */}
               <div className="relative">
                 <button
-                  onClick={() => {
-                    setSortOpen(!sortOpen);
-                    setGenreOpen(false);
-                  }}
-                  className="flex items-center gap-2 bg-input border border-border text-muted-foreground text-xs rounded-xl px-4 py-2.5 hover:border-border transition-all focus:outline-none"
+                  type="button"
+                  onClick={() => { setSortOpen(!sortOpen); setGenreOpen(false); }}
+                  className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-xs text-white/60 transition-all hover:border-white/25 focus:outline-none"
                 >
-                  <SlidersHorizontal className="w-3.5 h-3.5 text-muted-foreground" />
+                  <SlidersHorizontal className="h-3.5 w-3.5 text-white/50" />
                   <span className="font-semibold">{getSortLabel(sortBy)}</span>
-                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  <ChevronDown className={cn('h-4 w-4 text-white/50', sortOpen && 'rotate-180')} />
                 </button>
                 <AnimatePresence>
                   {sortOpen && (
@@ -200,7 +197,7 @@ export const MoviesPage: React.FC = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -6, scale: 0.98 }}
                         transition={{ duration: 0.12 }}
-                        className="absolute right-0 mt-2 w-44 rounded-xl bg-popover border border-border p-1 shadow-2xl z-20 origin-top-right"
+                        className="absolute right-0 mt-2 w-44 origin-top-right rounded-xl border border-white/10 bg-black/95 p-1 shadow-2xl backdrop-blur-xl z-20"
                       >
                         {[
                           { id: 'POPULARITY', label: 'Popularity' },
@@ -209,13 +206,12 @@ export const MoviesPage: React.FC = () => {
                         ].map((item) => (
                           <button
                             key={item.id}
-                            onClick={() => {
-                              setSortBy(item.id);
-                              setSortOpen(false);
-                            }}
-                            className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold hover:bg-muted ${
-                              sortBy === item.id ? 'text-[#E50914] bg-[#E50914]/5' : 'text-muted-foreground'
-                            }`}
+                            type="button"
+                            onClick={() => { setSortBy(item.id); setSortOpen(false); }}
+                            className={cn(
+                              'w-full rounded-lg px-3 py-2 text-left text-xs font-semibold transition-colors',
+                              sortBy === item.id ? 'bg-[var(--primary)]/10 text-[var(--primary)]' : 'text-white/60 hover:bg-white/5 hover:text-white'
+                            )}
                           >
                             {item.label}
                           </button>
@@ -227,165 +223,54 @@ export const MoviesPage: React.FC = () => {
               </div>
             </div>
           </div>
+
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <SectionTabs
+              tabs={[
+                { id: 'NOW_SHOWING', label: 'Now Showing', count: nowShowingCount },
+                { id: 'COMING_SOON', label: 'Coming Soon', count: comingSoonCount },
+              ]}
+              activeTab={activeListingTab}
+              onTabChange={(tab) => setActiveListingTab(tab as ListingTab)}
+              showCounts={false}
+            />
+            {activeListingTab === 'NOW_SHOWING' && (
+              <DateSelector
+                dateList={dateCards}
+                selectedDate={selectedDate}
+                onSelectDate={setSelectedDate}
+                className="border-0 bg-transparent px-0 py-0"
+                showLabel={false}
+              />
+            )}
+          </div>
         </div>
       </section>
 
       {/* Movies Grid Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 relative z-10">
-        {filteredMovies.length > 0 ? (
-          <motion.div 
-            key={selectedGenre + sortBy + searchQuery}
-            variants={containerVariants}
-            initial="hidden"
-            animate="show"
-            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6"
-          >
-            {filteredMovies.map((movie) => {
-              const inWatchlist = watchlist.includes(movie.id);
-              return (
-                <motion.div
-                  key={movie.id}
-                  variants={itemVariants}
-                  whileHover={shouldReduceMotion ? {} : { y: -4 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => navigate(`/movies/${movie.id}`)}
-                  className="group relative flex flex-col rounded-2xl overflow-hidden bg-card border border-border hover:border-[#E50914]/40 hover:shadow-xl hover:shadow-[#E50914]/5 transition-all duration-300 cursor-pointer h-full"
-                >
-                  {/* Poster Image Area */}
-                  <div className="relative aspect-[2/3] w-full overflow-hidden bg-zinc-950">
-                    <img
-                      src={movie.posterUrl}
-                      alt={movie.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      loading="lazy"
-                    />
-
-                    {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent opacity-90" />
-
-                    {/* Star Rating Badge - Top Left inside image viewport */}
-                    <div className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-border text-[11px] font-black text-amber-400">
-                      <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                      <span>{movie.rating.toFixed(1)}</span>
-                    </div>
-
-                    {/* Coming Soon Poster Banner */}
-                    {movie.status === 'COMING_SOON' && (
-                      <div className="absolute bottom-3 inset-x-0 mx-auto w-fit px-3 py-1 rounded-md bg-[#E50914] text-white text-[9px] font-black uppercase tracking-widest shadow-lg shadow-[#E50914]/30">
-                        Coming Soon
-                      </div>
-                    )}
-
-                    {/* High-Fidelity Hover Information Panel */}
-                    <div className="absolute inset-0 bg-card/95 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-5 z-10">
-                      <div>
-                        <div className="flex items-center justify-between gap-2">
-                          <h4 className="text-base font-black text-foreground uppercase tracking-tight leading-snug">
-                            {movie.title}
-                          </h4>
-                          <span className="text-[10px] font-black text-amber-400 shrink-0">
-                            ★ {movie.rating.toFixed(1)}
-                          </span>
-                        </div>
-                        
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-1.5">
-                          2024 • {movie.genres.join('/')} • {Math.floor(movie.durationMinutes / 60)}h {movie.durationMinutes % 60}m
-                        </p>
-
-                        <p className="text-[11px] text-muted-foreground mt-4 leading-relaxed line-clamp-4">
-                          {movie.description || 'No description available for this title. Check showtimes or view full movie details.'}
-                        </p>
-                      </div>
-
-                      {/* Interactive Buttons matching Mockup */}
-                      <div className="space-y-2.5">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (movie.trailerUrl) {
-                              setActiveTrailerUrl(movie.trailerUrl);
-                            } else {
-                              navigate(`/movies/${movie.id}`);
-                            }
-                          }}
-                          className="w-full py-2.5 px-4 rounded-xl bg-[#E50914] hover:bg-[#ff1f2d] text-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-lg shadow-[#E50914]/20 transition-all hover:scale-102"
-                        >
-                          <Play className="w-3.5 h-3.5 fill-white text-white" />
-                          <span>Watch Now</span>
-                        </button>
-
-                        <button
-                          onClick={(e) => toggleWatchlist(e, movie.id)}
-                          className={`w-full py-2.5 px-4 rounded-xl border text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
-                            inWatchlist
-                              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                              : 'border-border text-muted-foreground hover:bg-muted hover:text-[#E50914]'
-                          }`}
-                        >
-                          {inWatchlist ? (
-                            <>
-                              <Check className="w-3.5 h-3.5" />
-                              <span>Added</span>
-                            </>
-                          ) : (
-                            <>
-                              <Plus className="w-3.5 h-3.5" />
-                              <span>Add To List</span>
-                            </>
-                          )}
-                        </button>
-
-                        {/* Trailer link */}
-                        <div className="text-center">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/movies/${movie.id}`);
-                            }}
-                            className="text-[10px] font-black text-muted-foreground hover:text-[#E50914] uppercase tracking-widest transition-colors"
-                          >
-                            Movie Details
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Movie Info below Poster */}
-                  <div className="p-4 flex flex-col flex-1">
-                    <h3 className="font-bold text-foreground text-sm sm:text-base line-clamp-1 group-hover:text-[#E50914] transition-colors leading-tight uppercase">
-                      {movie.title}
-                    </h3>
-                    
-                    {/* Genres subtext */}
-                    <p className="text-[11px] text-muted-foreground mt-1 line-clamp-1">
-                      {movie.genres.join(', ')}
-                    </p>
-
-                    {/* Duration details */}
-                    <div className="flex items-center gap-1.5 mt-3 pt-2.5 border-t border-border text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                      <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                      <span>{movie.durationMinutes} MIN</span>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </motion.div>
+      <section className="container-main pt-6">
+        {loading ? (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
+            {Array.from({ length: 8 }).map((_, i) => <MovieCardSkeleton key={i} />)}
+          </div>
+        ) : filteredMovies.length > 0 ? (
+          <MovieGrid
+            key={`${activeListingTab}-${selectedDate}-${searchQuery}-${selectedGenre}-${sortBy}`}
+            movies={filteredMovies}
+            onMovieClick={(movie) => navigate(`/movies/${movie.id}`)}
+            emptyMessage="No films match that selection"
+          />
         ) : (
-          /* Empty Search State */
-          <div className="py-20 text-center bg-card border border-border rounded-3xl p-8 space-y-4">
-            <Film className="w-12 h-12 text-muted-foreground mx-auto animate-pulse" />
-            <h3 className="text-lg font-black text-foreground uppercase tracking-wider">No Movies Found</h3>
-            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+          <div className="space-y-4 rounded-3xl border border-white/10 bg-white/[0.02] p-8 py-20 text-center">
+            <Film className="mx-auto h-12 w-12 animate-pulse text-white/50" />
+            <h3 className="text-lg font-black uppercase tracking-wider">No Movies Found</h3>
+            <p className="mx-auto max-w-sm text-xs text-white/50">
               We couldn't find any movies matching "{searchQuery}" or selected filters. Try adjusting your search query or filters.
             </p>
             <button
-              onClick={() => {
-                setSearchQuery('');
-                setSelectedGenre('ALL');
-              }}
-              className="px-5 py-2.5 rounded-xl bg-secondary text-secondary-foreground text-xs font-bold uppercase tracking-wider hover:bg-muted transition-all"
+              type="button"
+              onClick={() => { setSearchQuery(''); setSelectedGenre('ALL'); }}
+              className="rounded-xl bg-white/10 px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition-all hover:bg-white/15"
             >
               Reset Filters
             </button>
@@ -396,31 +281,32 @@ export const MoviesPage: React.FC = () => {
       {/* Trailer Video Player Modal */}
       <AnimatePresence>
         {activeTrailerUrl && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/95 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 backdrop-blur-sm"
           >
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-              className="relative w-full max-w-4xl aspect-video bg-zinc-950 rounded-2xl overflow-hidden border border-border shadow-2xl"
+              className="relative aspect-video w-full max-w-4xl overflow-hidden rounded-2xl border border-white/10 bg-black shadow-2xl"
             >
-              {/* Close Button */}
               <button
+                type="button"
                 onClick={() => setActiveTrailerUrl(null)}
-                className="absolute top-4 right-4 p-2 rounded-full bg-black/70 border border-white/20 text-white hover:bg-[#E50914] transition-colors z-10"
+                className="absolute right-4 top-4 z-10 rounded-full border border-white/20 bg-black/70 p-2 text-white transition-colors hover:bg-[var(--primary)]"
+                aria-label="Close trailer"
               >
-                <X className="w-5 h-5" />
+                <X className="h-5 w-5" />
               </button>
               <iframe
                 src={activeTrailerUrl}
                 title="Movie Trailer Player"
-                className="w-full h-full"
+                className="h-full w-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />

@@ -10,16 +10,15 @@ import {
   Home,
   LogOut,
   MapPin,
-  Menu,
   Moon,
   Play,
+  Search,
   Shield,
   ShoppingBag,
   Sparkles,
   Sun,
   Ticket,
   User as UserIcon,
-  X,
 } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { AnimatePresence, motion } from 'motion/react';
@@ -50,7 +49,7 @@ const MOVIE_MENU_ITEMS = [
 ];
 
 const dropdownPanelClass =
-  'absolute z-50 mt-2 origin-top rounded-2xl border border-border bg-card p-2 text-foreground shadow-2xl backdrop-blur-xl dark:border-zinc-800 dark:bg-zinc-950 dark:text-white';
+  'absolute z-50 mt-2 origin-top rounded-2xl border border-white/10 bg-black/95 backdrop-blur-xl p-2 text-white shadow-2xl';
 
 interface UserMenuProps {
   user: User;
@@ -86,11 +85,11 @@ const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
         <button
           type="button"
           onClick={() => setOpen((value) => !value)}
-          className="inline-flex h-9 items-center gap-2 rounded-full border border-border bg-card py-1 pl-1 pr-3 text-xs font-bold text-foreground transition hover:border-[#E50914]/60 hover:bg-muted dark:border-zinc-700/80 dark:bg-zinc-900/90 dark:text-white dark:hover:bg-zinc-800"
+          className="avatar-pill"
         >
-          <Avatar src={user.avatar} alt={user.username} className="h-7 w-7 border border-[#E50914]" />
+          <Avatar src={user.avatar} alt={user.username} className="h-7 w-7 border border-[var(--primary)]" />
           <span className="max-w-[90px] truncate">{user.username}</span>
-          <ChevronDown className={cn('h-3.5 w-3.5 text-muted-foreground transition-transform', open && 'rotate-180')} />
+          <ChevronDown className={cn('h-3.5 w-3.5 text-white/50 transition-transform', open && 'rotate-180')} />
         </button>
 
         <AnimatePresence>
@@ -104,12 +103,12 @@ const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
                 transition={{ duration: 0.15 }}
                 className={cn(dropdownPanelClass, 'right-0 top-full w-60')}
               >
-                <div className="mb-1 flex items-center gap-2.5 border-b border-border px-3 py-2.5 dark:border-zinc-800">
-                  <Avatar src={user.avatar} alt={user.username} className="h-9 w-9 border border-[#E50914]" />
+                <div className="mb-1 flex items-center gap-2.5 border-b border-white/10 px-3 py-2.5">
+                  <Avatar src={user.avatar} alt={user.username} className="h-9 w-9 border border-[var(--primary)]" />
                   <div className="min-w-0">
-                    <p className="truncate text-xs font-bold text-foreground dark:text-white">{user.username}</p>
-                    <p className="truncate text-[10px] text-muted-foreground">{user.email}</p>
-                    <span className="mt-0.5 inline-block rounded bg-[#E50914]/20 px-2 py-0.5 text-[9px] font-black uppercase text-[#E50914]">
+                    <p className="truncate text-xs font-bold text-white">{user.username}</p>
+                    <p className="truncate text-[10px] text-white/50">{user.email}</p>
+                    <span className="mt-0.5 inline-block rounded bg-[var(--primary)]/20 px-2 py-0.5 text-[9px] font-black uppercase text-[var(--primary)]">
                       {user.role}
                     </span>
                   </div>
@@ -119,37 +118,37 @@ const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
                   <button
                     type="button"
                     onClick={() => go('/admin/dashboard')}
-                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-foreground hover:bg-muted dark:text-white dark:hover:bg-zinc-800"
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-white hover:bg-white/5"
                   >
-                    <Shield className="h-4 w-4 text-[#E50914]" />
+                    <Shield className="h-4 w-4 text-[var(--primary)]" />
                     Admin Dashboard
                   </button>
                 )}
                 <button
                   type="button"
                   onClick={() => go('/settings')}
-                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-foreground hover:bg-muted dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-white/80 hover:bg-white/5 hover:text-white"
                 >
-                  <UserIcon className="h-4 w-4 text-muted-foreground" />
+                  <UserIcon className="h-4 w-4 text-white/50" />
                   Profile & Settings
                 </button>
                 <button
                   type="button"
                   onClick={() => go('/history')}
-                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-foreground hover:bg-muted dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-white/80 hover:bg-white/5 hover:text-white"
                 >
                   <Ticket className="h-4 w-4 text-amber-400" />
                   My Tickets
                 </button>
 
-                <div className="my-1 border-t border-border pt-1 dark:border-zinc-800">
+                <div className="my-1 border-t border-white/10 pt-1">
                   <button
                     type="button"
                     onClick={() => {
                       setOpen(false);
                       setLogoutOpen(true);
                     }}
-                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-rose-500 transition hover:bg-rose-500/10 dark:text-rose-400"
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-rose-400 transition hover:bg-rose-500/10"
                   >
                     <LogOut className="h-4 w-4" />
                     Sign Out
@@ -179,33 +178,70 @@ interface CinemaSelectorProps {
 const CinemaSelector: React.FC<CinemaSelectorProps> = ({ onSelect, mobile = false }) => {
   const navigate = useNavigate();
   const { cinemas, selectedCinemaId, loading, error, fetchCinemas, selectCinema } = useCinemaStore();
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
 
   useEffect(() => { void fetchCinemas(); }, [fetchCinemas]);
 
-  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    selectCinema(event.target.value);
+  const selectedCinema = cinemas.find((cinema) => cinema.id === selectedCinemaId);
+  const filteredCinemas = cinemas.filter((cinema) => {
+    const value = `${cinema.name} ${cinema.city ?? ''}`.toLowerCase();
+    return value.includes(query.trim().toLowerCase());
+  });
+
+  const handleSelect = (cinemaId: string) => {
+    selectCinema(cinemaId);
+    setOpen(false);
+    setQuery('');
     onSelect();
-    navigate(`/cinemas?cinema=${encodeURIComponent(event.target.value)}`);
+    navigate(`/cinemas?cinema=${encodeURIComponent(cinemaId)}`);
   };
 
   return (
     <div className={cn('cinema-nav-picker', mobile && 'cinema-nav-picker--mobile')}>
-      <div className="cinema-nav-picker-control">
-        <MapPin className="h-3.5 w-3.5 shrink-0 text-[#E50914]" aria-hidden="true" />
-        <select
+      <div className="relative">
+        <button
+          type="button"
+          className="cinema-nav-picker-control w-full text-left"
           aria-label="Choose a cinema"
-          value={cinemas.some((cinema) => cinema.id === selectedCinemaId) ? selectedCinemaId : 'ALL'}
-          onChange={handleChange}
+          aria-haspopup="listbox"
+          aria-expanded={open}
           disabled={loading && cinemas.length === 0}
+          onClick={() => setOpen((value) => !value)}
+          onKeyDown={(event) => { if (event.key === 'Escape') setOpen(false); }}
         >
-          <option value="ALL">{loading && cinemas.length === 0 ? 'Loading cinemas...' : 'All Cinemas'}</option>
-          {cinemas.map((cinema) => (
-            <option key={cinema.id} value={cinema.id}>
-              {cinema.name}{cinema.city ? ` (${cinema.city})` : ''}
-            </option>
-          ))}
-        </select>
-        <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <MapPin className="h-3.5 w-3.5 shrink-0 text-[var(--primary)]" aria-hidden="true" />
+          <span className="min-w-0 flex-1 truncate">
+            {loading && cinemas.length === 0 ? 'Loading cinemas...' : selectedCinema?.name ?? 'All Cinemas'}
+          </span>
+          <ChevronDown className={cn('h-3 w-3 shrink-0 text-white/50 transition-transform', open && 'rotate-180')} aria-hidden="true" />
+        </button>
+
+        {open && (
+          <>
+            <button type="button" className="fixed inset-0 z-40 cursor-default" aria-label="Close cinema selector" onClick={() => setOpen(false)} />
+            <div className="cinema-nav-picker-menu" role="listbox" aria-label="Cinema locations">
+              {cinemas.length > 8 && (
+                <label className="cinema-nav-picker-search">
+                  <Search className="h-3.5 w-3.5 text-white/40" aria-hidden="true" />
+                  <span className="sr-only">Search cinemas</span>
+                  <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search cinemas" autoFocus />
+                </label>
+              )}
+              <button type="button" role="option" aria-selected={selectedCinemaId === 'ALL'} className={cn('cinema-nav-picker-option', selectedCinemaId === 'ALL' && 'cinema-nav-picker-option-selected')} onClick={() => handleSelect('ALL')}>
+                <MapPin className="h-4 w-4" aria-hidden="true" />
+                <span>All Cinemas</span>
+              </button>
+              {filteredCinemas.map((cinema) => (
+                <button key={cinema.id} type="button" role="option" aria-selected={selectedCinemaId === cinema.id} className={cn('cinema-nav-picker-option', selectedCinemaId === cinema.id && 'cinema-nav-picker-option-selected')} onClick={() => handleSelect(cinema.id)}>
+                  <MapPin className="h-4 w-4" aria-hidden="true" />
+                  <span className="min-w-0 truncate">{cinema.name}{cinema.city ? ` · ${cinema.city}` : ''}</span>
+                </button>
+              ))}
+              {filteredCinemas.length === 0 && <p className="px-3 py-4 text-xs text-white/45">No cinemas match that search.</p>}
+            </div>
+          </>
+        )}
       </div>
       {error && (
         <p role="status" className="cinema-nav-picker-error">
@@ -226,8 +262,8 @@ export const Navbar: React.FC = () => {
   const { user, isAuthenticated } = useAuthStore();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [moviesDropdownOpen, setMoviesDropdownOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const isMoviesActive =
     location.pathname.startsWith('/movies') ||
@@ -235,12 +271,17 @@ export const Navbar: React.FC = () => {
     location.pathname === '/premiere';
 
   useEffect(() => {
-    setMobileMenuOpen(false);
     setMoviesDropdownOpen(false);
   }, [location.pathname]);
 
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 40);
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const closeMenus = () => {
-    setMobileMenuOpen(false);
     setMoviesDropdownOpen(false);
   };
 
@@ -261,21 +302,11 @@ export const Navbar: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-card/95 text-foreground backdrop-blur-xl shadow-md transition-all dark:border-zinc-800/80 dark:bg-zinc-950/95 dark:text-white">
-      {/* Top Header Row (Search | Brand Logo | Actions) */}
-      <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8">
-        
-        {/* Left: Search Bar (Desktop) & Mobile Menu Toggle */}
+    <header className={cn('sticky top-0 z-20 w-full border-b border-white/10 text-white transition-all', isScrolled ? 'bg-black/60 backdrop-blur-md' : 'bg-transparent')}>
+      {/* Row 1: Search | Logo | Actions */}
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        {/* Left: Search Bar */}
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen((open) => !open)}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-foreground hover:bg-muted lg:hidden dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-          </button>
-
           <div className="hidden w-52 lg:block xl:w-64">
             <SearchAutocomplete
               size="sm"
@@ -291,21 +322,21 @@ export const Navbar: React.FC = () => {
         <Link
           to="/"
           onClick={closeMenus}
-          className="flex items-center rounded-full focus:outline-none"
-          aria-label="CINEMATIQUE Home"
+          className="flex items-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+          aria-label="Legend Cinema Home"
         >
           <CinematiqueLogo />
         </Link>
 
-        {/* Right: Actions (Ticket, User/Join, Bell, Theme) */}
+        {/* Right: Actions (Ticket, User/Join, Bell, Language, Theme) */}
         <div className="flex items-center gap-2 sm:gap-2.5">
           {/* Ticket Button */}
           <button
             type="button"
             onClick={handleTicketClick}
-            className="hidden items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-bold text-foreground transition hover:border-[#E50914]/60 hover:bg-muted dark:border-zinc-700/80 dark:bg-zinc-900/90 dark:text-white dark:hover:bg-zinc-800 sm:flex"
+            className="hidden items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-xs font-bold text-white transition-colors hover:border-[var(--primary)]/60 hover:bg-white/[0.06] sm:flex"
           >
-            <Ticket className="h-3.5 w-3.5 text-[#E50914]" />
+            <Ticket className="h-3.5 w-3.5 text-[var(--primary)]" />
             Ticket
           </button>
 
@@ -315,9 +346,9 @@ export const Navbar: React.FC = () => {
           ) : (
             <Link
               to="/login"
-              className="flex h-9 items-center gap-1.5 rounded-full border border-border bg-card px-4 text-xs font-bold text-foreground transition hover:border-[#E50914]/60 hover:bg-muted dark:border-zinc-700/80 dark:bg-zinc-900/90 dark:text-white dark:hover:bg-zinc-800"
+              className="avatar-pill"
             >
-              <UserIcon className="h-3.5 w-3.5 text-[#E50914]" />
+              <UserIcon className="h-3.5 w-3.5 text-[var(--primary)]" />
               Join Now
             </Link>
           )}
@@ -325,18 +356,30 @@ export const Navbar: React.FC = () => {
           {/* Notifications Bell */}
           <button
             type="button"
-            className="relative flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground transition hover:bg-muted dark:border-zinc-700/80 dark:bg-zinc-900/90 dark:text-zinc-300 dark:hover:text-white"
+            className="relative icon-btn-circle"
             aria-label="Notifications"
           >
             <Bell className="h-4 w-4" />
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#E50914]" />
+            <span className="notification-dot" aria-hidden="true" />
           </button>
+
+          {/* Language Selector */}
+          <div className="relative hidden sm:block">
+            <button
+              type="button"
+              className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-bold text-white transition-colors hover:border-[var(--primary)]/60 hover:bg-white/[0.06]"
+              aria-label="Select language"
+            >
+              <span className="text-[10px] font-black uppercase">KH</span>
+              <ChevronDown className="h-3 w-3 text-white/50" />
+            </button>
+          </div>
 
           {/* Theme Toggle */}
           <button
             type="button"
             onClick={toggleTheme}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground transition hover:bg-muted dark:border-zinc-700/80 dark:bg-zinc-900/90 dark:text-zinc-300 dark:hover:text-white"
+            className="icon-btn-circle"
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           >
             {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-slate-700" />}
@@ -344,9 +387,9 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Sub-Navigation Bar (Nav links on Left | Cinema Selector on Right) */}
-      <div className="hidden border-t border-border bg-muted/60 py-1.5 backdrop-blur-md dark:border-zinc-800/80 dark:bg-zinc-950/90 lg:block">
-        <div className="mx-auto flex max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-8">
+      {/* Row 2: Nav Links | Cinema Selector */}
+      <div className="hidden border-t border-white/10 bg-transparent py-2 backdrop-blur-md lg:block">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Nav Links */}
           <nav className="flex items-center gap-1" aria-label="Public sub navigation">
             {NAV_LINKS.map((link) => {
@@ -361,13 +404,17 @@ export const Navbar: React.FC = () => {
                     cn(
                       'flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold transition-all',
                       isActive
-                        ? 'bg-[#E50914] text-white shadow-md shadow-[#E50914]/30'
-                        : 'text-foreground/80 hover:bg-muted hover:text-foreground dark:text-zinc-300 dark:hover:bg-zinc-800/80 dark:hover:text-white',
+                        ? 'text-white'
+                        : 'text-white/50 hover:text-white hover:bg-white/5'
                     )
                   }
                 >
-                  <Icon className="h-3.5 w-3.5" />
-                  {link.name}
+                  {({ isActive }) => (
+                    <>
+                      <Icon className={cn('h-3.5 w-3.5', isActive ? 'text-[var(--primary)]' : '')} />
+                      {link.name}
+                    </>
+                  )}
                 </NavLink>
               );
             })}
@@ -380,11 +427,11 @@ export const Navbar: React.FC = () => {
                 className={cn(
                   'flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold transition-all cursor-pointer',
                   isMoviesActive
-                    ? 'bg-[#E50914] text-white shadow-md shadow-[#E50914]/30'
-                    : 'text-foreground/80 hover:bg-muted hover:text-foreground dark:text-zinc-300 dark:hover:bg-zinc-800/80 dark:hover:text-white',
+                    ? 'text-white'
+                    : 'text-white/50 hover:text-white hover:bg-white/5'
                 )}
               >
-                <Clapperboard className="h-3.5 w-3.5" />
+                <Clapperboard className={cn('h-3.5 w-3.5', isMoviesActive ? 'text-[var(--primary)]' : '')} />
                 Movies
                 <ChevronDown className={cn('h-3 w-3 transition-transform', moviesDropdownOpen && 'rotate-180')} />
               </button>
@@ -398,7 +445,7 @@ export const Navbar: React.FC = () => {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.96 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute left-0 top-full mt-2 z-50 w-64 rounded-2xl border border-border bg-card p-2 text-foreground shadow-2xl dark:border-zinc-800 dark:bg-zinc-950 dark:text-white"
+                      className="absolute left-0 top-full mt-2 z-50 w-64 rounded-2xl border border-white/10 bg-black/95 backdrop-blur-xl p-2 text-white shadow-2xl"
                     >
                       {MOVIE_MENU_ITEMS.map((item) => {
                         const Icon = item.icon;
@@ -411,12 +458,12 @@ export const Navbar: React.FC = () => {
                               navigate(item.path);
                               closeMenus();
                             }}
-                            className="flex w-full items-start gap-3 rounded-xl p-2.5 text-left transition hover:bg-muted dark:hover:bg-zinc-800"
+                            className="flex w-full items-start gap-3 rounded-xl p-2.5 text-left transition hover:bg-white/5"
                           >
-                            <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[#E50914]" />
+                            <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" />
                             <div>
-                              <span className="block text-xs font-bold text-foreground dark:text-white">{item.name}</span>
-                              <span className="block text-[10px] text-muted-foreground">{item.description}</span>
+                              <span className="block text-xs font-bold text-white">{item.name}</span>
+                              <span className="block text-[10px] text-white/50">{item.description}</span>
                             </div>
                           </button>
                         );
@@ -432,60 +479,6 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Menu Drawer */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden border-t border-border bg-card px-4 py-4 dark:border-zinc-800 dark:bg-zinc-950 lg:hidden"
-          >
-            {/* Search */}
-            <div className="mb-3">
-              <SearchAutocomplete
-                size="sm"
-                value={searchQuery}
-                onChange={setSearchQuery}
-                onSubmit={handleSearchSubmit}
-                onSelect={handleSuggestionSelect}
-              />
-            </div>
-
-            <div className="mb-4">
-              <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Choose a cinema</p>
-              <CinemaSelector onSelect={closeMenus} mobile />
-            </div>
-
-            {/* Links */}
-            <nav className="grid gap-1 border-t border-border pt-3 dark:border-zinc-800" aria-label="Mobile navigation">
-              {NAV_LINKS.map((link) => {
-                const Icon = link.icon;
-                return (
-                  <NavLink
-                    key={link.name}
-                    to={link.path}
-                    end={link.end}
-                    onClick={closeMenus}
-                    className={({ isActive }) =>
-                      cn(
-                        'flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs font-bold transition',
-                        isActive
-                          ? 'bg-[#E50914] text-white'
-                          : 'text-foreground/80 hover:bg-muted hover:text-foreground dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white',
-                      )
-                    }
-                  >
-                    <Icon className="h-4 w-4" />
-                    {link.name}
-                  </NavLink>
-                );
-              })}
-            </nav>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </header>
   );
 };

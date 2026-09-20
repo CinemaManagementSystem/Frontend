@@ -22,4 +22,5 @@ export interface ApiMovieInput {
   durationMinutes: number;
   releaseDate: string;
   status: string;
+  posterFile?: File | null;
 }
