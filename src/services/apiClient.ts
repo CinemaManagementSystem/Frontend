@@ -1,52 +1,97 @@
-import axios from 'axios'
+import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import type { ApiResponse } from '@/types/api';
 
-export const apiBaseUrl = import.meta.env.VITE_API_URL ?? '/api'
+const TOKEN_KEY = 'token';
+const USER_KEY = 'auth_user';
+const PUBLIC_AUTH_PATHS = ['/auth/login', '/auth/register', '/auth/refresh'];
+export const apiBaseUrl = import.meta.env.VITE_API_URL?.trim() || '/api';
 
-// One configured Axios instance every feature's own services/ imports from.
-// Feature services should never call axios directly.
-export const apiClient = axios.create({
+const apiClient = axios.create({
   baseURL: apiBaseUrl,
-  headers: { 'Content-Type': 'application/json' },
-})
+  headers: { Accept: 'application/json' },
+});
 
-export function getApiErrorMessage(error: unknown, resource: string): string {
-  if (axios.isAxiosError(error)) {
-    if (error.response?.status === 429) {
-      return `The ${resource} service is temporarily busy. Please wait a moment and try again.`
-    }
-
-    const responseMessage = (error.response?.data as { message?: unknown } | undefined)?.message
-    if (typeof responseMessage === 'string' && responseMessage.trim()) return responseMessage
-
-    if (!error.response) {
-      return `Unable to connect to the API. Make sure the backend is running at ${apiBaseUrl}.`
-    }
-
-    return error.message || `Failed to load ${resource}.`
+const getRequestPath = (url?: string): string => {
+  if (!url) return '';
+  try {
+    return new URL(url, apiClient.defaults.baseURL || window.location.origin).pathname;
+  } catch {
+    return url.split('?')[0].split('#')[0];
   }
+};
 
-  return error instanceof Error ? error.message : `Failed to load ${resource}.`
-}
+const isPublicAuthRequest = (url?: string): boolean => {
+  const path = getRequestPath(url).replace(/\/$/, '');
+  return PUBLIC_AUTH_PATHS.some((publicPath) => path === publicPath || path.endsWith(publicPath));
+};
 
-apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token')
-  if (token) config.headers.Authorization = `Bearer ${token}`
-  return config
-})
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+export const unwrapApiResponse = <T>(value: T | ApiResponse<T>): T => {
+  if (isRecord(value) && typeof value.success === 'boolean' && 'data' in value) {
+    return value.data as T;
+  }
+  return value as T;
+};
+
+apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  if (!isPublicAuthRequest(config.url) && typeof window !== 'undefined') {
+    const token = window.localStorage.getItem(TOKEN_KEY);
+    if (token) config.headers.set('Authorization', `Bearer ${token}`);
+  }
+  return config;
+});
 
 apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401 && typeof window !== 'undefined') {
-      localStorage.removeItem('token')
-      localStorage.removeItem('auth_user')
-
+  (response) => {
+    response.data = unwrapApiResponse(response.data);
+    return response;
+  },
+  (error: AxiosError) => {
+    if (
+      error.response?.status === 401 &&
+      typeof window !== 'undefined' &&
+      !isPublicAuthRequest(error.config?.url)
+    ) {
+      window.localStorage.removeItem(TOKEN_KEY);
+      window.localStorage.removeItem(USER_KEY);
       if (!window.location.pathname.startsWith('/login')) {
-        const returnTo = `${window.location.pathname}${window.location.search}`
-        window.location.assign(`/login?redirect=${encodeURIComponent(returnTo)}`)
+        const returnTo = `${window.location.pathname}${window.location.search}`;
+        window.location.assign(`/login?redirect=${encodeURIComponent(returnTo)}`);
       }
     }
-
-    return Promise.reject(error)
+    return Promise.reject(error);
   },
-)
+);
+
+const getPayloadMessage = (payload: unknown): string | undefined => {
+  if (typeof payload === 'string' && payload.trim()) return payload;
+  if (!isRecord(payload)) return undefined;
+  if (typeof payload.message === 'string' && payload.message.trim()) return payload.message;
+  if (typeof payload.error === 'string' && payload.error.trim()) return payload.error;
+  if (Array.isArray(payload.errors)) {
+    const messages = payload.errors.filter((item): item is string => typeof item === 'string');
+    if (messages.length) return messages.join(', ');
+  }
+  return undefined;
+};
+
+export const getApiErrorMessage = (error: unknown, operation = 'request'): string => {
+  if (axios.isAxiosError(error)) {
+    const responseMessage = getPayloadMessage(error.response?.data);
+    if (responseMessage) return responseMessage;
+    if (error.response?.status === 429) {
+      return `The ${operation} service is temporarily busy. Please wait a moment and try again.`;
+    }
+    if (error.code === 'ERR_CANCELED') return 'Request was cancelled.';
+    if (!error.response) {
+      return `Unable to connect to the API. Make sure the backend is running at ${apiBaseUrl}.`;
+    }
+    if (error.message) return error.message;
+  }
+  if (error instanceof Error && error.message.trim()) return error.message;
+  return `Unable to complete ${operation}. Please try again.`;
+};
+
+export { apiClient };
