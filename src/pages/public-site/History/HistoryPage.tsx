@@ -1,199 +1,49 @@
-import React, { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { FC } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'motion/react';
-import {
-  Ticket,
-  Calendar,
-  Clock,
-  MapPin,
-  ArrowLeft,
-  XCircle,
-} from 'lucide-react';
+import { Calendar, Clock, MapPin, Ticket, XCircle } from 'lucide-react';
 import { useMovieStore } from '@/store/movieStore';
-import { Badge } from '@/components/ui/Badge/Badge';
 import { formatCurrency, formatDate } from '@/utils/formatDate';
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.05 }
-  }
-};
+type TicketTab = 'upcoming' | 'history';
+const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black';
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' as const } }
-};
+function isUpcoming(showDate: string, showTime: string) {
+  const timestamp = Date.parse(`${showDate}T${showTime || '00:00'}:00`);
+  return Number.isNaN(timestamp) || timestamp >= Date.now();
+}
 
-export const HistoryPage: React.FC = () => {
+export const HistoryPage: FC = () => {
   const { bookings, cancelBooking, fetchBookings } = useMovieStore();
+  const [activeTab, setActiveTab] = useState<TicketTab>('upcoming');
 
-  useEffect(() => {
-    void fetchBookings();
-  }, [fetchBookings]);
+  useEffect(() => { void fetchBookings(); }, [fetchBookings]);
+
+  const upcoming = useMemo(() => bookings.filter((booking) => booking.status !== 'CANCELLED' && isUpcoming(booking.showDate, booking.showTime)), [bookings]);
+  const history = useMemo(() => bookings.filter((booking) => !upcoming.includes(booking)), [bookings, upcoming]);
+  const visibleBookings = activeTab === 'upcoming' ? upcoming : history;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
-        <div>
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground mb-2 transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Back to Movies
-          </Link>
-          <h1 className="text-2xl sm:text-3xl font-black text-foreground uppercase tracking-tight">
-            TICKET HISTORY
-          </h1>
-          <p className="text-xs text-muted-foreground mt-1">
-            Review your past bookings and manage your cinema experiences
-          </p>
-        </div>
+    <main className="min-h-[calc(100vh-9rem)] bg-[radial-gradient(circle_at_50%_36%,rgba(65,0,10,.58),transparent_58%),linear-gradient(180deg,#050506_0%,#170207_56%,#050506_100%)] px-4 pb-16 pt-7 text-white sm:px-6 sm:pt-10">
+      <div className="mx-auto max-w-5xl">
+        <div className="flex justify-center border-b border-white/10"><div className="flex items-center gap-7"><button type="button" onClick={() => setActiveTab('upcoming')} aria-selected={activeTab === 'upcoming'} className={`relative pb-4 text-lg font-bold transition ${activeTab === 'upcoming' ? 'text-white' : 'text-white/55 hover:text-white'} ${FOCUS}`}>Upcoming{activeTab === 'upcoming' && <span className="absolute inset-x-0 -bottom-px h-0.5 bg-red-500" />}</button><button type="button" onClick={() => setActiveTab('history')} aria-selected={activeTab === 'history'} className={`relative pb-4 text-lg font-bold transition ${activeTab === 'history' ? 'text-white' : 'text-white/55 hover:text-white'} ${FOCUS}`}>History{activeTab === 'history' && <span className="absolute inset-x-0 -bottom-px h-0.5 bg-red-500" />}</button></div></div>
 
-        <div className="flex items-center gap-2">
-          <Badge variant="primary" size="md">
-            {bookings.length} Total Bookings
-          </Badge>
-        </div>
+        {visibleBookings.length === 0 ? (
+          <section className="flex min-h-[58vh] flex-col items-center justify-center text-center">
+            <div className="relative mb-6 h-24 w-28 rotate-[-9deg] text-red-100"><Ticket className="absolute left-3 top-3 h-16 w-24 drop-shadow-[0_0_12px_rgba(229,9,20,.35)]" strokeWidth={1.1} /><span className="absolute left-1 top-12 h-px w-24 rotate-[-18deg] bg-red-400/70" /></div>
+            <h1 className="text-xl font-black sm:text-2xl">{activeTab === 'upcoming' ? 'No Upcoming Tickets' : 'No Ticket History'}</h1>
+            <p className="mt-2 max-w-sm text-sm leading-6 text-white/55">{activeTab === 'upcoming' ? 'Your upcoming movie tickets will appear here after you complete a booking.' : 'Completed and past movie bookings will appear here.'}</p>
+            <Link to="/cinemas" className={`mt-6 inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-3 text-xs font-bold hover:bg-red-500 ${FOCUS}`}>Browse showtimes <Ticket className="h-4 w-4" /></Link>
+          </section>
+        ) : (
+          <section className="mx-auto max-w-4xl space-y-5 pt-8">
+            {visibleBookings.map((booking) => {
+              const isCancelled = booking.status === 'CANCELLED';
+              return <article key={booking.id} className={`overflow-hidden rounded-2xl border border-white/15 bg-[#171013] shadow-xl shadow-black/25 ${isCancelled ? 'opacity-60' : ''}`}><div className="grid md:grid-cols-[180px_1fr_160px]"><div className="relative min-h-48 bg-black"><img src={booking.moviePoster} alt={booking.movieTitle} className="h-full w-full object-cover" /><div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" /></div><div className="space-y-4 p-5 sm:p-6"><div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-red-400">E-ticket #{booking.id}</p><h2 className="mt-1 text-xl font-black">{booking.movieTitle}</h2></div><span className="rounded-full border border-white/15 px-2.5 py-1 text-[10px] font-bold uppercase text-white/70">{booking.status}</span></div><div className="grid gap-2 text-xs text-white/60 sm:grid-cols-2"><span className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5 text-red-400" />{formatDate(booking.showDate)}</span><span className="flex items-center gap-2"><Clock className="h-3.5 w-3.5 text-red-400" />{booking.showTime}</span><span className="flex items-center gap-2 sm:col-span-2"><MapPin className="h-3.5 w-3.5 text-red-400" />{booking.cinemaName} · {booking.hallName}</span></div><div className="flex items-end justify-between border-t border-white/10 pt-3 text-xs"><span><span className="block text-white/45">Seats</span><strong>{booking.seats.join(', ') || '—'}</strong></span><span className="text-right"><span className="block text-white/45">Total</span><strong className="text-emerald-400">{formatCurrency(booking.totalAmount)}</strong></span></div></div><div className="flex flex-col items-center justify-center gap-3 border-t border-dashed border-white/15 bg-black/20 p-5 md:border-l md:border-t-0"><div className="rounded-lg bg-white p-2"><img src={booking.qrCodeUrl || 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=CINEMATIQUE'} alt="Ticket QR code" className="h-20 w-20" /></div><span className="text-[10px] uppercase tracking-wider text-white/45">Scan at entrance</span>{!isCancelled && <button type="button" onClick={() => void cancelBooking(booking.id)} className={`inline-flex items-center gap-1 text-[11px] text-red-400 hover:text-red-300 ${FOCUS}`}><XCircle className="h-3 w-3" />Cancel ticket</button>}</div></div></article>;
+            })}
+          </section>
+        )}
       </div>
-
-      {/* Tickets List */}
-      {bookings.length > 0 ? (
-        <motion.div 
-          variants={containerVariants}
-          initial="hidden"
-          animate="show"
-          className="space-y-6"
-        >
-          {bookings.map((booking) => {
-            const isCancelled = booking.status === 'CANCELLED';
-
-            return (
-              <motion.div
-                key={booking.id}
-                variants={itemVariants}
-                whileHover={isCancelled ? {} : { y: -3 }}
-                className={`relative overflow-hidden rounded-3xl bg-card border border-border transition-all ${
-                  isCancelled ? 'opacity-50 grayscale' : 'hover:border-border shadow-2xl'
-                }`}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-4">
-                  {/* Left Movie Poster */}
-                  <div className="md:col-span-1 relative min-h-[160px] md:min-h-full bg-muted dark:bg-zinc-900 overflow-hidden">
-                    <img
-                      src={booking.moviePoster}
-                      alt={booking.movieTitle}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-black/80 via-transparent to-transparent" />
-                  </div>
-
-                  {/* Middle Ticket Details */}
-                  <div className="md:col-span-2 p-6 space-y-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <span className="text-[10px] font-bold tracking-widest text-[#E50914] uppercase">
-                          E-TICKET REF: {booking.id}
-                        </span>
-                        <h3 className="text-xl font-bold text-foreground uppercase mt-0.5">
-                          {booking.movieTitle}
-                        </h3>
-                      </div>
-                      <Badge
-                        variant={
-                          isCancelled
-                            ? 'destructive'
-                            : booking.status === 'CONFIRMED'
-                            ? 'success'
-                            : 'warning'
-                        }
-                        size="sm"
-                      >
-                        {booking.status}
-                      </Badge>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-3.5 h-3.5 text-[#E50914]" />
-                        <span>{formatDate(booking.showDate)}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-3.5 h-3.5 text-[#E50914]" />
-                        <span>{booking.showTime}</span>
-                      </div>
-                      <div className="flex items-center gap-2 col-span-2">
-                        <MapPin className="w-3.5 h-3.5 text-[#E50914]" />
-                        <span className="text-foreground font-medium">
-                          {booking.cinemaName} • {booking.hallName}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-3 border-t border-border text-xs">
-                      <div>
-                        <span className="text-muted-foreground block text-[11px]">Reserved Seats</span>
-                        <span className="font-black text-foreground text-sm">
-                          {booking.seats.join(', ')}
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-muted-foreground block text-[11px]">Total Paid</span>
-                        <span className="font-black text-emerald-400 text-sm">
-                          {formatCurrency(booking.totalAmount)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right QR Code Pass section */}
-                  <div className="md:col-span-1 p-6 bg-muted/50 dark:bg-[#1a1a1e] md:border-l border-t md:border-t-0 border-dashed border-border flex flex-col items-center justify-center text-center space-y-3">
-                    <div className="p-2.5 bg-white rounded-xl shadow-lg">
-                      <img
-                        src={booking.qrCodeUrl || 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=CINEMATIQUE'}
-                        alt="Ticket QR Code"
-                        className="w-20 h-20"
-                      />
-                    </div>
-                    <span className="text-[10px] text-muted-foreground font-mono tracking-wider">
-                      SCAN AT ENTRANCE
-                    </span>
-
-                    {!isCancelled && (
-                      <div className="flex items-center gap-2 pt-1">
-                        <button
-                          onClick={() => cancelBooking(booking.id)}
-                          className="text-[11px] text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 transition-colors flex items-center gap-1"
-                        >
-                          <XCircle className="w-3 h-3" />
-                          Cancel Pass
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </motion.div>
-      ) : (
-        <div className="p-12 text-center bg-card rounded-3xl border border-border space-y-4">
-          <Ticket className="w-12 h-12 text-muted-foreground mx-auto" />
-          <h3 className="text-lg font-bold text-foreground">No Tickets Found</h3>
-          <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-            You haven't booked any movie tickets yet. Start exploring our cinema catalog!
-          </p>
-          <Link
-            to="/#movies"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#E50914] text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-[#E50914]/30"
-          >
-            Browse Movies
-          </Link>
-        </div>
-      )}
-    </div>
+    </main>
   );
 };
