@@ -93,8 +93,8 @@ export function OffersPage() {
       <section className="relative isolate overflow-hidden border-b border-white/10 bg-[#0a0809]">
         {heroImage && <div aria-hidden="true" className="absolute inset-0 -z-10 scale-110 bg-cover bg-center opacity-35 blur-2xl" style={{ backgroundImage: `url(${heroImage})` }} />}
         <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_18%,rgba(229,9,20,.3),transparent_48%),linear-gradient(180deg,rgba(8,6,7,.25),#050506_92%)]" />
-        <div className="mx-auto max-w-5xl px-4 pb-12 pt-8 sm:px-6 sm:pt-12">
-          <div className="relative mx-auto aspect-[2.45/1] max-w-[806px] overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-br from-red-950 via-[#1b060b] to-black shadow-2xl shadow-black/50">
+        <div className={isFoodPage ? 'container-main pb-12 pt-8 sm:pt-12' : 'mx-auto max-w-5xl px-4 pb-12 pt-8 sm:px-6 sm:pt-12'}>
+          <div className={isFoodPage ? 'relative aspect-[16/9] overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-br from-red-950 via-[#1b060b] to-black shadow-2xl shadow-black/50 sm:aspect-[16/6]' : 'relative mx-auto aspect-[2.45/1] max-w-[806px] overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-br from-red-950 via-[#1b060b] to-black shadow-2xl shadow-black/50'}>
             {heroImage && <img src={heroImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-75" />}
             <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/35 to-transparent" />
             <div className="relative flex h-full max-w-md flex-col justify-center px-7 py-8 sm:px-12">
