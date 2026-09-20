@@ -63,6 +63,7 @@ import { PaymentGatewayPage } from '@/pages/public-site/Payment/PaymentGatewayPa
 import { OrderConfirmationPage } from '@/pages/public-site/Payment/OrderConfirmationPage';
 import { useAuthStore } from '@/store/authStore';
 import { canAccessAdmin } from '@/lib/authRole';
+import Promotion from '@/pages/public-site/promotion/Promotion';
 
 const CustomerOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isAuthenticated } = useAuthStore();
@@ -92,9 +93,9 @@ export const AppRoutes: React.FC = () => {
         <Route path="/booking/:showtimeId" element={<BookingPage />} />
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/cinemas" element={<CinemasPage />} />
-        <Route path="/promotion" element={<OffersPage />} />
+        <Route path="/promotion" element={<Promotion />} />
         <Route path="/fnb" element={<OffersPage />} />
-        <Route path="/offers" element={<Navigate to="/promotion" replace />} />
+        {/* <Route path="/offers" element={<Navigate to="/promotion" replace />} /> */}
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/premiere" element={<PremierePage />} />
         <Route path="/membership" element={<PremierePage />} />
