@@ -183,7 +183,7 @@ export const HomePage: React.FC = () => {
                       type="button"
                       onClick={() => setSelectedMonth(month.id)}
                       aria-pressed={selectedMonth === month.id}
-                      className={`h-20 min-w-[140px] snap-start rounded-xl border bg-black/60 px-4 py-2.5 text-base font-black transition-colors duration-200 hover:border-white/50 ${selectedMonth === month.id ? 'border-red-600 bg-red-950/30 text-white shadow-[0_0_20px_rgba(225,29,46,0.25)]' : 'border-white/20 text-white/75'}`}
+                      className={`h-20 min-w-[140px] snap-start rounded-xl border bg-black/60 px-4 py-2.5 text-lg font-black transition-colors duration-200 hover:border-white/50 ${selectedMonth === month.id ? 'border-red-600 bg-red-950/30 text-white shadow-[0_0_20px_rgba(225,29,46,0.25)]' : 'border-white/20 text-white/75'}`}
                     >
                       {month.label}
                     </button>
