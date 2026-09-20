@@ -100,6 +100,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="/membership" element={<PremierePage />} />
         <Route path="/premiere-circle" element={<PremierePage />} />
         <Route path="/coming-soon" element={<PremierePage />} />
+        <Route path="/payment/:bookingId" element={<PaymentGatewayPage />} />
         <Route path="/payment-gateway" element={<PaymentGatewayPage />} />
         <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
       </Route>

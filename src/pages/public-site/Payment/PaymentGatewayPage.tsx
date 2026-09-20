@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { AlertTriangle, ArrowLeft, Banknote, CheckCircle2, Clock3, Download, LoaderCircle, LockKeyhole, QrCode, RefreshCw, Ticket } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
@@ -15,6 +15,7 @@ const focus = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:rin
 
 export function PaymentGatewayPage() {
   const location = useLocation();
+  const { bookingId: routeBookingId } = useParams<{ bookingId: string }>();
   const user = useAuthStore((store) => store.user);
   if (!user) return (
     <main className="mx-auto max-w-xl space-y-5 px-6 py-20 text-center">
@@ -22,7 +23,14 @@ export function PaymentGatewayPage() {
       <Link to="/login" className={`inline-block rounded-xl bg-primary px-6 py-3 text-primary-foreground ${focus}`}>Sign in</Link>
     </main>
   );
-  return <GatewayLoader key={`${location.key}:${user.id}`} state={(location.state ?? {}) as PaymentGatewayState} customerId={user.id} />;
+  const routerState = (location.state ?? {}) as PaymentGatewayState;
+  const state: PaymentGatewayState = {
+    ...routerState,
+    // The URL is the recovery source after a browser refresh; router state is
+    // still used for the initial checkout so existing links keep working.
+    bookingId: routerState.bookingId ?? routeBookingId,
+  };
+  return <GatewayLoader key={`${location.key}:${user.id}:${state.bookingId ?? ''}`} state={state} customerId={user.id} />;
 }
 
 function GatewayLoader({ state, customerId }: { state: PaymentGatewayState; customerId: number }) {

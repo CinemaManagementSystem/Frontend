@@ -409,7 +409,7 @@ const BookingFlow: React.FC = () => {
       if (booking.id) useCheckoutCartStore.getState().setCheckout(booking.id, selectedSnackItems.map((snack) => ({
         productId: Number(snack.id), quantity: snackQuantities[snack.id] ?? 0, unitPrice: snack.price,
       })));
-      navigate('/payment-gateway', { state: {
+      navigate(`/payment/${booking.id}`, { state: {
         bookingId: booking.id, orderId, totalAmount: amount, paymentMethod: 'KHQR',
         formData: { name: billingName, email: billingEmail },
       } });
