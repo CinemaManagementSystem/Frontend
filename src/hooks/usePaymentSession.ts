@@ -22,6 +22,7 @@ export function usePaymentSession(session: GatewaySession) {
   const manualCount = useRef(session.manualChecks);
   const currentPayment = useRef(session.payment);
   const pending = useRef<Promise<Payment | null> | null>(null);
+  const manualRequestInFlight = useRef(false);
   const finalStarted = useRef(false);
   const fired = useRef(new Set<number>());
 
@@ -77,7 +78,9 @@ export function usePaymentSession(session: GatewaySession) {
     alive.current = true;
     if (phaseRef.current !== 'waiting') return () => { alive.current = false; };
     const timers: number[] = [];
-    const checks = [...SCHEDULED_CHECK_SECONDS, 250, 260, 270, 280, 290];
+    // Keep automatic checks at the documented milestones. The final check
+    // below is the only request made at the hard expiry deadline.
+    const checks = [...SCHEDULED_CHECK_SECONDS];
     for (const second of checks) {
       const at = session.startedAt + second * 1000;
       if (at < Date.now() || at >= session.expiresAt || fired.current.has(second)) continue;
@@ -94,8 +97,9 @@ export function usePaymentSession(session: GatewaySession) {
       transition('finalizing');
       const result = await verify('final');
       if (!alive.current || (phaseRef.current as Phase) !== 'finalizing') return;
-      transition(result ? 'expired' : 'unverified');
-      setMessage(result ? 'Time is up. Payment has not been confirmed. Check your booking history before paying again.'
+      const finalExpired = result?.status === 'EXPIRED' || result?.status === 'FAILED';
+      transition(finalExpired ? 'expired' : 'unverified');
+      setMessage(finalExpired ? 'Time is up. Payment has not been confirmed. Check your booking history before paying again.'
         : 'The QR is closed, but we could not verify the payment. Check your booking history before paying again.');
     }, Math.max(0, session.expiresAt - Date.now())));
     const tick = window.setInterval(() => {
@@ -109,11 +113,19 @@ export function usePaymentSession(session: GatewaySession) {
   }, [session, transition, verify]);
 
   const manualCheck = useCallback(async () => {
-    if (manualCount.current >= MAX_MANUAL_CHECKS || pending.current || phaseRef.current !== 'waiting') return;
+    if (manualRequestInFlight.current || manualCount.current >= MAX_MANUAL_CHECKS
+      || pending.current || phaseRef.current !== 'waiting') return;
+    manualRequestInFlight.current = true;
     manualCount.current += 1;
     setManualChecks(manualCount.current);
     saveGatewaySession({ ...session, payment: currentPayment.current, manualChecks: manualCount.current });
-    await verify('manual');
+    try {
+      // One click owns one request. A scheduled check that is already running
+      // is rejected by the pending-request guard above.
+      await verify('manual');
+    } finally {
+      manualRequestInFlight.current = false;
+    }
   }, [session, verify]);
 
   const switchToCash = useCallback(async () => {

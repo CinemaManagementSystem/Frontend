@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCinemaStore } from '@/store/cinemaStore';
 import {
-  Film,
   MapPin,
   Heart,
   Send,
@@ -12,6 +11,7 @@ import {
   AtSign,
   Play,
 } from 'lucide-react';
+import { CinematiqueLogo } from '@/components/common/CinematiqueLogo';
 
 const SOCIAL_LINKS = [
   { name: 'Facebook', icon: Globe, href: '#' },
@@ -91,12 +91,7 @@ export const Footer: React.FC = () => {
           {/* Brand */}
           <div className="space-y-4 lg:col-span-2">
             <Link to="/" className="flex items-center gap-2.5">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E50914] shadow-lg shadow-[#E50914]/30">
-                <Film className="h-5 w-5 text-white" />
-              </span>
-              <span className="text-xl font-black uppercase tracking-wider text-foreground">
-                CINEMA<span className="text-[#E50914]">TIQUE</span>
-              </span>
+              <CinematiqueLogo size="md" />
             </Link>
             <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
               Experience the pinnacle of cinema. IMAX, 3D Laser, and Dolby Atmos audio with premium

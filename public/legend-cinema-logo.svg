@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 360" role="img" aria-labelledby="title desc">
+  <title id="title">Legend Cinema</title>
+  <desc id="desc">Legend Cinema wordmark in white and red</desc>
+  <g fill="#fff" font-family="Arial Black, Arial, sans-serif" font-weight="900" text-anchor="middle">
+    <text x="500" y="158" font-size="145" letter-spacing="8">LEGEND</text>
+  </g>
+  <g fill="#c9151e" font-family="Arial Black, Arial, sans-serif" font-weight="900" text-anchor="middle">
+    <text x="500" y="278" font-size="94" letter-spacing="12">CINEMA</text>
+  </g>
+  <path fill="#fff" d="M85 252h158l-50 18H85zm830 0H757l50 18h108z" />
+</svg>
