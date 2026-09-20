@@ -4,8 +4,9 @@ import { Link } from 'react-router-dom';
 
 const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black';
 
-const PROMOTIONS = [
+export const PROMOTIONS = [
   {
+    id: 'movie-night-favourites',
     title: 'Movie night favourites',
     description: 'Pair your tickets with popcorn, drinks, and a combo made for sharing.',
     image: 'https://images.unsplash.com/photo-1585647347483-22b66260dfff?auto=format&fit=crop&w=900&q=85',
@@ -14,6 +15,7 @@ const PROMOTIONS = [
     tone: 'from-fuchsia-950 via-red-900 to-black',
   },
   {
+    id: 'grab-movie-break',
     title: 'Grab your movie break',
     description: 'Take the big-screen feeling with you with a quick snack stop before the show.',
     image: 'https://images.unsplash.com/photo-1572177191856-3cde618dee1f?auto=format&fit=crop&w=900&q=85',
@@ -22,6 +24,7 @@ const PROMOTIONS = [
     tone: 'from-emerald-950 via-green-800 to-black',
   },
   {
+    id: 'member-only-moments',
     title: 'Member-only moments',
     description: 'Collect rewards and unlock more ways to make every visit feel special.',
     image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=900&q=85',
@@ -30,6 +33,7 @@ const PROMOTIONS = [
     tone: 'from-blue-950 via-indigo-900 to-black',
   },
   {
+    id: 'better-snack-break',
     title: 'A better snack break',
     description: 'Refresh your seat with a cold drink and something warm from the counter.',
     image: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=900&q=85',
@@ -38,6 +42,7 @@ const PROMOTIONS = [
     tone: 'from-pink-950 via-rose-800 to-black',
   },
   {
+    id: 'september-cinema-picks',
     title: 'September cinema picks',
     description: 'Find your next screening and plan the complete cinema experience.',
     image: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=900&q=85',
@@ -46,6 +51,7 @@ const PROMOTIONS = [
     tone: 'from-red-950 via-orange-900 to-black',
   },
   {
+    id: 'bring-the-whole-crew',
     title: 'Bring the whole crew',
     description: 'Choose a cinema, pick your seats, and make the next group outing easy.',
     image: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=900&q=85',
@@ -90,7 +96,7 @@ export default function Promotion() {
 
       <main className="mx-auto max-w-5xl px-4 sm:px-6">
         <div className="flex flex-col justify-between gap-3 pt-10 sm:flex-row sm:items-end"><div><p className="text-[10px] font-bold uppercase tracking-[.22em] text-red-500">Make more of your visit</p><h2 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">Promotions</h2></div><Link to="/cinemas" className={`inline-flex items-center gap-2 text-xs font-bold text-red-400 ${FOCUS}`}><MapPin className="h-4 w-4" /> Find a cinema</Link></div>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{PROMOTIONS.map((promotion) => <article key={promotion.title} className="group overflow-hidden rounded-xl border border-white/15 bg-[#171316] shadow-lg shadow-black/25 transition hover:-translate-y-1 hover:border-red-500/60"><div className="relative aspect-[1.6/1] overflow-hidden bg-black"><img src={promotion.image} alt="" loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" /><div className={`absolute inset-0 bg-gradient-to-t ${promotion.tone} opacity-45 mix-blend-multiply`} /><div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/85 to-transparent" /></div><div className="p-4"><div className="flex items-start gap-2"><Gift className="mt-0.5 h-4 w-4 shrink-0 text-red-400" /><div><h3 className="text-sm font-bold leading-5">{promotion.title}</h3><p className="mt-1.5 text-xs leading-5 text-white/55">{promotion.description}</p></div></div><Link to={promotion.to} className={`mt-4 inline-flex items-center gap-2 text-xs font-bold text-red-400 ${FOCUS}`}>{promotion.action} <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" /></Link></div></article>)}</div>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{PROMOTIONS.map((promotion) => <Link key={promotion.id} to={`/promotion/${promotion.id}`} className={`group block overflow-hidden rounded-xl border border-white/15 bg-[#171316] shadow-lg shadow-black/25 transition hover:-translate-y-1 hover:border-red-500/60 ${FOCUS}`}><article><div className="relative aspect-[1.6/1] overflow-hidden bg-black"><img src={promotion.image} alt="" loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" /><div className={`absolute inset-0 bg-gradient-to-t ${promotion.tone} opacity-45 mix-blend-multiply`} /><div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/85 to-transparent" /></div><div className="p-4"><div className="flex items-start gap-2"><Gift className="mt-0.5 h-4 w-4 shrink-0 text-red-400" /><div><h3 className="text-sm font-bold leading-5">{promotion.title}</h3><p className="mt-1.5 text-xs leading-5 text-white/55">{promotion.description}</p></div></div><span className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-red-400">View promotion <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" /></span></div></article></Link>)}</div>
         <section className="mt-12 flex flex-col justify-between gap-5 rounded-2xl border border-red-500/20 bg-gradient-to-r from-red-950/60 to-[#171316] p-6 sm:flex-row sm:items-center sm:p-8"><div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-red-300">Ready for your next visit?</p><h2 className="mt-2 text-2xl font-black">Choose a movie and make it yours.</h2><p className="mt-2 max-w-lg text-sm leading-6 text-white/60">Find a cinema, select your seats, and add snacks before checkout.</p></div><Link to="/cinemas" className={`inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-3 text-sm font-bold hover:bg-red-500 ${FOCUS}`}><Ticket className="h-4 w-4" /> View showtimes</Link></section>
       </main>
     </div>
