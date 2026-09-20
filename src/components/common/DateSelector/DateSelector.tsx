@@ -15,12 +15,18 @@ interface DateSelectorProps {
   dateList: DateItem[];
   selectedDate: string;
   onSelectDate: (dateStr: string) => void;
+  className?: string;
+  showLabel?: boolean;
+  variant?: 'default' | 'home';
 }
 
 export const DateSelector: React.FC<DateSelectorProps> = ({
   dateList,
   selectedDate,
   onSelectDate,
+  className = '',
+  showLabel = true,
+  variant = 'default',
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const selectedButtonRef = useRef<HTMLButtonElement>(null);
@@ -42,18 +48,23 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
   };
 
   return (
-    <section className="border-b border-white/10 bg-[#0a0a0a] py-3.5" aria-label="Screening dates">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+    <section className={cn(
+      variant === 'home' ? 'bg-transparent py-0' : 'bg-card border-b border-white/10 py-3.5',
+      className,
+    )} aria-label="Screening dates">
+      <div className={variant === 'home' ? 'w-full' : 'container-main'}>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 shrink-0 border-r border-white/10 pr-4 text-xs font-bold text-white/50 uppercase tracking-widest hidden sm:flex">
-            <Calendar className="w-4 h-4 text-[var(--primary)]" />
-            <span>Select Date</span>
-          </div>
+          {showLabel && (
+            <div className="flex items-center gap-2 shrink-0 border-r border-white/10 pr-4 text-xs font-bold text-white/50 uppercase tracking-widest hidden sm:flex">
+              <Calendar className="w-4 h-4 text-[var(--primary)]" />
+              <span>Select Date</span>
+            </div>
+          )}
 
           <button
             type="button"
             onClick={() => handleScroll('left')}
-            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+            className={cn('shrink-0 rounded-xl bg-white/5 p-2 text-white/50 transition-all hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]', variant === 'home' && 'hidden')}
             aria-label="Previous dates"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -61,7 +72,10 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
 
           <div
             ref={scrollContainerRef}
-            className="no-scrollbar relative flex items-center gap-2.5 overflow-x-auto py-1 flex-1"
+            className={cn(
+              'no-scrollbar relative flex flex-1 items-center overflow-x-auto py-1',
+              variant === 'home' ? 'snap-x snap-mandatory gap-6 py-0' : 'gap-2.5',
+            )}
           >
             {dateList.map((d) => {
               const active = selectedDate === d.dateStr;
@@ -74,21 +88,27 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
                   aria-pressed={active}
                   aria-label={`${d.isToday ? 'Today, ' : ''}${d.dayName} ${d.monthName} ${d.dayNum}${d.hasShowtimes ? ', screenings available' : ', no upcoming screenings'}`}
                   className={cn(
-                    'date-card',
-                    active ? 'date-card-selected' : 'date-card-unselected'
+                    variant === 'home'
+                      ? 'snap-start flex min-h-[82px] min-w-[164px] shrink-0 flex-col items-center justify-center gap-[2px] rounded-lg border border-white/20 bg-black/60 px-4 py-2.5 transition duration-200 hover:border-white/50'
+                      : 'date-card min-h-[76px] min-w-[112px] sm:min-h-[92px] sm:min-w-[148px]',
+                    variant === 'home'
+                      ? active
+                        ? 'border-red-600 shadow-[0_0_20px_rgba(225,29,46,0.25)] text-white'
+                        : 'text-white/70'
+                      : active ? 'date-card-selected' : 'date-card-unselected'
                   )}
                 >
-                  <span className={cn('text-[10px] font-black uppercase tracking-widest', active ? 'text-white/90' : 'text-white/50')}>
+                  <span className="date-selector-day text-sm font-medium leading-none text-[#AAA4A7]">
                     {d.isToday ? 'Today' : d.dayName}
                   </span>
-                  <span className="text-base sm:text-lg font-black my-0.5 tracking-tight leading-none">
+                  <span className="date-selector-number text-[22px] font-semibold leading-none text-[#F5F5F5]">
                     {d.dayNum}
                   </span>
-                  <span className={cn('text-[9px] uppercase font-black tracking-wider', active ? 'text-white/80' : 'text-white/40')}>
+                  <span className="date-selector-month text-sm font-normal leading-none text-[#AAA4A7]">
                     {d.monthName}
                   </span>
 
-                  {d.hasShowtimes && (
+                  {d.hasShowtimes && variant !== 'home' && (
                     <span
                       className={cn(
                         'absolute bottom-1 h-1.5 w-1.5 rounded-full',
@@ -104,7 +124,7 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
           <button
             type="button"
             onClick={() => handleScroll('right')}
-            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+            className={cn('shrink-0 rounded-xl bg-white/5 p-2 text-white/50 transition-all hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]', variant === 'home' && 'hidden')}
             aria-label="Next dates"
           >
             <ChevronRight className="w-4 h-4" />

@@ -3,13 +3,13 @@
 @source "../.flowbite-react/class-list.json";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
+@import "@fontsource-variable/mulish";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
     --font-heading: var(--font-sans);
-    --font-sans: 'Geist Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-sans: 'Mulish Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -52,33 +52,37 @@
 
 :root,
 .dark {
-    --background: #0f0f10;
+    --background: #050505;
     --foreground: #ffffff;
-    --card: #141416;
+    --card: #0a0a0a;
     --card-foreground: #ffffff;
-    --popover: #1a1a1e;
+    --popover: #0a0a0a;
     --popover-foreground: #ffffff;
-    --primary: #E50914;
+    --primary: #e11d2e;
     --primary-foreground: #ffffff;
-    --secondary: #222226;
+    --secondary: #141414;
     --secondary-foreground: #ffffff;
-    --muted: #1c1c20;
-    --muted-foreground: #9ca3af;
-    --accent: #E50914;
+    --muted: #101010;
+    --muted-foreground: #a3a3a3;
+    --accent: #e11d2e;
     --accent-foreground: #ffffff;
     --destructive: #ef4444;
     --border: rgba(255, 255, 255, 0.1);
     --input: rgba(255, 255, 255, 0.12);
-    --ring: #E50914;
+    --ring: #e11d2e;
     --radius: 0.75rem;
-    --sidebar: #101012;
-    --sidebar-foreground: #f3f4f6;
-    --sidebar-primary: #E50914;
+    --sidebar: #0a0a0a;
+    --sidebar-foreground: #f5f5f5;
+    --sidebar-primary: #e11d2e;
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #1e1e24;
+    --sidebar-accent: #181818;
     --sidebar-accent-foreground: #ffffff;
     --sidebar-border: rgba(255, 255, 255, 0.08);
-    --sidebar-ring: #E50914;
+    --sidebar-ring: #e11d2e;
+    --surface-2: #16161a;
+    --surface-3: #1f1f24;
+    --glow-red: rgba(150, 10, 25, 0.25);
+    --shadow-soft: 0 18px 50px rgba(0, 0, 0, 0.24);
 }
 
 /* ---- Light Theme Variables ---- */
@@ -90,26 +94,30 @@
     --card-foreground: #0f172a;
     --popover: #ffffff;
     --popover-foreground: #0f172a;
-    --primary: #E50914;
+    --primary: #e11d2e;
     --primary-foreground: #ffffff;
     --secondary: #e2e8f0;
     --secondary-foreground: #0f172a;
     --muted: #f1f5f9;
     --muted-foreground: #64748b;
-    --accent: #E50914;
+    --accent: #e11d2e;
     --accent-foreground: #ffffff;
     --destructive: #dc2626;
     --border: rgba(0, 0, 0, 0.12);
     --input: rgba(0, 0, 0, 0.14);
-    --ring: #E50914;
+    --ring: #e11d2e;
     --sidebar: #ffffff;
     --sidebar-foreground: #1e293b;
-    --sidebar-primary: #E50914;
+    --sidebar-primary: #e11d2e;
     --sidebar-primary-foreground: #ffffff;
     --sidebar-accent: #f1f5f9;
     --sidebar-accent-foreground: #1e293b;
     --sidebar-border: rgba(0, 0, 0, 0.1);
-    --sidebar-ring: #E50914;
+    --sidebar-ring: #e11d2e;
+    --surface-2: #eef0f3;
+    --surface-3: #e2e5e9;
+    --glow-red: rgba(225, 29, 46, 0.12);
+    --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.12);
 }
 
 @layer base {
@@ -121,12 +129,35 @@
     color: var(--foreground);
     font-family: var(--font-sans);
     overflow-x: hidden;
+    text-rendering: optimizeLegibility;
   }
+
+  button, a, input, select, textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+}
+
+/* Global background with radial gradients */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: 
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(120, 10, 20, 0.18), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(120, 10, 20, 0.1), transparent 60%),
+    var(--background);
+  pointer-events: none;
 }
 
 /* Glassmorphism styling */
 .glass-panel {
-  background-color: rgba(26, 26, 26, 0.75);
+  background-color: rgba(10, 10, 10, 0.8);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -138,112 +169,30 @@ html.light .glass-panel {
 }
 
 .glass-nav {
-  background-color: rgba(18, 18, 20, 0.85);
+  background-color: rgba(5, 5, 5, 0.9);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 html.light .glass-nav {
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: rgba(255, 255, 255, 0.95);
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 /* Selection color */
-html.light ::selection {
-    background-color: rgba(229, 9, 20, 0.2);
+::selection {
+    background-color: rgba(225, 29, 46, 0.3);
     color: var(--foreground);
 }
 
-/* 7. Modals in light mode */
-html.light [class*="shadow-2xl"][class*="rounded-2xl"] {
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
-}
-
-/* 8. Placeholder text readability */
-html.light .placeholder\:text-muted-foreground::placeholder,
-html.light [placeholder]::placeholder {
-    color: var(--muted-foreground) !important;
-}
-
-/* 9. Table row hover in light mode */
-html.light .hover\:bg-white\/10:hover {
-    background-color: rgba(0, 0, 0, 0.04) !important;
-}
-
-/* 10. Accent color contrast in light mode.
-   400-level colors are too bright on white — darken to 600/700 shades.
-   Elements sitting on intentionally dark surfaces are rescued below. */
-html.light .text-emerald-400 {
-    color: #047857 !important;
-}
-html.light .text-amber-400 {
-    color: #b45309 !important;
-}
-html.light .text-yellow-400 {
-    color: #a16207 !important;
-}
-html.light .text-cyan-400 {
-    color: #0e7490 !important;
-}
-html.light .text-rose-400 {
-    color: #be123c !important;
-}
-html.light .text-emerald-500 {
-    color: #059669 !important;
-}
-html.light .text-amber-500 {
-    color: #d97706 !important;
-}
-
-/* Keep accent text bright on intentionally dark chips/heroes */
-html.light .bg-black\/40 .text-amber-400,
-html.light .bg-black\/50 .text-amber-400,
-html.light .bg-black\/60 .text-amber-400,
-html.light .bg-black\/60 .text-emerald-400,
-html.light .bg-black .text-amber-400,
-html.light .bg-black .text-emerald-400 {
-    color: revert !important;
-}
-
-/* 11. Light gray dividers / text that were mapped for dark backgrounds */
-html.light .divide-white\/5 > :not([hidden]) ~ :not([hidden]) {
-    border-color: rgba(0, 0, 0, 0.1) !important;
-}
-html.light .text-gray-200,
-html.light .text-gray-300 {
-    color: var(--foreground) !important;
-}
-html.light .bg-white\/\[0\.02\],
-html.light .bg-white\/\[0\.03\] {
-    background-color: rgba(0, 0, 0, 0.03) !important;
-}
-
-/* Movie Curve Screen Graphic */
-.screen-curve {
-  position: relative;
-  height: 24px;
-  border-top: 4px solid #E50914;
-  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
-  box-shadow: 0 0 18px rgba(229, 9, 20, 0.35);
-}
-
-.screen-curve::after {
-  content: '';
-  position: absolute;
-  inset: 6px -12px -20px;
-  background: radial-gradient(40% 100% at 50% 0%, rgba(229, 9, 20, 0.26), transparent 72%);
-  filter: blur(8px);
-  pointer-events: none;
-}
-
-/* Occupied seat pattern */
-.seat-occupied {
-  background-image: repeating-linear-gradient(
-    -45deg,
-    transparent 0 3px,
-    rgba(128, 128, 128, 0.32) 3px 4px
-  );
+/* Focus visible */
+.focus-visible-ring:focus-visible {
+  outline: none;
+  ring: 2px;
+  ring-color: var(--ring);
+  ring-offset: 2px;
+  ring-offset-color: var(--background);
 }
 
 /* Hide scrollbars while keeping scroll behavior */
@@ -253,4 +202,376 @@ html.light .bg-white\/\[0\.03\] {
 
 .scrollbar-none::-webkit-scrollbar {
   display: none;
+}
+
+/* Skeleton loader */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 25%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.05) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+html.light .skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.06) 25%,
+    rgba(0, 0, 0, 0.12) 50%,
+    rgba(0, 0, 0, 0.06) 75%
+  );
+  background-size: 200% 100%;
+}
+
+/* Transitions */
+.transition-smooth {
+  transition: all 200ms ease-out;
+}
+
+.transition-smooth-300 {
+  transition: all 300ms ease-out;
+}
+
+/* Red glow effects */
+.red-glow {
+  box-shadow: 0 0 20px rgba(225, 29, 46, 0.3);
+}
+
+.red-glow-subtle {
+  box-shadow: 0 0 10px rgba(225, 29, 46, 0.15);
+}
+
+/* Gradient text */
+.gradient-text-red {
+  background: linear-gradient(135deg, #e11d2e, #ff4d57);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Pill button base */
+@utility btn-pill {
+  @apply rounded-full px-4 py-2 text-sm font-bold transition-all duration-200;
+}
+
+.btn-pill-primary {
+  @apply btn-pill bg-[var(--primary)] text-white hover:bg-[#ff2d3e] hover:shadow-[0_4px_20px_rgba(225,29,46,0.4)];
+}
+
+.btn-pill-outline {
+  @apply btn-pill border border-white/20 bg-transparent text-white hover:border-[var(--primary)] hover:text-[var(--primary)] hover:bg-[var(--primary)]/10;
+}
+
+.btn-pill-ghost {
+  @apply btn-pill bg-transparent text-white/70 hover:bg-white/10 hover:text-white;
+}
+
+/* Time slot pill */
+.time-slot-pill {
+  @apply px-6 py-2.5 rounded-full border border-white/40 text-sm font-medium text-white/90 
+         hover:border-[var(--primary)] hover:text-[var(--primary)] hover:bg-[var(--primary)]/10 
+         transition-all duration-200 cursor-pointer
+         disabled:opacity-40 disabled:cursor-not-allowed disabled:line-through;
+}
+
+/* Date card */
+.date-card {
+  @apply relative flex min-w-[72px] sm:min-w-[80px] flex-col items-center justify-center rounded-xl border px-3 py-2.5 
+         transition-all duration-200 cursor-pointer
+         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)];
+}
+
+.date-card-selected {
+  @apply border-[var(--primary)] bg-[var(--primary)] font-bold text-white shadow-lg shadow-[var(--primary)]/30;
+}
+
+.date-card-unselected {
+  @apply border-white/10 bg-white/[0.03] text-white/50 hover:border-white/25 hover:text-white hover:bg-white/[0.06];
+}
+
+/* Movie card */
+.movie-card {
+  @apply relative flex flex-col min-w-0;
+}
+
+.movie-card-poster {
+  @apply aspect-[2/3] w-full rounded-lg object-cover transition-transform duration-500 
+         group-hover:scale-[1.03] group-hover:ring-2 group-hover:ring-[var(--primary)]/50;
+}
+
+.movie-card-title {
+  @apply mt-3 line-clamp-2 text-sm font-bold text-white;
+}
+
+.movie-card-date {
+  @apply text-xs font-medium text-white/50;
+}
+
+.movie-card-rating {
+  @apply inline-flex items-center gap-1 rounded-full border border-white/30 px-2 py-0.5 text-[10px] font-bold text-white/80;
+}
+
+/* Section tabs */
+.section-tab {
+  @apply flex items-center gap-2 whitespace-nowrap px-0 py-3 text-2xl font-semibold leading-none tracking-[-0.02em] transition-colors md:text-3xl lg:text-[34px];
+}
+
+.section-tab-active {
+  @apply text-white;
+}
+
+.section-tab-inactive {
+  @apply text-[#918C8E] hover:text-white/80;
+}
+
+.section-tab-divider {
+  @apply h-9 w-px bg-white/20;
+}
+
+/* Typography refinement for the dedicated movie listing page. */
+.movie-listing-page .date-card {
+  @apply min-h-[82px] min-w-[155px] gap-[2px] rounded-lg border-white/25 bg-black/20 px-4 py-2.5;
+}
+
+.movie-listing-page .date-card-selected {
+  @apply border-[#FF2028] bg-black/40 font-normal text-[#F5F5F5] shadow-[0_0_20px_rgba(255,32,40,0.18)];
+}
+
+.movie-listing-page .date-card-unselected {
+  @apply border-white/25 bg-black/20 text-[#AAA4A7] hover:border-white/40 hover:bg-black/30 hover:text-[#F5F5F5];
+}
+
+.movie-listing-page .date-selector-day,
+.movie-listing-page .date-selector-month {
+  @apply text-sm font-medium leading-none text-[#AAA4A7];
+}
+
+.movie-listing-page .date-selector-number {
+  @apply text-[22px] font-semibold leading-none text-[#F5F5F5];
+}
+
+.movie-listing-page .movie-card-title {
+  @apply mt-2 text-base font-medium leading-snug text-[#F5F5F5] md:text-[17px];
+}
+
+.movie-listing-page .movie-card-date {
+  @apply text-[15px] font-normal text-[#AAA4A7] md:text-base;
+}
+
+.movie-listing-page .movie-card-rating {
+  @apply px-1.5 py-0.5 text-[10px] font-medium leading-none text-[#B4AFB1];
+}
+
+/* Cinema accordion */
+.cinema-accordion-header {
+  @apply flex items-center justify-between w-full px-4 py-4 text-left font-bold text-white hover:bg-white/[0.03] transition-colors;
+}
+
+.cinema-accordion-chevron {
+  @apply h-5 w-5 text-white/50 transition-transform duration-200;
+}
+
+.cinema-accordion-chevron-open {
+  @apply rotate-180;
+}
+
+/* Format badge */
+@utility format-badge {
+  @apply inline-flex items-center justify-center min-w-[56px] h-7 rounded-lg bg-white/5 border border-white/10 
+         text-[11px] font-black uppercase tracking-wider text-white/80;
+}
+
+.format-badge-2d {
+  @apply format-badge bg-red-900/30 border-red-500/30 text-red-400;
+}
+
+.format-badge-3d {
+  @apply format-badge bg-blue-900/30 border-blue-500/30 text-blue-400;
+}
+
+.format-badge-imax {
+  @apply format-badge bg-purple-900/30 border-purple-500/30 text-purple-400;
+}
+
+.format-badge-dolby {
+  @apply format-badge bg-amber-900/30 border-amber-500/30 text-amber-400;
+}
+
+/* Language tag */
+.lang-tag {
+  @apply inline-flex items-center justify-center h-7 rounded-lg bg-white/5 border border-white/10 
+         px-3 text-[10px] font-black uppercase tracking-wider text-white/70;
+}
+
+/* Hall type label */
+.hall-label {
+  @apply text-[10px] font-bold uppercase tracking-wider text-white/50;
+}
+
+/* Hero banner */
+.hero-banner {
+  @apply relative overflow-hidden rounded-2xl;
+}
+
+.hero-banner-bg {
+  @apply absolute inset-0 h-full w-full object-cover;
+}
+
+.hero-banner-overlay {
+  @apply absolute inset-0 bg-gradient-to-r from-black/95 via-black/70 to-black/10;
+}
+
+.hero-banner-content {
+  @apply relative z-10 flex min-h-[380px] items-end p-6 sm:p-10 lg:p-14;
+}
+
+/* Carousel pagination */
+.carousel-dot {
+  @apply h-1.5 rounded-full transition-all duration-300;
+}
+
+.carousel-dot-active {
+  @apply w-8 bg-[var(--primary)];
+}
+
+.carousel-dot-inactive {
+  @apply w-2 bg-white/30 hover:bg-white/60;
+}
+
+/* Blurred page background from hero */
+.page-bg-blur {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  background-size: cover;
+  background-position: center;
+  filter: blur(72px) brightness(0.5) saturate(1.15);
+  opacity: 0.72;
+  pointer-events: none;
+}
+
+/* Location dropdown */
+.location-dropdown {
+  @apply absolute right-0 top-full z-50 mt-2 min-w-[220px] origin-top-right rounded-lg 
+         border border-white/10 bg-black/95 backdrop-blur-xl py-1 shadow-2xl;
+}
+
+.location-dropdown-item {
+  @apply flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-white/80 
+         hover:bg-white/5 hover:text-white transition-colors;
+}
+
+.location-dropdown-item-selected {
+  @apply text-[var(--primary)];
+}
+
+.location-dropdown-divider {
+  @apply h-px bg-white/10 my-0.5;
+}
+
+/* Search input pill */
+.search-pill {
+  @apply relative w-full max-w-xs h-10 rounded-full border border-white/10 bg-white/[0.04] 
+         pl-10 pr-12 text-sm font-medium text-white placeholder:text-white/35 
+         outline-none transition-all focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/30;
+}
+
+.search-pill-icon {
+  @apply absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40 pointer-events-none;
+}
+
+/* Avatar pill */
+.avatar-pill {
+  @apply inline-flex h-9 items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] 
+         py-1 pl-1 pr-3 text-xs font-bold text-white transition-colors 
+         hover:border-[var(--primary)]/60 hover:bg-white/[0.06];
+}
+
+/* Icon button circle */
+.icon-btn-circle {
+  @apply flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] 
+         text-white/70 transition-colors hover:bg-white/10 hover:text-white;
+}
+
+.icon-btn-circle-active {
+  @apply text-[var(--primary)];
+}
+
+/* Notification dot */
+.notification-dot {
+  @apply absolute right-2 top-2 h-2 w-2 rounded-full bg-[var(--primary)];
+}
+
+/* Thin divider */
+.divider-thin {
+  @apply h-px bg-white/10;
+}
+
+/* Container */
+.container-main {
+  @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+}
+
+/* Red icon square for meta rows */
+.meta-icon-square {
+  @apply inline-flex h-6 w-6 items-center justify-center rounded bg-[var(--primary)] text-white text-[10px];
+}
+
+/* Shared cinematic surfaces */
+.surface-panel {
+  background: linear-gradient(145deg, color-mix(in srgb, var(--card) 94%, white 6%), var(--card));
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
+}
+
+.ticket-divider {
+  position: relative;
+  border-top: 1px dashed rgba(255, 255, 255, 0.18);
+}
+
+.ticket-divider::before,
+.ticket-divider::after {
+  content: '';
+  position: absolute;
+  top: -7px;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--background);
+}
+
+.ticket-divider::before { left: -8px; }
+.ticket-divider::after { right: -8px; }
+
+.eyebrow {
+  @apply text-[10px] font-black uppercase tracking-[0.28em] text-[var(--primary)];
+}
+
+.section-heading {
+  @apply text-2xl font-black tracking-[-0.035em] text-foreground sm:text-3xl;
+}
+
+.section-copy {
+  @apply max-w-xl text-sm leading-6 text-muted-foreground;
+}
+
+.mobile-bottom-nav {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

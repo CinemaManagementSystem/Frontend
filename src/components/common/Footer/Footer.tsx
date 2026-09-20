@@ -24,13 +24,14 @@ const SOCIAL_LINKS = [
   { name: 'Telegram', icon: Send },
 ];
 
-const circleButton = 'inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/75 text-white transition hover:border-red-500 hover:bg-red-500/15 hover:text-red-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black';
+const circleButton = 'inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/75 text-white transition hover:border-[var(--primary)] hover:bg-[var(--primary)]/15 hover:text-[var(--primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-black';
 
 export const Footer: React.FC = () => (
-  <footer className="border-t border-white/10 bg-black text-white">
-    <div className="mx-auto max-w-3xl px-6 pb-6 pt-10 sm:px-8 sm:pt-12">
-      <div className="grid gap-10 sm:grid-cols-[1fr_1fr_1.2fr] sm:gap-12">
+  <footer className="border-t border-white/10 bg-[var(--card)] text-white">
+    <div className="container-main pb-8 pt-12 sm:pt-16">
+      <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1.2fr] lg:gap-12">
         <FooterColumn title="Company" links={COMPANY_LINKS} />
+        <FooterColumn title="Cinemas" links={[{ name: 'Find a cinema', to: '/cinemas' }, { name: 'Now showing', to: '/movies' }, { name: 'Coming soon', to: '/coming-soon' }]} />
         <FooterColumn title="More" links={MORE_LINKS} />
         <div className="space-y-7">
           <div>
@@ -66,5 +67,5 @@ export const Footer: React.FC = () => (
 );
 
 function FooterColumn({ title, links }: { title: string; links: Array<{ name: string; to: string }> }) {
-  return <nav aria-label={`${title} footer links`}><h2 className="text-sm font-bold text-white">{title}</h2><ul className="mt-4 space-y-2.5">{links.map((link) => <li key={link.name}><Link to={link.to} className="text-xs text-white/80 transition hover:text-red-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500">{link.name}</Link></li>)}</ul></nav>;
+  return <nav aria-label={`${title} footer links`}><h2 className="text-sm font-bold text-white">{title}</h2><ul className="mt-4 space-y-2.5">{links.map((link) => <li key={link.name}><Link to={link.to} className="text-xs text-white/80 transition hover:text-[var(--primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]">{link.name}</Link></li>)}</ul></nav>;
 }
