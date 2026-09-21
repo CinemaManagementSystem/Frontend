@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, BadgePercent, CheckCircle2, ChevronLeft, ChevronRight, Coffee, Crown, MapPin, Popcorn, Search, Ticket } from 'lucide-react';
+import { ArrowRight, BadgePercent, CheckCircle2, ChevronLeft, ChevronRight, Coffee, Crown, MapPin, Popcorn, Search, Ticket } from 'lucide-react';
 import { useMovieStore } from '@/store/movieStore';
 import { useCinemaStore } from '@/store/cinemaStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -156,8 +156,7 @@ function WhatsNewSection() {
                 <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-[55%] bg-[radial-gradient(circle_at_0%_50%,rgba(225,29,46,.25),transparent_60%)] md:block" />
 
                 <div className="relative z-10 flex flex-1 flex-col justify-end p-6 pb-20 md:h-full md:w-[42%] md:justify-center md:p-8 md:pb-20 lg:p-10 lg:pb-20">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-red-500">Promotion</p>
-                  <h3 className="mt-3 line-clamp-2 text-2xl font-bold leading-tight text-white md:text-3xl">
+                  <h3 className="line-clamp-2 text-2xl font-bold leading-tight text-white md:text-3xl">
                     {stripEmoji(promotion.title)}
                   </h3>
                   <p className="mt-4 line-clamp-3 max-w-md text-sm leading-relaxed text-neutral-300 md:text-base">
@@ -534,6 +533,8 @@ export const HomePage: React.FC = () => {
           </>
         )}
       </section>
+
+      <WhatsNewSection />
 
       <PlanVisitSection products={popularProducts} isAuthenticated={isAuthenticated} />
 

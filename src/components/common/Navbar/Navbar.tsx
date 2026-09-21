@@ -10,11 +10,9 @@ import {
   LogOut,
   MapPin,
   Menu,
-  Moon,
   Search,
   Shield,
   ShoppingBag,
-  Sun,
   Ticket,
   User as UserIcon,
   X,
@@ -30,7 +28,6 @@ import { LogoutModal } from '@/components/common/LogoutModal/LogoutModal';
 import { Avatar } from '@/components/ui/Avatar/Avatar';
 import { CinematiqueLogo } from '@/components/common/CinematiqueLogo';
 import { PageContainer } from '@/components/layout/PageContainer';
-import { useTheme } from '@/context/ThemeContext';
 import type { User } from '@/types/auth';
 import './Navbar.css';
 
@@ -257,7 +254,6 @@ export const Navbar: React.FC = () => {
   const location = useLocation();
   const { user, isAuthenticated } = useAuthStore();
   const { language, setLanguage } = useSettingsStore();
-  const { theme, toggleTheme } = useTheme();
   const selectedLanguageOption =
     LANGUAGE_OPTIONS.find((option) => option.value === language) ?? LANGUAGE_OPTIONS[0];
 
@@ -387,16 +383,6 @@ export const Navbar: React.FC = () => {
           >
             <Bell className="h-4 w-4" />
             <span className="notification-dot" aria-hidden="true" />
-          </button>
-
-          <button
-            type="button"
-            className="hidden icon-btn-circle sm:flex"
-            onClick={toggleTheme}
-            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-          >
-            {theme === 'dark' ? <Sun className="h-4 w-4 text-yellow-400" /> : <Moon className="h-4 w-4 text-white" />}
           </button>
 
           {/* Language Selector */}

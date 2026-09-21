@@ -5,21 +5,16 @@ import {
   AlertTriangle,
   Bell,
   Camera,
-  Check,
   Languages,
   Loader2,
-  Moon,
-  Palette,
   RefreshCw,
   Settings2,
   Shield,
-  Sun,
   Trash2,
   User,
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useSettingsStore, type AppLanguage } from "@/store/settingsStore";
-import { useTheme, type Theme } from "@/context/ThemeContext";
 import { settingsService } from "@/services/settingsService";
 import { getApiErrorMessage } from "@/services/apiClient";
 import { useToast } from "@/components/ui/Toast/Toast";
@@ -81,41 +76,6 @@ const SectionCard: React.FC<SectionCardProps> = ({
   </div>
 );
 
-interface ThemeOptionProps {
-  value: Theme;
-  label: string;
-  icon: React.ReactNode;
-  active: boolean;
-  onClick: () => void;
-}
-
-const ThemeOption: React.FC<ThemeOptionProps> = ({
-  label,
-  icon,
-  active,
-  onClick,
-}) => (
-  <button
-    type="button"
-    onClick={onClick}
-    aria-pressed={active}
-    className={cn(
-      "flex flex-col items-center gap-2 w-28 py-4 rounded-2xl border text-xs font-semibold transition-all",
-      active
-        ? "border-[#E50914] bg-accent/10 text-[#E50914] shadow-sm"
-        : "border-border bg-muted/50 text-muted-foreground hover:border-accent/40 hover:text-foreground",
-    )}
-  >
-    <span className="text-muted-foreground">{icon}</span>
-    <span className="uppercase tracking-wider text-[10px]">{label}</span>
-    {active && (
-      <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#E50914] text-white">
-        <Check className="h-3 w-3" />
-      </span>
-    )}
-  </button>
-);
-
 export const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const shouldReduceMotion = useReducedMotion();
@@ -123,7 +83,6 @@ export const SettingsPage: React.FC = () => {
   const user = useAuthStore((state) => state.user);
   const updateProfileStore = useAuthStore((state) => state.updateProfile);
   const logoutAsync = useAuthStore((state) => state.logoutAsync);
-  const { theme, setTheme } = useTheme();
   const settingsStore = useSettingsStore();
 
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
@@ -591,35 +550,6 @@ export const SettingsPage: React.FC = () => {
           {activeTab === "preferences" && (
             <>
               <SectionCard
-                title="Appearance"
-                description="Choose whether the admin portal uses a light or dark appearance."
-                icon={<Palette className="h-5 w-5 text-[#E50914]" />}
-              >
-                <div className="flex items-center gap-3">
-                  <ThemeOption
-                    value="dark"
-                    label="Dark"
-                    icon={<Moon className="h-5 w-5" />}
-                    active={theme === "dark"}
-                    onClick={() => {
-                      setTheme("dark");
-                      toast.success("Dark mode enabled");
-                    }}
-                  />
-                  <ThemeOption
-                    value="light"
-                    label="Light"
-                    icon={<Sun className="h-5 w-5" />}
-                    active={theme === "light"}
-                    onClick={() => {
-                      setTheme("light");
-                      toast.success("Light mode enabled");
-                    }}
-                  />
-                </div>
-              </SectionCard>
-
-              <SectionCard
                 title="General"
                 description="System notifications and language preferences."
                 icon={<Settings2 className="h-5 w-5 text-[#E50914]" />}
@@ -718,8 +648,7 @@ export const SettingsPage: React.FC = () => {
                       Reset Account Data
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Restore preferences, theme and profile picture to
-                      defaults.
+                      Restore preferences and profile picture to defaults.
                     </p>
                   </div>
                 </div>
@@ -773,8 +702,8 @@ export const SettingsPage: React.FC = () => {
       >
         <div className="space-y-5">
           <p className="text-sm text-foreground">
-            This will restore your preferences, theme and profile picture to
-            their defaults.
+            This will restore your preferences and profile picture to their
+            defaults.
           </p>
           <div className="flex justify-end gap-2">
             <button

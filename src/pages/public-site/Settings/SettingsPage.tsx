@@ -1,8 +1,6 @@
 import React from 'react';
-import { Sun, Moon, Monitor, Palette, Shield, Bell, Check } from 'lucide-react';
+import { Palette, Shield, Bell } from 'lucide-react';
 import { motion } from 'motion/react';
-import { useTheme, type Theme } from '@/context/ThemeContext';
-import { cn } from '@/lib/utils';
 import { PageContainer } from '@/components/layout/PageContainer';
 
 interface SettingRowProps {
@@ -29,50 +27,7 @@ const SettingRow: React.FC<SettingRowProps> = ({ icon, title, description, child
   );
 };
 
-interface ThemeOptionProps {
-  value: Theme;
-  label: string;
-  icon: React.ReactNode;
-  active: boolean;
-  onClick: () => void;
-}
-
-const ThemeOption: React.FC<ThemeOptionProps> = ({ value, label, icon, active, onClick }) => {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        'relative flex flex-col items-center gap-2 w-24 py-4 rounded-2xl border text-xs font-semibold transition-all',
-        active
-          ? 'border-[#E50914] bg-accent/10 text-[#E50914] shadow-sm'
-          : 'border-border bg-muted/50 text-muted-foreground hover:border-accent/40 hover:text-foreground',
-      )}
-    >
-      {active && (
-        <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-[#E50914] text-white flex items-center justify-center">
-          <Check className="w-3 h-3" />
-        </span>
-      )}
-      <span className="text-muted-foreground">{icon}</span>
-      <span className="uppercase tracking-wider text-[10px]">{label}</span>
-      <span
-        className={cn('w-8 h-1.5 rounded-full mt-0.5', {
-          'bg-white border border-border': value === 'light',
-          'bg-[#0f0f10] border border-border': value === 'dark',
-        })}
-      />
-    </button>
-  );
-};
-
 export const SettingsPage: React.FC = () => {
-  const { theme, setTheme } = useTheme();
-
-  const themes: { value: Theme; label: string; icon: React.ReactNode }[] = [
-    { value: 'dark', label: 'Dark', icon: <Moon className="w-5 h-5" /> },
-    { value: 'light', label: 'Light', icon: <Sun className="w-5 h-5" /> },
-  ];
-
   return (
     <PageContainer className="py-12 space-y-8">
       {/* Header */}
@@ -86,33 +41,6 @@ export const SettingsPage: React.FC = () => {
           Customize your Cinematique experience. Preferences are saved on this device.
         </p>
       </div>
-
-      {/* Appearance */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2 }}
-        className="bg-card border border-border rounded-2xl shadow-sm p-6 sm:p-8 space-y-2"
-      >
-        <SettingRow
-          icon={<Monitor className="w-5 h-5" />}
-          title="Theme Mode"
-          description="Choose whether Cinematique uses a light or dark appearance."
-        >
-          <div className="flex items-center gap-2">
-            {themes.map(({ value, label, icon }) => (
-              <ThemeOption
-                key={value}
-                value={value}
-                label={label}
-                icon={icon}
-                active={theme === value}
-                onClick={() => setTheme(value)}
-              />
-            ))}
-          </div>
-        </SettingRow>
-      </motion.div>
 
       {/* More settings (placeholders for future preferences) */}
       <motion.div

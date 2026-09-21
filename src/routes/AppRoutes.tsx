@@ -15,6 +15,8 @@ import { HistoryPage } from '@/pages/public-site/History/HistoryPage';
 import { CinemasPage } from '@/pages/public-site/Cinemas';
 import { OffersPage } from '@/pages/public-site/Offers';
 import { PremierePage } from '@/pages/public-site/Premiere';
+import { MembershipPage } from '@/pages/public-site/Membership/MembershipPage';
+import { MyMembershipPage } from '@/pages/public-site/Membership/MyMembershipPage';
 import { NotFoundPage } from '@/pages/public-site/NotFound';
 import { SettingsPage } from '@/pages/public-site/Settings';
 
@@ -58,6 +60,11 @@ import { UsersPage } from '@/pages/admin/Users/UsersPage';
 import { CreateUserPage } from '@/pages/admin/Users/CreateUserPage';
 import { AuditLogsPage } from '@/pages/admin/AuditLogs/AuditLogsPage';
 import { SettingsPage as AdminSettingsPage } from '@/pages/admin/Settings';
+import { MembershipPlansPage } from '@/pages/admin/Memberships/MembershipPlansPage';
+import { MembershipMembersPage } from '@/pages/admin/Memberships/MembershipMembersPage';
+import { PromotionsPage } from '@/pages/admin/Promotions/PromotionsPage';
+import { PromotionFormPage } from '@/pages/admin/Promotions/PromotionFormPage';
+import { PromotionDetailPage } from '@/pages/admin/Promotions/PromotionDetailPage';
 import { ShowcasePage } from '@/pages/public-site/Showcase/ShowcasePage';
 import { PaymentGatewayPage } from '@/pages/public-site/Payment/PaymentGatewayPage';
 import { OrderConfirmationPage } from '@/pages/public-site/Payment/OrderConfirmationPage';
@@ -65,10 +72,11 @@ import { useAuthStore } from '@/store/authStore';
 import { canAccessAdmin } from '@/lib/authRole';
 import { AdminRoute } from './AdminRoute';
 import { ProtectedRoute } from './ProtectedRoute';
+import { GuestRoute } from './GuestRoute';
 import Promotion from '@/pages/public-site/promotion/Promotion';
 import PromotionDetail from '@/pages/public-site/promotion/PromotionDetail';
 
-const CustomerOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const PublicSiteRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isAuthenticated } = useAuthStore();
 
   if (isAuthenticated && canAccessAdmin(user?.role)) {
@@ -84,9 +92,9 @@ export const AppRoutes: React.FC = () => {
       {/* Public Site Layout & Routes */}
       <Route
         element={
-          <CustomerOnlyRoute>
+          <PublicSiteRoute>
             <MainLayout />
-          </CustomerOnlyRoute>
+          </PublicSiteRoute>
         }
       >
         <Route path="/" element={<HomePage />} />
@@ -99,7 +107,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="/fnb" element={<OffersPage />} />
         <Route path="/offers" element={<Navigate to="/promotion" replace />} />
         <Route path="/premiere" element={<PremierePage />} />
-        <Route path="/membership" element={<PremierePage />} />
+        <Route path="/membership" element={<MembershipPage />} />
         <Route path="/premiere-circle" element={<PremierePage />} />
         <Route path="/coming-soon" element={<PremierePage />} />
       </Route>
@@ -108,14 +116,15 @@ export const AppRoutes: React.FC = () => {
       <Route element={<ProtectedRoute />}>
         <Route
           element={
-            <CustomerOnlyRoute>
+            <PublicSiteRoute>
               <MainLayout />
-            </CustomerOnlyRoute>
+            </PublicSiteRoute>
           }
         >
           <Route path="/booking/:showtimeId" element={<BookingPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/my-membership" element={<MyMembershipPage />} />
           <Route path="/payment/:bookingId" element={<PaymentGatewayPage />} />
           <Route path="/payment-gateway" element={<PaymentGatewayPage />} />
           <Route path="/order-confirmation/:bookingId" element={<OrderConfirmationPage />} />
@@ -124,9 +133,11 @@ export const AppRoutes: React.FC = () => {
       </Route>
 
       {/* Authentication Layout & Routes */}
-      <Route element={<AuthLayout />}>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+      <Route element={<GuestRoute />}>
+        <Route element={<AuthLayout />}>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+        </Route>
       </Route>
 
       {/* Redirects for legacy/incorrect prefix routes */}
@@ -168,6 +179,12 @@ export const AppRoutes: React.FC = () => {
           <Route path="payments/create" element={<CreatePaymentPage />} />
           <Route path="payment-transactions" element={<PaymentTransactionsPage />} />
           <Route path="payment-transactions/create" element={<CreatePaymentTransactionPage />} />
+          <Route path="promotions" element={<PromotionsPage />} />
+          <Route path="promotions/create" element={<PromotionFormPage />} />
+          <Route path="promotions/:promotionId" element={<PromotionDetailPage />} />
+          <Route path="promotions/:promotionId/edit" element={<PromotionFormPage />} />
+          <Route path="membership-plans" element={<MembershipPlansPage />} />
+          <Route path="membership-members" element={<MembershipMembersPage />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="users/create" element={<CreateUserPage />} />
           <Route path="audit-logs" element={<AuditLogsPage />} />
@@ -179,9 +196,9 @@ export const AppRoutes: React.FC = () => {
       {/* 404 Page Not Found Fallback */}
       <Route
         element={
-          <CustomerOnlyRoute>
+          <PublicSiteRoute>
             <MainLayout />
-          </CustomerOnlyRoute>
+          </PublicSiteRoute>
         }
       >
         <Route path="*" element={<NotFoundPage />} />

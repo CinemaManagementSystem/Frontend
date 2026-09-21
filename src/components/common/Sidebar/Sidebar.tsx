@@ -18,6 +18,8 @@ import {
   UtensilsCrossed,
   CreditCard,
   ReceiptText,
+  Crown,
+  Megaphone,
   LogOut,
   Settings,
   ChevronDown,
@@ -80,6 +82,7 @@ export const Sidebar: React.FC = () => {
           path: "/admin/order-items",
           icon: UtensilsCrossed,
         },
+        { name: "Promotions", path: "/admin/promotions", icon: Megaphone },
       ],
     },
     {
@@ -105,6 +108,13 @@ export const Sidebar: React.FC = () => {
       ],
     },
     {
+      label: "Membership",
+      items: [
+        { name: "Plans", path: "/admin/membership-plans", icon: Crown },
+        { name: "Members", path: "/admin/membership-members", icon: Users },
+      ],
+    },
+    {
       label: "Administration",
       items: [
         { name: "Users", path: "/admin/users", icon: Users },
@@ -117,6 +127,7 @@ export const Sidebar: React.FC = () => {
 
   const isActive = (path: string) =>
     location.pathname === path ||
+    (path === "/admin/promotions" && location.pathname.startsWith("/admin/promotions")) ||
     (path === "/admin/security" && location.pathname === "/admin/audit-logs");
   const isSectionActive = (section: MenuSection) =>
     section.items.some((item) => isActive(item.path));

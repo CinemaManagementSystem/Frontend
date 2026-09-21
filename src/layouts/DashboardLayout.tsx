@@ -7,13 +7,10 @@ import {
   Bell,
   ChevronDown,
   LogOut,
-  Moon,
   ShieldCheck,
-  Sun,
   User as UserIcon,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
-import { useTheme } from '@/context/ThemeContext';
 import { useToast } from '@/components/ui/Toast/Toast';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/components/ui/Avatar/Avatar';
@@ -28,7 +25,6 @@ export const DashboardLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logoutAsync, isLoggingOut } = useAuthStore();
-  const { theme, toggleTheme } = useTheme();
   const shouldReduceMotion = useReducedMotion();
   const toast = useToast();
 
@@ -92,13 +88,6 @@ export const DashboardLayout: React.FC = () => {
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span>Live System</span>
             </div>
-            <button
-              onClick={toggleTheme}
-              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              className="p-2 rounded-xl bg-muted border border-border hover:bg-muted/70 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
             <button className="relative p-2 rounded-xl bg-muted border border-border hover:bg-muted/70 text-muted-foreground hover:text-foreground transition-colors">
               <Bell className="w-4 h-4" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#E50914]" />
@@ -184,23 +173,6 @@ export const DashboardLayout: React.FC = () => {
                           <UserIcon className="h-4 w-4 text-[#E50914]" />
                           My Profile
                         </button>
-
-                        <button
-                          type="button"
-                          onClick={toggleTheme}
-                          role="menuitem"
-                          className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-left text-xs font-medium text-foreground transition hover:bg-muted"
-                        >
-                          <span className="flex items-center gap-2.5">
-                            {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-slate-500" />}
-                            {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-                          </span>
-                          <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                            {theme}
-                          </span>
-                        </button>
-
-                        <div className="my-1 border-t border-border" />
 
                         <button
                           type="button"

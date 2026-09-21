@@ -14,6 +14,7 @@ export interface Payment {
   bookingId: number | null;
   customerId: number;
   orderId: number | null;
+  userMembershipId: string | null;
   qrCodeUrl?: string | null;
   qrImageUrl?: string | null;
   khqrImageUrl?: string | null;
@@ -31,6 +32,7 @@ export interface PaymentInput {
   customerId: number;
   bookingId: number | null;
   orderId: number | null;
+  userMembershipId?: string | null;
   merchantName?: string;
   accountId?: string;
 }
