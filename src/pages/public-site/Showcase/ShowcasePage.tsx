@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Search,
@@ -15,6 +15,7 @@ import { useCategoryStore } from '@/store/categoryStore';
 import { useMovieStore } from '@/store/movieStore';
 import { useCinemaStore } from '@/store/cinemaStore';
 import { Badge } from '@/components/ui/Badge/Badge';
+import { PageContainer } from '@/components/layout/PageContainer';
 import { formatDuration, formatDate } from '@/utils/formatDate';
 import { isUpcomingShowtime, parseShowtimeStart } from '@/lib/showtime';
 import { useShowtimeClock } from '@/hooks/useShowtimeClock';
@@ -33,7 +34,7 @@ export const ShowcasePage: React.FC = () => {
   const navigate = useNavigate();
   const { movies, loading, fetchAll } = useMovieAdminStore();
   const { categories, fetchAll: fetchCategories } = useCategoryStore();
-  const { showtimes, fetchCatalog, catalogRequiresSignIn } = useMovieStore();
+  const { showtimes, fetchCatalog } = useMovieStore();
   const { cinemas, selectedCinemaId, selectCinema } = useCinemaStore();
   const selectedCinemaName = cinemas.find((cinema) => cinema.id === selectedCinemaId)?.name || 'your selected cinema';
 
@@ -80,7 +81,7 @@ export const ShowcasePage: React.FC = () => {
     <div className="pb-24 bg-[#0f0f10] min-h-screen text-white selection:bg-[#E50914]">
       {/* Hero */}
       <section className="relative w-full py-16 overflow-hidden border-b border-white/5 bg-gradient-to-b from-zinc-900 to-[#0f0f10]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <PageContainer className="space-y-6">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#E50914]/15 border border-[#E50914]/30 text-[#E50914] text-[10px] font-black uppercase tracking-widest">
             <Sparkles className="w-3.5 h-3.5" />
             Live From The API
@@ -93,11 +94,11 @@ export const ShowcasePage: React.FC = () => {
             combined with <code className="text-[#E50914]">GET /api/shows</code> and
             <code className="text-[#E50914]"> /api/movie-category</code> — no mock data.
           </p>
-        </div>
+        </PageContainer>
       </section>
 
       {/* Filters */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4">
+      <PageContainer as="section" className="py-6 space-y-4">
         <div className="flex flex-wrap items-center gap-3 text-xs text-gray-300">
           <span>Showtimes: {selectedCinemaId === 'ALL' ? 'All cinemas' : selectedCinemaName}</span>
           {selectedCinemaId !== 'ALL' && <button type="button" onClick={() => selectCinema('ALL')} className="font-semibold text-red-400 underline underline-offset-4">View all cinemas</button>}
@@ -150,10 +151,10 @@ export const ShowcasePage: React.FC = () => {
           Showing <span className="text-white font-bold">{filtered.length}</span> of{' '}
           {movies.length} movies
         </p>
-      </section>
+      </PageContainer>
 
       {/* Catalog */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <PageContainer as="section">
         {loading ? (
           <div className="py-24 text-center text-gray-400 text-sm">Loading live catalog…</div>
         ) : filtered.length > 0 ? (
@@ -230,9 +231,7 @@ export const ShowcasePage: React.FC = () => {
                     </p>
 
                     <div className="flex items-center gap-2 pt-4 mt-4 border-t border-white/5">
-                      {catalogRequiresSignIn ? (
-                        <Link to={`/login?redirect=${encodeURIComponent('/showcase')}`} className="text-xs font-semibold text-red-400 underline underline-offset-4">Sign in to view showtimes</Link>
-                      ) : hasShows ? (
+                      {hasShows ? (
                         <button
                           onClick={() => setActiveMovie(activeMovie === movie.id ? null : movie.id)}
                           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#E50914] hover:bg-[#ff1f2d] text-white text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-[#E50914]/30"
@@ -248,7 +247,7 @@ export const ShowcasePage: React.FC = () => {
                     </div>
 
                     <AnimatePresence>
-                      {activeMovie === movie.id && !catalogRequiresSignIn && (
+                      {activeMovie === movie.id && (
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
@@ -304,7 +303,7 @@ export const ShowcasePage: React.FC = () => {
             </button>
           </div>
         )}
-      </section>
+      </PageContainer>
     </div>
   );
 };

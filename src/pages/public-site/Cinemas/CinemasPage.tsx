@@ -18,7 +18,7 @@ function dateLabel(date: string, options: Intl.DateTimeFormatOptions) {
 }
 
 export const CinemasPage = () => {
-  const { movies, showtimes, loading, fetchCatalog, catalogRequiresSignIn } = useMovieStore();
+  const { movies, showtimes, loading, fetchCatalog } = useMovieStore();
   const { cinemas, selectedCinemaId, selectCinema, fetchCinemas, loading: cinemasLoading, error: cinemaError, locationError } = useCinemaStore();
   const [params, setParams] = useSearchParams();
   const clock = useShowtimeClock();
@@ -121,7 +121,7 @@ export const CinemasPage = () => {
                   <span className="mb-3 flex w-full items-center justify-between gap-2 text-[11px] font-semibold uppercase tracking-wider text-white/50"><span>{cinema.city || cinema.locationName || 'Cinema'}</span>{selected ? <Check className="h-4 w-4 text-[var(--primary)]" /> : <Building2 className="h-4 w-4" />}</span>
                   <span className="font-bold">{cinema.name}</span>
                   <span className="mt-1 text-xs leading-relaxed text-white/50">{cinema.address || 'Address not listed'}</span>
-                  <span className="mt-4 border-t border-white/10 pt-3 text-xs text-white/50">{cinema.status.toUpperCase() !== 'OPEN' ? 'Currently closed' : catalogRequiresSignIn ? 'View cinema details' : `${count} upcoming ${count === 1 ? 'screening' : 'screenings'}`}</span>
+                  <span className="mt-4 border-t border-white/10 pt-3 text-xs text-white/50">{cinema.status.toUpperCase() !== 'OPEN' ? 'Currently closed' : `${count} upcoming ${count === 1 ? 'screening' : 'screenings'}`}</span>
                 </button>;
               })}
             </div>
@@ -147,9 +147,7 @@ export const CinemasPage = () => {
         <div className="grid items-start gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
           <aside className="hidden lg:block">{filters}<p className="px-2 pt-4 text-xs leading-relaxed text-white/50">Pick a time to view the seat map. Seat availability is confirmed when you book.</p><Link to="/promotion" className="mt-5 flex items-center justify-between rounded-lg border border-white/10 px-4 py-3 text-xs font-semibold hover:border-[var(--primary)]">Plan your snacks<ArrowUpRight className="h-4 w-4 text-[var(--primary)]" /></Link></aside>
           <div className="min-w-0">
-            {busy ? <ShowtimeSkeleton /> : fetchError ? <ShowtimeEmptyState type="ERROR" cinemaName={selectedCinema?.name || 'all cinemas'} selectedDate={activeDate} errorMessage={fetchError} onResetFilters={clearFilters} onRetry={retry} /> : catalogRequiresSignIn ? (
-              <div className="rounded-2xl border border-white/10 bg-white/[0.02] px-6 py-14 text-center"><Ticket className="mx-auto mb-4 h-8 w-8 text-[var(--primary)]" /><h3 className="text-xl font-bold">Sign in to see available screenings</h3><p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-white/50">Explore our cinema locations above, then sign in to choose your screen and seats.</p><Link to={`/login?redirect=${encodeURIComponent(`/cinemas?cinema=${selectedCinemaId}`)}`} className="mt-6 inline-flex rounded-lg bg-[var(--primary)] px-6 py-3 text-sm font-bold text-white">Sign in to continue</Link></div>
-            ) : filteredShows.length ? <><p role="status" className="mb-3 text-xs text-white/50">{Object.keys(showtimesByMovie).length} {Object.keys(showtimesByMovie).length === 1 ? 'movie' : 'movies'} · {filteredShows.length} {filteredShows.length === 1 ? 'screening' : 'screenings'}</p><ShowtimeResults showtimesByMovie={showtimesByMovie} movies={movies} showCinemaName={selectedCinemaId === 'ALL'} onShowtimeExpired={() => setRecheckTime(Date.now())} /></> : <ShowtimeEmptyState type={dateShows.length ? 'FILTER_EMPTY' : 'NO_SHOWTIMES'} cinemaName={selectedCinema?.name || 'all cinemas'} selectedDate={activeDate} tomorrowDateStr={nextDate} onResetFilters={clearFilters} onSelectTomorrow={(date) => { setSelectedDate(date); clearFilters(); }} onShowAllCinemas={selectedCinemaId === 'ALL' ? undefined : () => chooseCinema('ALL')} />}
+            {busy ? <ShowtimeSkeleton /> : fetchError ? <ShowtimeEmptyState type="ERROR" cinemaName={selectedCinema?.name || 'all cinemas'} selectedDate={activeDate} errorMessage={fetchError} onResetFilters={clearFilters} onRetry={retry} /> : filteredShows.length ? <><p role="status" className="mb-3 text-xs text-white/50">{Object.keys(showtimesByMovie).length} {Object.keys(showtimesByMovie).length === 1 ? 'movie' : 'movies'} · {filteredShows.length} {filteredShows.length === 1 ? 'screening' : 'screenings'}</p><ShowtimeResults showtimesByMovie={showtimesByMovie} movies={movies} showCinemaName={selectedCinemaId === 'ALL'} onShowtimeExpired={() => setRecheckTime(Date.now())} /></> : <ShowtimeEmptyState type={dateShows.length ? 'FILTER_EMPTY' : 'NO_SHOWTIMES'} cinemaName={selectedCinema?.name || 'all cinemas'} selectedDate={activeDate} tomorrowDateStr={nextDate} onResetFilters={clearFilters} onSelectTomorrow={(date) => { setSelectedDate(date); clearFilters(); }} onShowAllCinemas={selectedCinemaId === 'ALL' ? undefined : () => chooseCinema('ALL')} />}
           </div>
         </div>
       </section>

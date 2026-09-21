@@ -9,7 +9,8 @@ interface MovieGridProps {
   className?: string;
   emptyMessage?: string;
   onMovieClick?: (movie: Movie) => void;
-  variant?: 'default' | 'home';
+  variant?: 'default' | 'home' | 'now' | 'soon';
+  getShowAdvanceTicket?: (movie: Movie) => boolean;
 }
 
 const containerVariants = {
@@ -26,6 +27,7 @@ export const MovieGrid: React.FC<MovieGridProps> = ({
   emptyMessage = 'No films match that selection',
   onMovieClick,
   variant = 'default',
+  getShowAdvanceTicket,
 }) => {
   if (movies.length === 0) {
     return (
@@ -42,12 +44,18 @@ export const MovieGrid: React.FC<MovieGridProps> = ({
       variants={containerVariants}
       initial="hidden"
       animate="show"
-      className={cn('grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 lg:gap-6', className)}
+      className={cn('grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4', className)}
       role="list"
       aria-label="Movie listings"
     >
       {movies.map((movie) => (
-        <MovieCard key={movie.id} movie={movie} variant={variant} onClick={() => onMovieClick?.(movie)} />
+        <MovieCard
+          key={movie.id}
+          movie={movie}
+          variant={variant}
+          showAdvanceTicket={getShowAdvanceTicket?.(movie) ?? false}
+          onClick={() => onMovieClick?.(movie)}
+        />
       ))}
     </motion.div>
   );

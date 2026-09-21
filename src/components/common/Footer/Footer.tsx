@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Apple, Camera, Globe, Music2, Play, Send } from 'lucide-react';
+import { PageContainer } from '@/components/layout/PageContainer';
 
 const COMPANY_LINKS = [
   { name: 'About Us', to: '/' },
@@ -28,7 +29,7 @@ const circleButton = 'inline-flex h-8 w-8 items-center justify-center rounded-fu
 
 export const Footer: React.FC = () => (
   <footer className="border-t border-white/10 bg-[var(--card)] text-white">
-    <div className="container-main pb-8 pt-12 sm:pt-16">
+    <PageContainer className="pb-8 pt-12 sm:pt-16">
       <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1.2fr] lg:gap-12">
         <FooterColumn title="Company" links={COMPANY_LINKS} />
         <FooterColumn title="Cinemas" links={[{ name: 'Find a cinema', to: '/cinemas' }, { name: 'Now showing', to: '/movies' }, { name: 'Coming soon', to: '/coming-soon' }]} />
@@ -62,7 +63,7 @@ export const Footer: React.FC = () => (
       <div className="mt-9 border-t border-white/15 pt-5 text-center text-[11px] text-white/80">
         © {new Date().getFullYear()} Legend Cinemas. All rights reserved.
       </div>
-    </div>
+    </PageContainer>
   </footer>
 );
 

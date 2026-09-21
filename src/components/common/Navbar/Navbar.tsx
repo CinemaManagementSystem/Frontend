@@ -1,35 +1,36 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   Bell,
-  CalendarDays,
+  Check,
   ChevronDown,
-  Clapperboard,
   Crown,
   Gift,
   Home,
   LogOut,
   MapPin,
+  Menu,
   Moon,
-  Play,
   Search,
   Shield,
   ShoppingBag,
-  Sparkles,
   Sun,
   Ticket,
   User as UserIcon,
+  X,
 } from 'lucide-react';
-import { useTheme } from '@/context/ThemeContext';
 import { AnimatePresence, motion } from 'motion/react';
 import { useAuthStore } from '@/store/authStore';
 import { useCinemaStore } from '@/store/cinemaStore';
+import { useSettingsStore, type AppLanguage } from '@/store/settingsStore';
 import { canAccessAdmin } from '@/lib/authRole';
 import { cn } from '@/lib/utils';
 import { SearchAutocomplete } from './SearchAutocomplete';
 import { LogoutModal } from '@/components/common/LogoutModal/LogoutModal';
 import { Avatar } from '@/components/ui/Avatar/Avatar';
 import { CinematiqueLogo } from '@/components/common/CinematiqueLogo';
+import { PageContainer } from '@/components/layout/PageContainer';
+import { useTheme } from '@/context/ThemeContext';
 import type { User } from '@/types/auth';
 import './Navbar.css';
 
@@ -41,11 +42,9 @@ const NAV_LINKS = [
   { name: 'Membership', path: '/membership', icon: Crown, end: true },
 ];
 
-const MOVIE_MENU_ITEMS = [
-  { name: 'Now Showing', path: '/movies', icon: Play, description: 'Currently in theaters' },
-  { name: 'Coming Soon', path: '/coming-soon', icon: CalendarDays, description: 'Upcoming releases' },
-  { name: 'Premiere', path: '/premiere', icon: Sparkles, description: 'Member premieres & events' },
-  { name: 'View All Movies', path: '/movies', icon: Clapperboard, description: 'Browse full catalog' },
+const LANGUAGE_OPTIONS: { value: AppLanguage; label: string; shortLabel: string; flag: string }[] = [
+  { value: 'en', label: 'English', shortLabel: 'EN', flag: '🇬🇧' },
+  { value: 'km', label: 'ភាសាខ្មែរ', shortLabel: 'KH', flag: '🇰🇭' },
 ];
 
 const dropdownPanelClass =
@@ -87,7 +86,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
           onClick={() => setOpen((value) => !value)}
           className="avatar-pill"
         >
-          <Avatar src={user.avatar} alt={user.username} className="h-7 w-7 border border-[var(--primary)]" />
+          <Avatar src={user.avatar} alt={user.username} className="h-6 w-6 border border-[var(--primary)]" />
           <span className="max-w-[90px] truncate">{user.username}</span>
           <ChevronDown className={cn('h-3.5 w-3.5 text-white/50 transition-transform', open && 'rotate-180')} />
         </button>
@@ -176,7 +175,6 @@ interface CinemaSelectorProps {
 }
 
 const CinemaSelector: React.FC<CinemaSelectorProps> = ({ onSelect, mobile = false }) => {
-  const navigate = useNavigate();
   const { cinemas, selectedCinemaId, loading, error, fetchCinemas, selectCinema } = useCinemaStore();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -194,7 +192,6 @@ const CinemaSelector: React.FC<CinemaSelectorProps> = ({ onSelect, mobile = fals
     setOpen(false);
     setQuery('');
     onSelect();
-    navigate(`/cinemas?cinema=${encodeURIComponent(cinemaId)}`);
   };
 
   return (
@@ -258,31 +255,47 @@ const CinemaSelector: React.FC<CinemaSelectorProps> = ({ onSelect, mobile = fals
 export const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { theme, toggleTheme } = useTheme();
   const { user, isAuthenticated } = useAuthStore();
+  const { language, setLanguage } = useSettingsStore();
+  const { theme, toggleTheme } = useTheme();
+  const selectedLanguageOption =
+    LANGUAGE_OPTIONS.find((option) => option.value === language) ?? LANGUAGE_OPTIONS[0];
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [moviesDropdownOpen, setMoviesDropdownOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  const isMoviesActive =
-    location.pathname.startsWith('/movies') ||
-    location.pathname === '/coming-soon' ||
-    location.pathname === '/premiere';
+  const [languageOpen, setLanguageOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const languageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setMoviesDropdownOpen(false);
+    setLanguageOpen(false);
+    setMobileMenuOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 40);
-    handleScroll();
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    const updateScrolled = () => setScrolled(window.scrollY > 40);
+    updateScrolled();
+    window.addEventListener('scroll', updateScrolled, { passive: true });
+    return () => window.removeEventListener('scroll', updateScrolled);
+  }, []);
+
+  useEffect(() => {
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!languageRef.current?.contains(event.target as Node)) setLanguageOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setLanguageOpen(false);
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   const closeMenus = () => {
-    setMoviesDropdownOpen(false);
+    setMobileMenuOpen(false);
   };
 
   const handleSearchSubmit = (query: string) => {
@@ -302,12 +315,25 @@ export const Navbar: React.FC = () => {
   };
 
   return (
-    <header className={cn('sticky top-0 z-20 w-full border-b border-white/10 text-white transition-all', isScrolled ? 'bg-black/60 backdrop-blur-md' : 'bg-transparent')}>
+    <header
+      className={cn(
+        'sticky top-0 z-30 w-full text-white transition-colors duration-200',
+        scrolled ? 'border-b border-white/10 bg-black/30 backdrop-blur-xl' : 'border-b border-white/10 bg-transparent',
+      )}
+    >
       {/* Row 1: Search | Logo | Actions */}
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <PageContainer className="grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-3">
         {/* Left: Search Bar */}
-        <div className="flex items-center gap-3">
-          <div className="hidden w-52 lg:block xl:w-64">
+        <div className="flex min-w-0 items-center justify-start">
+          <button
+            type="button"
+            onClick={() => navigate('/movies')}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/40 text-white/80 transition-colors hover:bg-white/10 hover:text-white lg:hidden"
+            aria-label="Search movies"
+          >
+            <Search className="h-4 w-4" />
+          </button>
+          <div className="hidden w-64 lg:block">
             <SearchAutocomplete
               size="sm"
               value={searchQuery}
@@ -325,18 +351,18 @@ export const Navbar: React.FC = () => {
           className="flex items-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
           aria-label="Legend Cinema Home"
         >
-          <CinematiqueLogo />
+          <CinematiqueLogo className="h-7 w-auto object-contain md:h-10" />
         </Link>
 
-        {/* Right: Actions (Ticket, User/Join, Bell, Language, Theme) */}
-        <div className="flex items-center gap-2 sm:gap-2.5">
+          {/* Right: Actions (Ticket, User/Join, Bell, Language) */}
+        <div className="flex min-w-0 items-center justify-end gap-3">
           {/* Ticket Button */}
           <button
             type="button"
             onClick={handleTicketClick}
-            className="hidden items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-xs font-bold text-white transition-colors hover:border-[var(--primary)]/60 hover:bg-white/[0.06] sm:flex"
+            className="hidden h-10 items-center gap-2 rounded-full border border-white/10 bg-black/40 px-5 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:flex"
           >
-            <Ticket className="h-3.5 w-3.5 text-[var(--primary)]" />
+            <Ticket className="h-4 w-4 text-white" />
             Ticket
           </button>
 
@@ -363,35 +389,86 @@ export const Navbar: React.FC = () => {
             <span className="notification-dot" aria-hidden="true" />
           </button>
 
-          {/* Language Selector */}
-          <div className="relative hidden sm:block">
-            <button
-              type="button"
-              className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-bold text-white transition-colors hover:border-[var(--primary)]/60 hover:bg-white/[0.06]"
-              aria-label="Select language"
-            >
-              <span className="text-[10px] font-black uppercase">KH</span>
-              <ChevronDown className="h-3 w-3 text-white/50" />
-            </button>
-          </div>
-
-          {/* Theme Toggle */}
           <button
             type="button"
+            className="hidden icon-btn-circle sm:flex"
             onClick={toggleTheme}
-            className="icon-btn-circle"
-            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           >
-            {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-slate-700" />}
+            {theme === 'dark' ? <Sun className="h-4 w-4 text-yellow-400" /> : <Moon className="h-4 w-4 text-white" />}
           </button>
+
+          {/* Language Selector */}
+          <div ref={languageRef} className="relative hidden sm:block">
+            <button
+              type="button"
+              className="inline-flex h-10 items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3 text-sm font-semibold text-white transition-colors hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+              aria-label="Select language"
+              aria-haspopup="menu"
+              aria-expanded={languageOpen}
+              onClick={() => setLanguageOpen((open) => !open)}
+            >
+              <span className="flex h-5 w-5 items-center justify-center overflow-hidden rounded-full text-base leading-none" aria-hidden="true">
+                {selectedLanguageOption.flag}
+              </span>
+              <span className="font-semibold uppercase">{selectedLanguageOption.shortLabel}</span>
+              <ChevronDown className={cn('h-4 w-4 text-white/80 transition-transform', languageOpen && 'rotate-180')} />
+            </button>
+            {languageOpen && (
+              <div
+                className="absolute right-0 top-full z-[100] mt-2 w-44 overflow-hidden rounded-xl border border-white/10 bg-black/90 p-1 text-white shadow-xl backdrop-blur-md"
+                role="menu"
+                aria-label="Language options"
+              >
+                {LANGUAGE_OPTIONS.map((option) => {
+                  const selected = option.value === language;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setLanguage(option.value);
+                        setLanguageOpen(false);
+                      }}
+                      className={cn(
+                        'flex h-11 w-full items-center justify-between gap-3 rounded-lg px-3 text-left text-sm font-semibold transition-colors hover:bg-white/[0.06]',
+                        selected ? 'text-[var(--primary)]' : 'text-white/85',
+                      )}
+                    >
+                      <span className="flex min-w-0 items-center gap-2.5">
+                        <span className="flex h-5 w-5 items-center justify-center overflow-hidden rounded-full text-base leading-none" aria-hidden="true">
+                          {option.flag}
+                        </span>
+                        <span className="truncate">{option.label}</span>
+                      </span>
+                      {selected && <Check className="h-4 w-4 shrink-0 text-white" aria-hidden="true" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/40 text-white transition-colors hover:bg-white/10 lg:hidden"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-expanded={mobileMenuOpen}
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+
         </div>
-      </div>
+      </PageContainer>
 
       {/* Row 2: Nav Links | Cinema Selector */}
-      <div className="hidden border-t border-white/10 bg-transparent py-2 backdrop-blur-md lg:block">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="hidden border-t border-white/10 lg:block">
+        <PageContainer className="flex h-[52px] items-center justify-between">
           {/* Nav Links */}
-          <nav className="flex items-center gap-1" aria-label="Public sub navigation">
+          <nav className="flex items-center gap-8" aria-label="Public sub navigation">
             {NAV_LINKS.map((link) => {
               const Icon = link.icon;
 
@@ -402,82 +479,90 @@ export const Navbar: React.FC = () => {
                   end={link.end}
                   className={({ isActive }) =>
                     cn(
-                      'flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold transition-all',
+                      'flex items-center gap-2 text-sm font-medium text-neutral-300 transition-colors md:text-[15px]',
                       isActive
-                        ? 'text-white'
-                        : 'text-white/50 hover:text-white hover:bg-white/5'
+                        ? 'font-bold text-white'
+                        : 'hover:text-white'
                     )
                   }
                 >
                   {({ isActive }) => (
                     <>
-                      <Icon className={cn('h-3.5 w-3.5', isActive ? 'text-[var(--primary)]' : '')} />
+                      <Icon className={cn('h-[18px] w-[18px]', isActive ? 'text-red-500' : '')} />
                       {link.name}
                     </>
                   )}
                 </NavLink>
               );
             })}
-
-            {/* Movies Dropdown */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setMoviesDropdownOpen((open) => !open)}
-                className={cn(
-                  'flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold transition-all cursor-pointer',
-                  isMoviesActive
-                    ? 'text-white'
-                    : 'text-white/50 hover:text-white hover:bg-white/5'
-                )}
-              >
-                <Clapperboard className={cn('h-3.5 w-3.5', isMoviesActive ? 'text-[var(--primary)]' : '')} />
-                Movies
-                <ChevronDown className={cn('h-3 w-3 transition-transform', moviesDropdownOpen && 'rotate-180')} />
-              </button>
-
-              <AnimatePresence>
-                {moviesDropdownOpen && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setMoviesDropdownOpen(false)} />
-                    <motion.div
-                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                      transition={{ duration: 0.15 }}
-                      className="absolute left-0 top-full mt-2 z-50 w-64 rounded-2xl border border-white/10 bg-black/95 backdrop-blur-xl p-2 text-white shadow-2xl"
-                    >
-                      {MOVIE_MENU_ITEMS.map((item) => {
-                        const Icon = item.icon;
-
-                        return (
-                          <button
-                            key={item.name}
-                            type="button"
-                            onClick={() => {
-                              navigate(item.path);
-                              closeMenus();
-                            }}
-                            className="flex w-full items-start gap-3 rounded-xl p-2.5 text-left transition hover:bg-white/5"
-                          >
-                            <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" />
-                            <div>
-                              <span className="block text-xs font-bold text-white">{item.name}</span>
-                              <span className="block text-[10px] text-white/50">{item.description}</span>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
-            </div>
           </nav>
 
           <CinemaSelector onSelect={closeMenus} />
-        </div>
+        </PageContainer>
       </div>
+
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <>
+            <motion.button
+              type="button"
+              className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+              aria-label="Close navigation menu"
+              onClick={() => setMobileMenuOpen(false)}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            />
+            <motion.div
+              className="fixed bottom-0 right-0 top-0 z-50 flex w-[min(360px,88vw)] flex-col border-l border-white/10 bg-black/95 p-4 pt-20 text-white shadow-2xl backdrop-blur-xl lg:hidden"
+              initial={{ opacity: 0, x: 36 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 36 }}
+              transition={{ duration: 0.18 }}
+            >
+              <div className="mb-4">
+                <SearchAutocomplete
+                  size="sm"
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  onSubmit={handleSearchSubmit}
+                  onSelect={handleSuggestionSelect}
+                />
+              </div>
+
+              <nav className="space-y-1" aria-label="Mobile public navigation">
+                {NAV_LINKS.map((link) => {
+                  const Icon = link.icon;
+                  return (
+                    <NavLink
+                      key={link.name}
+                      to={link.path}
+                      end={link.end}
+                      className={({ isActive }) =>
+                        cn(
+                          'flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition-colors',
+                          isActive ? 'bg-white/5 text-white' : 'text-white/65 hover:bg-white/5 hover:text-white',
+                        )
+                      }
+                    >
+                      {({ isActive }) => (
+                        <>
+                          <Icon className={cn('h-5 w-5', isActive && 'text-[var(--primary)]')} />
+                          {link.name}
+                        </>
+                      )}
+                    </NavLink>
+                  );
+                })}
+              </nav>
+
+              <div className="mt-4 border-t border-white/10 pt-4">
+                <CinemaSelector onSelect={closeMenus} mobile />
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
     </header>
   );
