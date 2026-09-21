@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   AlertTriangle,
@@ -124,9 +124,12 @@ const BookingFlow: React.FC = () => {
   const { showtimeId } = useParams<{ showtimeId: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { showtimes, getMovieById, fetchCatalog } = useMovieStore();
-  const { user } = useAuthStore();
+  const { user, isAuthenticated, isAuthLoading } = useAuthStore();
   const now = useShowtimeClock();
+  const needsLogin = !isAuthLoading && (!isAuthenticated || !user);
+  const loginRedirect = `${location.pathname}${location.search}`;
 
   const backendShowId = parseShowId(searchParams.get('showId') ?? showtimeId);
   const showtime = showtimes.find((show) => parseShowId(show.id) === backendShowId);
@@ -170,10 +173,20 @@ const BookingFlow: React.FC = () => {
   }, [fetchCatalog]);
 
   useEffect(() => {
+    if (!needsLogin) return;
+    navigate(`/login?redirect=${encodeURIComponent(loginRedirect)}`, { replace: true });
+  }, [loginRedirect, navigate, needsLogin]);
+
+  useEffect(() => {
     checkoutPaymentRef.current = checkoutPayment;
   }, [checkoutPayment]);
 
   useEffect(() => {
+    if (needsLogin) {
+      setSnacks([]);
+      setSnackCategories(DEFAULT_SNACK_CATEGORIES);
+      return;
+    }
     const loadConcessions = async () => {
       try {
         const [products, categories] = await Promise.all([productService.list(), productCategoryService.list()]);
@@ -203,9 +216,15 @@ const BookingFlow: React.FC = () => {
       }
     };
     void loadConcessions();
-  }, []);
+  }, [needsLogin]);
 
   useEffect(() => {
+    if (needsLogin) {
+      setLoadedShow(null);
+      setScreenSeats([]);
+      setSeatsLoading(false);
+      return;
+    }
     let cancelled = false;
 
     const loadSeats = async () => {
@@ -233,7 +252,7 @@ const BookingFlow: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [backendShowId, reloadSeats]);
+  }, [backendShowId, reloadSeats, needsLogin]);
 
   const rows = Array.from(new Set(screenSeats.map((seat) => seat.rowName)));
   const seatsByLabel = new Map(screenSeats.map((seat) => [seatLabel(seat), seat]));
@@ -1511,6 +1530,24 @@ const BookingFlow: React.FC = () => {
     if (step === 'checkout') return renderCheckout();
     return renderConfirmation();
   };
+
+  if (isAuthLoading || needsLogin) {
+    return (
+      <div className="mx-auto max-w-2xl px-6 py-16 sm:py-24">
+        <div className="rounded-3xl border border-border bg-card p-7 text-center sm:p-10">
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#E50914]/10 text-[#E50914]">
+            <LoaderCircle className="h-6 w-6 animate-spin" />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground">
+            {isAuthLoading ? 'Checking your account' : 'Redirecting to sign in'}
+          </h1>
+          <p role="status" className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
+            Please sign in before choosing seats or placing an order.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const unavailable = loadedShow && step !== 'confirmation' ? showUnavailableReason(loadedShow, now) : '';
   if (seatsLoading || seatsError || unavailable || !screenSeats.length) {

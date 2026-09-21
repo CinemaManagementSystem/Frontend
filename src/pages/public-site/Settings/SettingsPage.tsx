@@ -3,6 +3,7 @@ import { Sun, Moon, Monitor, Palette, Shield, Bell, Check } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useTheme, type Theme } from '@/context/ThemeContext';
 import { cn } from '@/lib/utils';
+import { PageContainer } from '@/components/layout/PageContainer';
 
 interface SettingRowProps {
   icon: React.ReactNode;
@@ -73,7 +74,7 @@ export const SettingsPage: React.FC = () => {
   ];
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
+    <PageContainer className="py-12 space-y-8">
       {/* Header */}
       <div className="space-y-1.5">
         <div className="flex items-center gap-2 text-[#E50914]">
@@ -143,6 +144,6 @@ export const SettingsPage: React.FC = () => {
           <span className="text-xs text-muted-foreground">Coming soon</span>
         </SettingRow>
       </motion.div>
-    </div>
+    </PageContainer>
   );
 };

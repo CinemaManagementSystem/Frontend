@@ -34,7 +34,7 @@ export const MainLayout: React.FC = () => {
 
   return (
     <HeroBackdropProvider>
-      <div className="relative isolate flex min-h-screen flex-col bg-background text-foreground selection:bg-[#E50914] selection:text-white">
+      <div className="relative isolate flex min-h-screen flex-col bg-transparent text-foreground selection:bg-[#E50914] selection:text-white">
         <PageBackdrop />
         <Navbar />
         <main className="relative z-10 flex-1 overflow-hidden">

@@ -96,7 +96,7 @@ export const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
     }
   };
 
-  const heightClass = size === 'lg' ? 'h-12 pl-11' : 'h-10 pl-11';
+  const heightClass = size === 'lg' ? 'h-12' : 'h-10';
 
   return (
     <div ref={containerRef} className="relative">

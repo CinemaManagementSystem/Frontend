@@ -25,7 +25,7 @@ export const SectionTabs: React.FC<SectionTabsProps> = ({
   showCounts = true,
 }) => {
   return (
-    <div className={cn('flex items-center gap-5 md:gap-6', className)} role="tablist" aria-label="Movie listing tabs">
+    <div className={cn('flex items-center gap-6', className)} role="tablist" aria-label="Movie listing tabs">
       {tabs.map((tab, index) => (
         <React.Fragment key={tab.id}>
           <button
@@ -37,12 +37,12 @@ export const SectionTabs: React.FC<SectionTabsProps> = ({
             onClick={() => onTabChange(tab.id)}
             className={cn(
               variant === 'home'
-                ? 'flex items-center gap-2 whitespace-nowrap px-0 py-3 text-3xl font-semibold leading-none tracking-[-0.02em] transition-colors md:text-4xl lg:text-[40px]'
+                ? 'flex items-center gap-2 whitespace-nowrap px-0 py-3 text-3xl font-bold leading-none transition-colors md:text-4xl'
                 : 'section-tab',
               variant === 'home'
                 ? activeTab === tab.id
                   ? 'text-white'
-                  : 'text-white/50 hover:text-white/80'
+                  : 'text-neutral-400 hover:text-white/80'
                 : activeTab === tab.id ? 'section-tab-active' : 'section-tab-inactive'
             )}
           >
@@ -59,7 +59,7 @@ export const SectionTabs: React.FC<SectionTabsProps> = ({
             )}
           </button>
           {index < tabs.length - 1 && (
-            <div className={variant === 'home' ? 'h-11 w-px bg-white/20' : 'section-tab-divider'} aria-hidden="true" />
+            <div className={variant === 'home' ? 'h-8 w-px bg-white/20' : 'section-tab-divider'} aria-hidden="true" />
           )}
         </React.Fragment>
       ))}

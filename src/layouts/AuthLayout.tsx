@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import { Film, ArrowLeft } from 'lucide-react';
+import { PageContainer } from '@/components/layout/PageContainer';
 
 export const AuthLayout: React.FC = () => {
   return (
@@ -15,7 +16,7 @@ export const AuthLayout: React.FC = () => {
       />
 
       {/* Top Header */}
-      <header className="relative z-10 px-6 py-6 max-w-7xl mx-auto w-full flex items-center justify-between">
+      <PageContainer as="header" className="relative z-10 flex items-center justify-between py-6">
         <Link to="/" className="flex items-center gap-2.5 group">
           <div className="w-10 h-10 rounded-xl bg-[#E50914] flex items-center justify-center shadow-lg shadow-[#E50914]/30 group-hover:scale-105 transition-transform">
             <Film className="w-5 h-5 text-white" />
@@ -32,7 +33,7 @@ export const AuthLayout: React.FC = () => {
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Home</span>
         </Link>
-      </header>
+      </PageContainer>
 
       {/* Main Form Center Box */}
       <main className="relative z-10 flex-1 flex items-center justify-center p-4">

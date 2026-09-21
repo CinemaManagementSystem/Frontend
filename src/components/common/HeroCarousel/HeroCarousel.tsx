@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PageContainer } from '@/components/layout/PageContainer';
 
 export interface HeroSlide {
   id: string;
@@ -132,7 +133,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
       <div key={slide.id} className="min-w-0 flex-[0_0_100%]">
         <div
           className={cn(
-            'relative aspect-[16/9] overflow-hidden rounded-2xl bg-white/10 sm:aspect-[16/6]',
+            'relative aspect-[16/9] overflow-hidden rounded-2xl bg-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.35)] sm:aspect-[16/6]',
             !loadedImages[slide.id] && 'animate-pulse',
             canOpenMovie && 'cursor-pointer',
           )}
@@ -149,17 +150,14 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
           ) : image}
 
           {slide.showContent && (
-            <>
-              <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/55 to-black/10" />
-              <div className="relative flex h-full items-center px-6 py-8 sm:px-10 lg:px-16">
-                <div className="max-w-[520px]">
-                  {slide.badge && <span className="inline-flex rounded-full border border-red-400/50 bg-red-950/30 px-4 py-1.5 text-xs font-semibold tracking-[0.2em] text-white">{slide.badge}</span>}
-                  <h1 className="mt-4 text-4xl font-extrabold leading-[0.95] text-white sm:text-5xl lg:text-6xl">{slide.title}</h1>
-                  {slide.description && <p className="mt-5 max-w-md text-base leading-relaxed text-white/70 sm:text-lg">{slide.description}</p>}
-                  {slide.buttonText && onSlideAction && <button type="button" onClick={() => onSlideAction(slide)} className="mt-6 inline-flex items-center gap-3 rounded-xl bg-red-600 px-6 py-3 font-semibold text-white transition hover:bg-red-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-white">{slide.buttonText}<ArrowRight className="h-4 w-4" /></button>}
-                </div>
+            <div className="relative flex h-full items-center px-6 py-8 sm:px-10 lg:px-16">
+              <div className="max-w-[520px]">
+                {slide.badge && <span className="inline-flex rounded-full border border-red-400/50 bg-red-950/30 px-4 py-1.5 text-xs font-semibold tracking-[0.2em] text-white">{slide.badge}</span>}
+                <h1 className="mt-4 text-4xl font-extrabold leading-[0.95] text-white sm:text-5xl lg:text-6xl">{slide.title}</h1>
+                {slide.description && <p className="mt-5 max-w-md text-base leading-relaxed text-white/70 sm:text-lg">{slide.description}</p>}
+                {slide.buttonText && onSlideAction && <button type="button" onClick={() => onSlideAction(slide)} className="mt-6 inline-flex items-center gap-3 rounded-xl bg-red-600 px-6 py-3 font-semibold text-white transition hover:bg-red-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-white">{slide.buttonText}<ArrowRight className="h-4 w-4" /></button>}
               </div>
-            </>
+            </div>
           )}
 
           {showArrows && slides.length > 1 && (
@@ -182,14 +180,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
       onMouseLeave={() => setIsHovered(false)}
       aria-label="Featured movies"
     >
-      <div
-        className="absolute inset-0 -z-10 scale-110 bg-cover bg-center blur-3xl opacity-40"
-        style={{ backgroundImage: currentImage ? `url(${currentImage})` : undefined }}
-        aria-hidden="true"
-      />
-      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-transparent via-[#050505]/55 to-[#050505]" aria-hidden="true" />
-
-      <div className="container-main">
+      <PageContainer>
         <div ref={emblaRef} className="overflow-hidden" role="region" aria-roledescription="carousel" aria-label="Featured movie banners">
           <div className="flex">{slideItems}</div>
         </div>
@@ -210,7 +201,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
             />
           ))}
         </div>
-      </div>
+      </PageContainer>
     </section>
   );
 };

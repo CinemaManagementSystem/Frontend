@@ -70,8 +70,8 @@ export const useMovieStore = create<MovieState>((set, get) => ({
         const [apiMovies, apiShows, seats, screens, theaters] = await Promise.all([
           movieAdminService.list(),
           showService.list(),
-          authenticated ? seatService.list() : Promise.resolve([]),
-          authenticated ? screenService.list() : Promise.resolve([]),
+          authenticated ? seatService.list().catch(() => []) : Promise.resolve([]),
+          screenService.list().catch(() => []),
           theaterService.list(),
         ]);
         const movies = apiMovies.map(toMovie);
@@ -100,7 +100,7 @@ export const useMovieStore = create<MovieState>((set, get) => ({
             id: `st-${show.id}`,
             movieId: `m-${show.movieId}`,
             cinemaId: theater ? `c-${theater.id}` : '',
-            cinemaName: theater?.name ?? 'Sign in to view cinema',
+            cinemaName: theater?.name ?? 'Cinema details unavailable',
             hallName: screen?.name ?? '',
             startTime: show.startTime,
             endTime: show.endTime,
@@ -113,7 +113,7 @@ export const useMovieStore = create<MovieState>((set, get) => ({
             occupiedSeats,
           };
         });
-        set({ movies, showtimes, catalogRequiresSignIn: !authenticated, error: null });
+        set({ movies, showtimes, catalogRequiresSignIn: false, error: null });
       } catch (error) {
         set({ error: getApiErrorMessage(error, 'movie catalogue') });
         throw error;

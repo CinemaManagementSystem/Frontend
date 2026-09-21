@@ -34,14 +34,17 @@ export const PageBackdrop: React.FC = () => {
     return () => window.cancelAnimationFrame(frame);
   }, [currentImage, reducedMotion]);
 
-  const imageClass = `absolute inset-0 h-full w-full scale-125 object-cover blur-3xl saturate-150 ${reducedMotion ? '' : 'transition-opacity duration-700'}`;
+  const transitionClass = reducedMotion ? '' : 'transition-opacity duration-700 ease-in-out';
+  const imageClass = `absolute inset-0 h-full w-full scale-125 object-cover blur-[80px] saturate-150 select-none will-change-opacity ${transitionClass}`;
+  const previousOpacity = currentVisible ? 'opacity-0' : 'opacity-70';
+  const currentOpacity = currentVisible ? 'opacity-70' : 'opacity-0';
 
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[720px] overflow-hidden bg-gradient-to-b from-[#3a0a10] to-[#050505]" aria-hidden="true">
-      {previousImage && <img src={previousImage} alt="" className={`${imageClass} opacity-60`} />}
-      {currentImage && <img key={currentImage} src={currentImage} alt="" className={`${imageClass} ${currentVisible ? 'opacity-60' : 'opacity-0'}`} />}
-      <div className="absolute inset-0 bg-black/30" />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#050505]/40 to-[#050505]" />
+    <div className="pointer-events-none fixed inset-x-0 top-0 z-0 h-[520px] overflow-hidden bg-gradient-to-b from-[#2a0710] to-[#0a0204]" aria-hidden="true">
+      {previousImage && <img src={previousImage} alt="" className={`${imageClass} ${previousOpacity}`} />}
+      {currentImage && <img key={currentImage} src={currentImage} alt="" className={`${imageClass} ${currentOpacity}`} />}
+      <div className="absolute inset-0 bg-black/20" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0a0204]/70 to-[#0a0204]" />
     </div>
   );
 };

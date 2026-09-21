@@ -8,6 +8,7 @@ import { initializeGateway } from '@/services/paymentGatewayService';
 import { getApiErrorMessage } from '@/services/apiClient';
 import { MAX_MANUAL_CHECKS, renderGatewayQr } from '@/lib/gatewayQr';
 import { usePaymentSession } from '@/hooks/usePaymentSession';
+import { PageContainer } from '@/components/layout/PageContainer';
 import type { GatewaySession, PaymentGatewayState } from '@/types/paymentGateway';
 import { formatCurrency } from '@/utils/formatCurrency';
 
@@ -15,12 +16,20 @@ const focus = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:rin
 
 export function PaymentGatewayPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { bookingId: routeBookingId } = useParams<{ bookingId: string }>();
   const user = useAuthStore((store) => store.user);
+  const redirectTarget = `${location.pathname}${location.search}`;
+  useEffect(() => {
+    if (user) return;
+    navigate(`/login?redirect=${encodeURIComponent(redirectTarget)}`, { replace: true });
+  }, [navigate, redirectTarget, user]);
+
   if (!user) return (
     <main className="mx-auto max-w-xl space-y-5 px-6 py-20 text-center">
-      <h1 className="text-2xl font-bold">Sign in to complete checkout</h1>
-      <Link to="/login" className={`inline-block rounded-xl bg-primary px-6 py-3 text-primary-foreground ${focus}`}>Sign in</Link>
+      <LoaderCircle className="mx-auto h-7 w-7 animate-spin text-primary" aria-hidden="true" />
+      <h1 className="text-2xl font-bold">Redirecting to sign in</h1>
+      <p className="text-sm text-muted-foreground">Please sign in to complete checkout.</p>
     </main>
   );
   const routerState = (location.state ?? {}) as PaymentGatewayState;
@@ -85,7 +94,10 @@ function GatewayCheckout({ session }: { session: GatewaySession }) {
   useEffect(() => {
     if (phase !== 'paid' && phase !== 'cash') return;
     useCheckoutCartStore.getState().clearCheckout(payment.bookingId);
-    const timer = window.setTimeout(() => navigate(`/order-confirmation?paymentId=${payment.id}`, {
+    const confirmationPath = payment.bookingId
+      ? `/order-confirmation/${payment.bookingId}?paymentId=${payment.id}`
+      : `/order-confirmation?paymentId=${payment.id}`;
+    const timer = window.setTimeout(() => navigate(confirmationPath, {
       replace: true, state: { paymentId: payment.id, orderId: payment.orderId, bookingId: payment.bookingId },
     }), phase === 'paid' ? 1500 : 0);
     return () => window.clearTimeout(timer);
@@ -99,8 +111,8 @@ function GatewayCheckout({ session }: { session: GatewaySession }) {
     : phase === 'finalizing' ? 'Verifying payment' : closed ? 'Session ended' : 'Awaiting payment';
 
   return (
-    <main className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 sm:py-12">
-      <div className="mx-auto max-w-5xl">
+    <main className="min-h-screen bg-background py-8 text-foreground sm:py-12">
+      <PageContainer>
         <Link to="/history" className={`mb-8 inline-flex items-center gap-2 rounded text-sm text-muted-foreground hover:text-foreground ${focus}`}>
           <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Your bookings
         </Link>
@@ -172,7 +184,7 @@ function GatewayCheckout({ session }: { session: GatewaySession }) {
             </aside>
           </div>
         </motion.section>
-      </div>
+      </PageContainer>
     </main>
   );
 }

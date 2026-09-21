@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Clock3, Home, LoaderCircle, Ticket } from 'lucide-react';
-import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import { paymentService } from '@/services/paymentService';
 import { getApiErrorMessage } from '@/services/apiClient';
 import { formatCurrency } from '@/utils/formatCurrency';
+import { PageContainer } from '@/components/layout/PageContainer';
 import type { Payment } from '@/types/payment';
 
 export function OrderConfirmationPage() {
   const location = useLocation();
+  const { bookingId: routeBookingId } = useParams<{ bookingId: string }>();
   const [params] = useSearchParams();
   const id = Number(params.get('paymentId') || (location.state as { paymentId?: number } | null)?.paymentId);
+  const expectedBookingId = Number(routeBookingId || (location.state as { bookingId?: number } | null)?.bookingId);
   const [payment, setPayment] = useState<Payment | null>(null);
   const [error, setError] = useState('');
   useEffect(() => {
@@ -17,16 +20,29 @@ export function OrderConfirmationPage() {
     setPayment(null);
     setError('');
     if (!Number.isSafeInteger(id) || id <= 0) setError('Open a payment from your booking history to view its confirmation.');
-    else paymentService.getById(id).then((result) => { if (active) setPayment(result); })
+    else paymentService.getById(id).then((result) => {
+      if (!active) return;
+      if (
+        Number.isSafeInteger(expectedBookingId)
+        && expectedBookingId > 0
+        && result.bookingId
+        && result.bookingId !== expectedBookingId
+      ) {
+        setError('This payment does not match the requested booking.');
+        return;
+      }
+      setPayment(result);
+    })
       .catch((reason) => { if (active) setError(getApiErrorMessage(reason, 'payment')); });
     return () => { active = false; };
-  }, [id]);
+  }, [expectedBookingId, id]);
   const paid = payment?.status === 'PAID';
   const cash = payment?.paymentMethod === 'CASH' && payment.status === 'PENDING';
   const title = error ? 'Confirmation unavailable' : paid ? 'Payment successful' : cash ? 'Cash payment pending' : 'Payment not confirmed';
 
   return (
-    <main className="min-h-screen bg-background px-4 py-12 text-foreground sm:px-6">
+    <main className="min-h-screen bg-background py-12 text-foreground">
+      <PageContainer>
       <section className="mx-auto max-w-xl rounded-3xl border border-border bg-card p-7 text-center shadow-xl sm:p-10">
         {!payment && !error ? <p role="status" className="flex items-center justify-center gap-3"><LoaderCircle className="h-6 w-6 motion-safe:animate-spin" /> Checking your confirmation...</p> : <>
           {paid ? <CheckCircle2 className="mx-auto h-16 w-16 text-emerald-500" aria-hidden="true" />
@@ -50,6 +66,7 @@ export function OrderConfirmationPage() {
           <Link to="/" className="inline-flex items-center justify-center gap-2 rounded-xl border border-border px-4 py-3 text-sm font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4"><Home className="h-4 w-4" /> Back home</Link>
         </div>
       </section>
+      </PageContainer>
     </main>
   );
 }

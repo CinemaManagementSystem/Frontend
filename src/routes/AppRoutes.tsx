@@ -63,6 +63,8 @@ import { PaymentGatewayPage } from '@/pages/public-site/Payment/PaymentGatewayPa
 import { OrderConfirmationPage } from '@/pages/public-site/Payment/OrderConfirmationPage';
 import { useAuthStore } from '@/store/authStore';
 import { canAccessAdmin } from '@/lib/authRole';
+import { AdminRoute } from './AdminRoute';
+import { ProtectedRoute } from './ProtectedRoute';
 import Promotion from '@/pages/public-site/promotion/Promotion';
 import PromotionDetail from '@/pages/public-site/promotion/PromotionDetail';
 
@@ -91,21 +93,34 @@ export const AppRoutes: React.FC = () => {
         <Route path="/movies" element={<PublicMoviesPage />} />
         <Route path="/showcase" element={<ShowcasePage />} />
         <Route path="/movies/:id" element={<MovieDetailPage />} />
-        <Route path="/booking/:showtimeId" element={<BookingPage />} />
-        <Route path="/history" element={<HistoryPage />} />
         <Route path="/cinemas" element={<CinemasPage />} />
         <Route path="/promotion" element={<Promotion />} />
         <Route path="/promotion/:promotionId" element={<PromotionDetail />} />
         <Route path="/fnb" element={<OffersPage />} />
         <Route path="/offers" element={<Navigate to="/promotion" replace />} />
-        <Route path="/settings" element={<SettingsPage />} />
         <Route path="/premiere" element={<PremierePage />} />
         <Route path="/membership" element={<PremierePage />} />
         <Route path="/premiere-circle" element={<PremierePage />} />
         <Route path="/coming-soon" element={<PremierePage />} />
-        <Route path="/payment/:bookingId" element={<PaymentGatewayPage />} />
-        <Route path="/payment-gateway" element={<PaymentGatewayPage />} />
-        <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
+      </Route>
+
+      {/* Customer-only actions: users may browse publicly, but must sign in before booking, ordering, payment, or account pages. */}
+      <Route element={<ProtectedRoute />}>
+        <Route
+          element={
+            <CustomerOnlyRoute>
+              <MainLayout />
+            </CustomerOnlyRoute>
+          }
+        >
+          <Route path="/booking/:showtimeId" element={<BookingPage />} />
+          <Route path="/history" element={<HistoryPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/payment/:bookingId" element={<PaymentGatewayPage />} />
+          <Route path="/payment-gateway" element={<PaymentGatewayPage />} />
+          <Route path="/order-confirmation/:bookingId" element={<OrderConfirmationPage />} />
+          <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
+        </Route>
       </Route>
 
       {/* Authentication Layout & Routes */}
@@ -119,44 +134,46 @@ export const AppRoutes: React.FC = () => {
       <Route path="/en/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
 
       {/* Admin Dashboard Layout & Routes */}
-      <Route path="/admin" element={<DashboardLayout />}>
-        <Route index element={<Navigate to="/admin/dashboard" replace />} />
-        <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="movie-categories" element={<CategoriesPage />} />
-        <Route path="movie-categories/create" element={<CreateCategoryPage />} />
-        <Route path="movies" element={<MoviesPage />} />
-        <Route path="movies/create" element={<CreateMoviePage />} />
-        <Route path="locations" element={<LocationsPage />} />
-        <Route path="locations/create" element={<CreateLocationPage />} />
-        <Route path="theaters" element={<TheatersPage />} />
-        <Route path="theaters/create" element={<CreateTheaterPage />} />
-        <Route path="screens" element={<ScreensPage />} />
-        <Route path="screens/create" element={<CreateScreenPage />} />
-        <Route path="seats" element={<SeatsPage />} />
-        <Route path="seats/create" element={<CreateSeatPage />} />
-        <Route path="shows" element={<ShowsPage />} />
-        <Route path="shows/create" element={<CreateShowPage />} />
-        <Route path="bookings" element={<BookingsPage />} />
-        <Route path="bookings/create" element={<CreateBookingPage />} />
-        <Route path="booking-seats" element={<BookingSeatsPage />} />
-        <Route path="booking-seats/create" element={<CreateBookingSeatPage />} />
-        <Route path="product-categories" element={<ProductCategoriesPage />} />
-        <Route path="product-categories/create" element={<CreateProductCategoryPage />} />
-        <Route path="products" element={<ProductsPage />} />
-        <Route path="products/create" element={<CreateProductPage />} />
-        <Route path="orders" element={<OrdersPage />} />
-        <Route path="orders/create" element={<CreateOrderPage />} />
-        <Route path="order-items" element={<OrderItemsPage />} />
-        <Route path="order-items/create" element={<CreateOrderItemPage />} />
-        <Route path="payments" element={<PaymentsPage />} />
-        <Route path="payments/create" element={<CreatePaymentPage />} />
-        <Route path="payment-transactions" element={<PaymentTransactionsPage />} />
-        <Route path="payment-transactions/create" element={<CreatePaymentTransactionPage />} />
-        <Route path="users" element={<UsersPage />} />
-        <Route path="users/create" element={<CreateUserPage />} />
-        <Route path="audit-logs" element={<AuditLogsPage />} />
-        <Route path="settings" element={<AdminSettingsPage />} />
-        <Route path="security" element={<Navigate to="/admin/audit-logs" replace />} />
+      <Route element={<AdminRoute />}>
+        <Route path="/admin" element={<DashboardLayout />}>
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="movie-categories" element={<CategoriesPage />} />
+          <Route path="movie-categories/create" element={<CreateCategoryPage />} />
+          <Route path="movies" element={<MoviesPage />} />
+          <Route path="movies/create" element={<CreateMoviePage />} />
+          <Route path="locations" element={<LocationsPage />} />
+          <Route path="locations/create" element={<CreateLocationPage />} />
+          <Route path="theaters" element={<TheatersPage />} />
+          <Route path="theaters/create" element={<CreateTheaterPage />} />
+          <Route path="screens" element={<ScreensPage />} />
+          <Route path="screens/create" element={<CreateScreenPage />} />
+          <Route path="seats" element={<SeatsPage />} />
+          <Route path="seats/create" element={<CreateSeatPage />} />
+          <Route path="shows" element={<ShowsPage />} />
+          <Route path="shows/create" element={<CreateShowPage />} />
+          <Route path="bookings" element={<BookingsPage />} />
+          <Route path="bookings/create" element={<CreateBookingPage />} />
+          <Route path="booking-seats" element={<BookingSeatsPage />} />
+          <Route path="booking-seats/create" element={<CreateBookingSeatPage />} />
+          <Route path="product-categories" element={<ProductCategoriesPage />} />
+          <Route path="product-categories/create" element={<CreateProductCategoryPage />} />
+          <Route path="products" element={<ProductsPage />} />
+          <Route path="products/create" element={<CreateProductPage />} />
+          <Route path="orders" element={<OrdersPage />} />
+          <Route path="orders/create" element={<CreateOrderPage />} />
+          <Route path="order-items" element={<OrderItemsPage />} />
+          <Route path="order-items/create" element={<CreateOrderItemPage />} />
+          <Route path="payments" element={<PaymentsPage />} />
+          <Route path="payments/create" element={<CreatePaymentPage />} />
+          <Route path="payment-transactions" element={<PaymentTransactionsPage />} />
+          <Route path="payment-transactions/create" element={<CreatePaymentTransactionPage />} />
+          <Route path="users" element={<UsersPage />} />
+          <Route path="users/create" element={<CreateUserPage />} />
+          <Route path="audit-logs" element={<AuditLogsPage />} />
+          <Route path="settings" element={<AdminSettingsPage />} />
+          <Route path="security" element={<Navigate to="/admin/audit-logs" replace />} />
+        </Route>
       </Route>
 
       {/* 404 Page Not Found Fallback */}
