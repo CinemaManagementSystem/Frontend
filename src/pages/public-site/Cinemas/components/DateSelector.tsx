@@ -42,10 +42,10 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
   };
 
   return (
-    <section className="border-b border-white/10 bg-[#0a0a0a] py-3.5" aria-label="Screening dates">
+    <section className="border-b border-border bg-card/60 py-3.5" aria-label="Screening dates">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 shrink-0 border-r border-white/10 pr-4 text-xs font-bold text-white/50 uppercase tracking-widest hidden sm:flex">
+          <div className="flex items-center gap-2 shrink-0 border-r border-border pr-4 text-xs font-bold text-muted-foreground uppercase tracking-widest hidden sm:flex">
             <Calendar className="w-4 h-4 text-[var(--primary)]" />
             <span>Select Date</span>
           </div>
@@ -53,7 +53,7 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
           <button
             type="button"
             onClick={() => handleScroll('left')}
-            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+            className="p-2 rounded-xl bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
             aria-label="Previous dates"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -78,13 +78,13 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
                     active ? 'date-card-selected' : 'date-card-unselected'
                   )}
                 >
-                  <span className={cn('text-[10px] font-black uppercase tracking-widest', active ? 'text-white/90' : 'text-white/50')}>
+                  <span className={cn('text-[10px] font-black uppercase tracking-widest', active ? 'text-white/90' : 'text-muted-foreground')}>
                     {d.isToday ? 'Today' : d.dayName}
                   </span>
                   <span className="text-base sm:text-lg font-black my-0.5 tracking-tight leading-none">
                     {d.dayNum}
                   </span>
-                  <span className={cn('text-[9px] uppercase font-black tracking-wider', active ? 'text-white/80' : 'text-white/40')}>
+                  <span className={cn('text-[9px] uppercase font-black tracking-wider', active ? 'text-white/80' : 'text-muted-foreground')}>
                     {d.monthName}
                   </span>
 
@@ -104,7 +104,7 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
           <button
             type="button"
             onClick={() => handleScroll('right')}
-            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+            className="p-2 rounded-xl bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
             aria-label="Next dates"
           >
             <ChevronRight className="w-4 h-4" />

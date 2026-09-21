@@ -83,6 +83,8 @@
     --surface-3: #1f1f24;
     --glow-red: rgba(150, 10, 25, 0.25);
     --shadow-soft: 0 18px 50px rgba(0, 0, 0, 0.24);
+    --radial-1: rgba(120, 10, 20, 0.18);
+    --radial-2: rgba(120, 10, 20, 0.1);
 }
 
 /* ---- Light Theme Variables ---- */
@@ -118,6 +120,8 @@
     --surface-3: #e2e5e9;
     --glow-red: rgba(225, 29, 46, 0.12);
     --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.12);
+    --radial-1: rgba(225, 29, 46, 0.05);
+    --radial-2: rgba(225, 29, 46, 0.03);
 }
 
 @layer base {
@@ -149,34 +153,31 @@ body::before {
   inset: 0;
   z-index: -1;
   background: 
+<<<<<<< Updated upstream
     radial-gradient(ellipse at 50% 0%, rgba(120, 10, 25, 0.25), transparent 60%),
+=======
+    radial-gradient(ellipse 80% 60% at 50% 0%, var(--radial-1), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 100% 100%, var(--radial-2), transparent 60%),
+>>>>>>> Stashed changes
     var(--background);
   pointer-events: none;
 }
 
 /* Glassmorphism styling */
 .glass-panel {
-  background-color: rgba(10, 10, 10, 0.8);
+  background-color: var(--card);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-html.light .glass-panel {
-  background-color: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border);
+  color: var(--card-foreground);
 }
 
 .glass-nav {
-  background-color: rgba(5, 5, 5, 0.9);
+  background-color: var(--background);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-html.light .glass-nav {
-  background-color: rgba(255, 255, 255, 0.95);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid var(--border);
+  color: var(--foreground);
 }
 
 /* Selection color */
@@ -266,16 +267,16 @@ html.light .skeleton {
 }
 
 .btn-pill-outline {
-  @apply btn-pill border border-white/20 bg-transparent text-white hover:border-[var(--primary)] hover:text-[var(--primary)] hover:bg-[var(--primary)]/10;
+  @apply btn-pill border border-border bg-transparent text-foreground hover:border-[var(--primary)] hover:text-[var(--primary)] hover:bg-[var(--primary)]/10;
 }
 
 .btn-pill-ghost {
-  @apply btn-pill bg-transparent text-white/70 hover:bg-white/10 hover:text-white;
+  @apply btn-pill bg-transparent text-muted-foreground hover:bg-accent/10 hover:text-foreground;
 }
 
 /* Time slot pill */
 .time-slot-pill {
-  @apply px-6 py-2.5 rounded-full border border-white/40 text-sm font-medium text-white/90 
+  @apply px-6 py-2.5 rounded-full border border-border text-sm font-medium text-foreground 
          hover:border-[var(--primary)] hover:text-[var(--primary)] hover:bg-[var(--primary)]/10 
          transition-all duration-200 cursor-pointer
          disabled:opacity-40 disabled:cursor-not-allowed disabled:line-through;
@@ -293,7 +294,11 @@ html.light .skeleton {
 }
 
 .date-card-unselected {
+<<<<<<< Updated upstream
   @apply border-white/20 bg-black/60 text-white/50 hover:border-white/35 hover:text-white;
+=======
+  @apply border-border bg-card/60 text-muted-foreground hover:border-foreground/30 hover:text-foreground hover:bg-accent/10;
+>>>>>>> Stashed changes
 }
 
 /* Movie card */
@@ -307,15 +312,15 @@ html.light .skeleton {
 }
 
 .movie-card-title {
-  @apply mt-3 line-clamp-2 text-sm font-bold text-white;
+  @apply mt-3 line-clamp-2 text-sm font-bold text-foreground;
 }
 
 .movie-card-date {
-  @apply text-xs font-medium text-white/50;
+  @apply text-xs font-medium text-muted-foreground;
 }
 
 .movie-card-rating {
-  @apply inline-flex items-center gap-1 rounded-full border border-white/30 px-2 py-0.5 text-[10px] font-bold text-white/80;
+  @apply inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[10px] font-bold text-muted-foreground;
 }
 
 /* Section tabs */
@@ -324,49 +329,49 @@ html.light .skeleton {
 }
 
 .section-tab-active {
-  @apply text-white;
+  @apply text-foreground;
 }
 
 .section-tab-inactive {
-  @apply text-[#918C8E] hover:text-white/80;
+  @apply text-muted-foreground hover:text-foreground;
 }
 
 .section-tab-divider {
-  @apply h-9 w-px bg-white/20;
+  @apply h-9 w-px bg-border;
 }
 
 /* Typography refinement for the dedicated movie listing page. */
 .movie-listing-page .date-card {
-  @apply min-h-[82px] min-w-[155px] gap-[2px] rounded-lg border-white/25 bg-black/20 px-4 py-2.5;
+  @apply min-h-[82px] min-w-[155px] gap-[2px] rounded-lg border-border bg-card/60 px-4 py-2.5;
 }
 
 .movie-listing-page .date-card-selected {
-  @apply border-[#FF2028] bg-black/40 font-normal text-[#F5F5F5] shadow-[0_0_20px_rgba(255,32,40,0.18)];
+  @apply border-[var(--primary)] bg-card font-normal text-foreground shadow-[0_0_20px_rgba(255,32,40,0.18)];
 }
 
 .movie-listing-page .date-card-unselected {
-  @apply border-white/25 bg-black/20 text-[#AAA4A7] hover:border-white/40 hover:bg-black/30 hover:text-[#F5F5F5];
+  @apply border-border bg-card/60 text-muted-foreground hover:border-foreground/30 hover:bg-accent/10 hover:text-foreground;
 }
 
 .movie-listing-page .date-selector-day,
 .movie-listing-page .date-selector-month {
-  @apply text-sm font-medium leading-none text-[#AAA4A7];
+  @apply text-sm font-medium leading-none text-muted-foreground;
 }
 
 .movie-listing-page .date-selector-number {
-  @apply text-[22px] font-semibold leading-none text-[#F5F5F5];
+  @apply text-[22px] font-semibold leading-none text-foreground;
 }
 
 .movie-listing-page .movie-card-title {
-  @apply mt-2 text-base font-medium leading-snug text-[#F5F5F5] md:text-[17px];
+  @apply mt-2 text-base font-medium leading-snug text-foreground md:text-[17px];
 }
 
 .movie-listing-page .movie-card-date {
-  @apply text-[15px] font-normal text-[#AAA4A7] md:text-base;
+  @apply text-[15px] font-normal text-muted-foreground md:text-base;
 }
 
 .movie-listing-page .movie-card-rating {
-  @apply px-1.5 py-0.5 text-[10px] font-medium leading-none text-[#B4AFB1];
+  @apply px-1.5 py-0.5 text-[10px] font-medium leading-none text-muted-foreground;
 }
 
 /* Home movie cards use a larger reading scale beneath the artwork. */
@@ -384,11 +389,11 @@ html.light .skeleton {
 
 /* Cinema accordion */
 .cinema-accordion-header {
-  @apply flex items-center justify-between w-full px-4 py-4 text-left font-bold text-white hover:bg-white/[0.03] transition-colors;
+  @apply flex items-center justify-between w-full px-4 py-4 text-left font-bold text-foreground hover:bg-accent/10 transition-colors;
 }
 
 .cinema-accordion-chevron {
-  @apply h-5 w-5 text-white/50 transition-transform duration-200;
+  @apply h-5 w-5 text-muted-foreground transition-transform duration-200;
 }
 
 .cinema-accordion-chevron-open {

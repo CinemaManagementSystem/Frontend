@@ -180,7 +180,18 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
       onMouseLeave={() => setIsHovered(false)}
       aria-label="Featured movies"
     >
+<<<<<<< Updated upstream
       <PageContainer>
+=======
+      <div
+        className="absolute inset-0 -z-10 scale-110 bg-cover bg-center blur-3xl opacity-40"
+        style={{ backgroundImage: currentImage ? `url(${currentImage})` : undefined }}
+        aria-hidden="true"
+      />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-transparent via-background/55 to-background" aria-hidden="true" />
+
+      <div className="container-main">
+>>>>>>> Stashed changes
         <div ref={emblaRef} className="overflow-hidden" role="region" aria-roledescription="carousel" aria-label="Featured movie banners">
           <div className="flex">{slideItems}</div>
         </div>

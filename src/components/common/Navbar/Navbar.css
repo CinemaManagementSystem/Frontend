@@ -51,11 +51,20 @@
   width: min(320px, calc(100vw - 2rem));
   max-height: min(360px, calc(100vh - 7rem));
   overflow-y: auto;
+<<<<<<< Updated upstream
   padding: 0.35rem;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 0.5rem;
   background: rgba(0, 0, 0, 0.94);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+=======
+  padding: 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+  background: var(--card);
+  color: var(--card-foreground);
+  box-shadow: var(--shadow-soft);
+>>>>>>> Stashed changes
   backdrop-filter: blur(18px);
 }
 
@@ -65,9 +74,9 @@
   gap: 0.5rem;
   margin: 0.25rem;
   padding: 0.6rem 0.7rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border);
   border-radius: 0.65rem;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--background);
 }
 
 .cinema-nav-picker-search input {
@@ -76,11 +85,11 @@
   border: 0;
   outline: 0;
   background: transparent;
-  color: white;
+  color: var(--foreground);
   font-size: 0.75rem;
 }
 
-.cinema-nav-picker-search input::placeholder { color: rgba(255, 255, 255, 0.38); }
+.cinema-nav-picker-search input::placeholder { color: var(--muted-foreground); }
 
 .cinema-nav-picker-option {
   display: flex;
@@ -90,7 +99,7 @@
   border-radius: 0.4rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   padding: 0.65rem 0.7rem;
-  color: rgba(255, 255, 255, 0.72);
+  color: var(--muted-foreground);
   font-size: 0.75rem;
   font-weight: 700;
   text-align: left;
@@ -103,12 +112,16 @@
 
 .cinema-nav-picker-option:hover,
 .cinema-nav-picker-option:focus-visible {
-  background: rgba(255, 255, 255, 0.08);
-  color: white;
+  background: var(--secondary);
+  color: var(--foreground);
 }
 
 .cinema-nav-picker-option svg { color: var(--primary); }
+<<<<<<< Updated upstream
 .cinema-nav-picker-option-selected { background: rgba(225, 29, 46, 0.08); color: var(--primary); }
+=======
+.cinema-nav-picker-option-selected { background: rgba(225, 29, 46, 0.14); color: var(--foreground); }
+>>>>>>> Stashed changes
 .cinema-nav-picker-option-selected svg { filter: drop-shadow(0 0 5px rgba(225, 29, 46, 0.6)); }
 
 .cinema-nav-picker-error {

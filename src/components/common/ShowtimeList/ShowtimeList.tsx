@@ -71,7 +71,7 @@ export const ShowtimeList: React.FC<ShowtimeListProps> = ({
         const upcomingShows = group.shows.filter(isUpcomingShowtime);
 
         return (
-          <article key={`${group.cinemaId}-${group.hallName}-${group.format}`} className="overflow-hidden rounded-2xl border border-white/10 bg-[#0a0a0a]">
+          <article key={`${group.cinemaId}-${group.hallName}-${group.format}`} className="overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-sm">
             <button
               type="button"
               onClick={() => toggleCinema(group.cinemaId)}
@@ -79,7 +79,7 @@ export const ShowtimeList: React.FC<ShowtimeListProps> = ({
               aria-expanded={isOpen}
               aria-controls={`showtimes-${group.cinemaId}-${group.hallName}`}
             >
-              <span className="text-base font-bold text-white">{group.cinemaName}</span>
+              <span className="text-base font-bold text-foreground">{group.cinemaName}</span>
               <ChevronDown className={cn('cinema-accordion-chevron', isOpen && 'cinema-accordion-chevron-open')} aria-hidden="true" />
             </button>
 
@@ -91,7 +91,7 @@ export const ShowtimeList: React.FC<ShowtimeListProps> = ({
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="overflow-hidden border-t border-white/10 p-4 pt-5"
+                  className="overflow-hidden border-t border-border p-4 pt-5"
                 >
                   <div className="flex flex-wrap items-center gap-3 mb-4">
                     <span className={cn(getFormatBadgeClass(group.format))}>
@@ -115,7 +115,7 @@ export const ShowtimeList: React.FC<ShowtimeListProps> = ({
                       </button>
                     ))}
                     {upcomingShows.length === 0 && (
-                      <span className="text-sm text-white/40">No upcoming shows</span>
+                      <span className="text-sm text-muted-foreground">No upcoming shows</span>
                     )}
                   </div>
                 </motion.div>

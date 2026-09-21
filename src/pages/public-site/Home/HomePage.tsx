@@ -436,7 +436,11 @@ export const HomePage: React.FC = () => {
   const comingSoonCount = useMemo(() => movies.filter((m) => m.status === 'COMING_SOON').length, [movies]);
 
   return (
+<<<<<<< Updated upstream
     <div className="home-page min-h-screen overflow-hidden bg-transparent pb-20 text-white">
+=======
+    <div className="home-page min-h-screen overflow-hidden bg-background pb-20 text-foreground">
+>>>>>>> Stashed changes
       <HeroCarousel
         slides={HOME_BANNER_SLIDES}
         autoPlayInterval={5000}
@@ -446,8 +450,8 @@ export const HomePage: React.FC = () => {
       {error && movies.length === 0 && (
         <section className="container-main py-24 text-center" role="alert">
           <Ticket className="mx-auto h-10 w-10 text-[var(--primary)]" />
-          <h1 className="mt-5 text-3xl font-black">Unable to load movies.</h1>
-          <p className="mt-3 text-sm text-white/60">The catalogue could not be loaded right now.</p>
+          <h1 className="mt-5 text-3xl font-black text-foreground">Unable to load movies.</h1>
+          <p className="mt-3 text-sm text-muted-foreground">The catalogue could not be loaded right now.</p>
           <button
             type="button"
             onClick={() => void fetchCatalog()}
@@ -470,14 +474,14 @@ export const HomePage: React.FC = () => {
               onTabChange={(tab) => setActiveListingTab(tab as ListingTab)}
               variant="home"
             />
-            <p className="hidden mt-2 flex items-center gap-1.5 text-xs text-white/45">
+            <p className="hidden mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
               <MapPin className="h-3.5 w-3.5 text-[var(--primary)]" />
               {selectedCinema ? selectedCinema.name : 'All cinemas'} · Cambodia local time
             </p>
           </div>
 
           <label className="relative hidden w-full sm:max-w-xs">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/40" />
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <span className="sr-only">Search movies</span>
             <input
               type="search"
@@ -513,7 +517,11 @@ export const HomePage: React.FC = () => {
                       type="button"
                       onClick={() => setSelectedMonth(month.id)}
                       aria-pressed={selectedMonth === month.id}
+<<<<<<< Updated upstream
                       className={`h-16 min-w-[110px] snap-start rounded-lg border bg-black px-5 text-base font-bold text-white transition-colors duration-200 hover:border-white/50 ${selectedMonth === month.id ? 'border-red-600 shadow-[0_0_20px_rgba(225,29,46,.25)]' : 'border-white/20'}`}
+=======
+                      className={`h-20 min-w-[140px] snap-start rounded-xl border px-4 py-2.5 text-base font-black transition-colors duration-200 hover:border-foreground/40 ${selectedMonth === month.id ? 'border-[var(--primary)] bg-[var(--primary)]/10 text-foreground shadow-[0_0_20px_rgba(225,29,46,0.25)]' : 'border-border bg-card/60 text-muted-foreground'}`}
+>>>>>>> Stashed changes
                     >
                       {month.label}
                     </button>
@@ -532,12 +540,50 @@ export const HomePage: React.FC = () => {
             />
           </>
         )}
+<<<<<<< Updated upstream
       </section>
 
       <WhatsNewSection />
 
       <PlanVisitSection products={popularProducts} isAuthenticated={isAuthenticated} />
 
+=======
+
+        <div className="mt-14 flex flex-col gap-4 border-t border-border py-8 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--primary)]">Plan your visit</p>
+            <h2 className="mt-2 text-xl font-black text-foreground">Find the right screen for your night.</h2>
+          </div>
+          <button type="button" onClick={() => navigate('/cinemas')} className="inline-flex items-center gap-2 self-start rounded-full border border-border px-5 py-3 text-xs font-bold text-muted-foreground transition hover:border-[var(--primary)] hover:text-foreground">
+            Explore cinemas <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+
+        <section className="grid gap-4 pb-12 pt-2 md:grid-cols-[1.3fr_0.7fr]" aria-label="Cinema experiences">
+          <article className="group relative overflow-hidden rounded-2xl border border-border bg-card p-6 sm:p-8">
+            <div className="relative z-10 max-w-md">
+              <p className="eyebrow">Make it a night out</p>
+              <h2 className="mt-3 text-2xl font-black tracking-tight text-foreground sm:text-3xl">Seats, snacks, and a story worth staying for.</h2>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">Choose your cinema, find the right showtime, and add your favourite bites before you arrive.</p>
+              <button type="button" onClick={() => navigate('/fnb')} className="btn-pill-outline mt-6">
+                Explore food & drinks <Coffee className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full border-[28px] border-primary/5 transition-transform duration-500 group-hover:scale-110" />
+          </article>
+
+          <article className="surface-panel rounded-2xl p-6 sm:p-8">
+            <Sparkles className="h-6 w-6 text-[var(--primary)]" />
+            <p className="eyebrow mt-5">Premiere circle</p>
+            <h2 className="mt-3 text-xl font-black text-foreground">Get closer to the films you love.</h2>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">Early access, member events, and rewards for every visit.</p>
+            <button type="button" onClick={() => navigate('/membership')} className="mt-5 inline-flex items-center gap-2 text-sm font-black text-[var(--primary)] hover:gap-3">
+              Discover membership <ArrowRight className="h-4 w-4" />
+            </button>
+          </article>
+        </section>
+      </section>
+>>>>>>> Stashed changes
     </div>
   );
 };
