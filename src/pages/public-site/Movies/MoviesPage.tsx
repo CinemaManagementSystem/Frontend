@@ -114,7 +114,7 @@ export const MoviesPage: React.FC = () => {
   const comingSoonCount = useMemo(() => movies.filter((m) => m.status === 'COMING_SOON').length, [movies]);
 
   return (
-    <div className="movie-listing-page pb-24 min-h-screen text-white">
+    <div className="movie-listing-page pb-24 min-h-screen text-foreground">
       {/* Header & Filter Toolbar */}
       <section className="relative pt-12 pb-6">
         <div className="container-main space-y-6">
@@ -123,18 +123,18 @@ export const MoviesPage: React.FC = () => {
               <Sparkles className="h-3.5 w-3.5" />
               Legend Cinema
             </span>
-            <h1 className="text-3xl font-black uppercase tracking-tight sm:text-5xl">Explore Movies</h1>
+            <h1 className="text-3xl font-black uppercase tracking-tight sm:text-5xl text-foreground">Explore Movies</h1>
           </div>
 
-          <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4 backdrop-blur-md md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 backdrop-blur-md md:flex-row md:items-center md:justify-between text-card-foreground">
             <div className="relative w-full md:max-w-md">
-              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/50" />
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Find a movie..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-white/[0.03] py-2.5 pl-10 pr-4 text-xs outline-none transition-all placeholder:text-white/35 focus:border-[var(--primary)]"
+                className="w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-4 text-xs text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-[var(--primary)]"
               />
             </div>
 
@@ -143,10 +143,10 @@ export const MoviesPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => { setGenreOpen(!genreOpen); setSortOpen(false); }}
-                  className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-xs text-white/60 transition-all hover:border-white/25 focus:outline-none"
+                  className="flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-xs text-muted-foreground transition-all hover:border-foreground/30 hover:text-foreground focus:outline-none"
                 >
                   <span className="font-semibold">{selectedGenre === 'ALL' ? 'All Genres' : selectedGenre}</span>
-                  <ChevronDown className={cn('h-4 w-4 text-white/50', genreOpen && 'rotate-180')} />
+                  <ChevronDown className={cn('h-4 w-4 text-muted-foreground', genreOpen && 'rotate-180')} />
                 </button>
                 <AnimatePresence>
                   {genreOpen && (
@@ -157,7 +157,7 @@ export const MoviesPage: React.FC = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -6, scale: 0.98 }}
                         transition={{ duration: 0.12 }}
-                        className="absolute right-0 mt-2 w-48 origin-top-right overflow-y-auto rounded-xl border border-white/10 bg-black/95 p-1 shadow-2xl backdrop-blur-xl z-20 max-h-60"
+                        className="absolute right-0 mt-2 w-48 origin-top-right overflow-y-auto rounded-xl border border-border bg-card p-1 text-card-foreground shadow-2xl backdrop-blur-xl z-20 max-h-60"
                       >
                         {genres.map((g) => (
                           <button

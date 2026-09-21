@@ -48,7 +48,7 @@ const LANGUAGE_OPTIONS: { value: AppLanguage; label: string; shortLabel: string;
 ];
 
 const dropdownPanelClass =
-  'absolute z-50 mt-2 origin-top rounded-2xl border border-white/10 bg-black/95 backdrop-blur-xl p-2 text-white shadow-2xl';
+  'absolute z-50 mt-2 origin-top rounded-2xl border border-border bg-card p-2 text-card-foreground shadow-2xl';
 
 interface UserMenuProps {
   user: User;
@@ -88,7 +88,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
         >
           <Avatar src={user.avatar} alt={user.username} className="h-6 w-6 border border-[var(--primary)]" />
           <span className="max-w-[90px] truncate">{user.username}</span>
-          <ChevronDown className={cn('h-3.5 w-3.5 text-white/50 transition-transform', open && 'rotate-180')} />
+          <ChevronDown className={cn('h-3.5 w-3.5 text-muted-foreground transition-transform', open && 'rotate-180')} />
         </button>
 
         <AnimatePresence>
@@ -102,11 +102,11 @@ const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
                 transition={{ duration: 0.15 }}
                 className={cn(dropdownPanelClass, 'right-0 top-full w-60')}
               >
-                <div className="mb-1 flex items-center gap-2.5 border-b border-white/10 px-3 py-2.5">
+                <div className="mb-1 flex items-center gap-2.5 border-b border-border px-3 py-2.5">
                   <Avatar src={user.avatar} alt={user.username} className="h-9 w-9 border border-[var(--primary)]" />
                   <div className="min-w-0">
-                    <p className="truncate text-xs font-bold text-white">{user.username}</p>
-                    <p className="truncate text-[10px] text-white/50">{user.email}</p>
+                    <p className="truncate text-xs font-bold text-foreground">{user.username}</p>
+                    <p className="truncate text-[10px] text-muted-foreground">{user.email}</p>
                     <span className="mt-0.5 inline-block rounded bg-[var(--primary)]/20 px-2 py-0.5 text-[9px] font-black uppercase text-[var(--primary)]">
                       {user.role}
                     </span>
@@ -117,7 +117,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
                   <button
                     type="button"
                     onClick={() => go('/admin/dashboard')}
-                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-white hover:bg-white/5"
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-foreground hover:bg-accent/10"
                   >
                     <Shield className="h-4 w-4 text-[var(--primary)]" />
                     Admin Dashboard
@@ -126,28 +126,28 @@ const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
                 <button
                   type="button"
                   onClick={() => go('/settings')}
-                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-white/80 hover:bg-white/5 hover:text-white"
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-muted-foreground hover:bg-accent/10 hover:text-foreground"
                 >
-                  <UserIcon className="h-4 w-4 text-white/50" />
+                  <UserIcon className="h-4 w-4 text-muted-foreground" />
                   Profile & Settings
                 </button>
                 <button
                   type="button"
                   onClick={() => go('/history')}
-                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-white/80 hover:bg-white/5 hover:text-white"
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-muted-foreground hover:bg-accent/10 hover:text-foreground"
                 >
-                  <Ticket className="h-4 w-4 text-amber-400" />
+                  <Ticket className="h-4 w-4 text-amber-500" />
                   My Tickets
                 </button>
 
-                <div className="my-1 border-t border-white/10 pt-1">
+                <div className="my-1 border-t border-border pt-1">
                   <button
                     type="button"
                     onClick={() => {
                       setOpen(false);
                       setLogoutOpen(true);
                     }}
-                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-rose-400 transition hover:bg-rose-500/10"
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-rose-500 transition hover:bg-rose-500/10"
                   >
                     <LogOut className="h-4 w-4" />
                     Sign Out
@@ -211,7 +211,7 @@ const CinemaSelector: React.FC<CinemaSelectorProps> = ({ onSelect, mobile = fals
           <span className="min-w-0 flex-1 truncate">
             {loading && cinemas.length === 0 ? 'Loading cinemas...' : selectedCinema?.name ?? 'All Cinemas'}
           </span>
-          <ChevronDown className={cn('h-3 w-3 shrink-0 text-white/50 transition-transform', open && 'rotate-180')} aria-hidden="true" />
+          <ChevronDown className={cn('h-3 w-3 shrink-0 text-muted-foreground transition-transform', open && 'rotate-180')} aria-hidden="true" />
         </button>
 
         {open && (
@@ -220,7 +220,7 @@ const CinemaSelector: React.FC<CinemaSelectorProps> = ({ onSelect, mobile = fals
             <div className="cinema-nav-picker-menu" role="listbox" aria-label="Cinema locations">
               {cinemas.length > 8 && (
                 <label className="cinema-nav-picker-search">
-                  <Search className="h-3.5 w-3.5 text-white/40" aria-hidden="true" />
+                  <Search className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
                   <span className="sr-only">Search cinemas</span>
                   <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search cinemas" autoFocus />
                 </label>
@@ -235,7 +235,7 @@ const CinemaSelector: React.FC<CinemaSelectorProps> = ({ onSelect, mobile = fals
                   <span className="min-w-0 truncate">{cinema.name}{cinema.city ? ` · ${cinema.city}` : ''}</span>
                 </button>
               ))}
-              {filteredCinemas.length === 0 && <p className="px-3 py-4 text-xs text-white/45">No cinemas match that search.</p>}
+              {filteredCinemas.length === 0 && <p className="px-3 py-4 text-xs text-muted-foreground">No cinemas match that search.</p>}
             </div>
           </>
         )}
@@ -315,12 +315,16 @@ export const Navbar: React.FC = () => {
   };
 
   return (
+<<<<<<< Updated upstream
     <header
       className={cn(
         'sticky top-0 z-30 w-full text-white transition-colors duration-200',
         scrolled ? 'border-b border-white/10 bg-black/30 backdrop-blur-xl' : 'border-b border-white/10 bg-transparent',
       )}
     >
+=======
+    <header className={cn('sticky top-0 z-20 w-full border-b border-border text-foreground transition-all', isScrolled ? 'bg-background/85 backdrop-blur-md shadow-sm' : 'bg-transparent')}>
+>>>>>>> Stashed changes
       {/* Row 1: Search | Logo | Actions */}
       <PageContainer className="grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-3">
         {/* Left: Search Bar */}
@@ -348,7 +352,7 @@ export const Navbar: React.FC = () => {
         <Link
           to="/"
           onClick={closeMenus}
-          className="flex items-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+          className="flex items-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           aria-label="Legend Cinema Home"
         >
           <CinematiqueLogo className="h-7 w-auto object-contain md:h-10" />
@@ -360,7 +364,11 @@ export const Navbar: React.FC = () => {
           <button
             type="button"
             onClick={handleTicketClick}
+<<<<<<< Updated upstream
             className="hidden h-10 items-center gap-2 rounded-full border border-white/10 bg-black/40 px-5 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:flex"
+=======
+            className="hidden items-center gap-1.5 rounded-full border border-border bg-card/60 px-3.5 py-1.5 text-xs font-bold text-foreground transition-colors hover:border-[var(--primary)]/60 hover:bg-accent/10 sm:flex"
+>>>>>>> Stashed changes
           >
             <Ticket className="h-4 w-4 text-white" />
             Ticket
@@ -389,6 +397,22 @@ export const Navbar: React.FC = () => {
             <span className="notification-dot" aria-hidden="true" />
           </button>
 
+<<<<<<< Updated upstream
+=======
+          {/* Language Selector */}
+          <div className="relative hidden sm:block">
+            <button
+              type="button"
+              className="flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-3 py-1.5 text-xs font-bold text-foreground transition-colors hover:border-[var(--primary)]/60 hover:bg-accent/10"
+              aria-label="Select language"
+            >
+              <span className="text-[10px] font-black uppercase">KH</span>
+              <ChevronDown className="h-3 w-3 text-muted-foreground" />
+            </button>
+          </div>
+
+          {/* Theme Toggle */}
+>>>>>>> Stashed changes
           <button
             type="button"
             className="hidden icon-btn-circle sm:flex"
@@ -465,8 +489,13 @@ export const Navbar: React.FC = () => {
       </PageContainer>
 
       {/* Row 2: Nav Links | Cinema Selector */}
+<<<<<<< Updated upstream
       <div className="hidden border-t border-white/10 lg:block">
         <PageContainer className="flex h-[52px] items-center justify-between">
+=======
+      <div className="hidden border-t border-border bg-transparent py-2 backdrop-blur-md lg:block">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
+>>>>>>> Stashed changes
           {/* Nav Links */}
           <nav className="flex items-center gap-8" aria-label="Public sub navigation">
             {NAV_LINKS.map((link) => {
@@ -481,8 +510,13 @@ export const Navbar: React.FC = () => {
                     cn(
                       'flex items-center gap-2 text-sm font-medium text-neutral-300 transition-colors md:text-[15px]',
                       isActive
+<<<<<<< Updated upstream
                         ? 'font-bold text-white'
                         : 'hover:text-white'
+=======
+                        ? 'text-foreground font-black'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/10'
+>>>>>>> Stashed changes
                     )
                   }
                 >
@@ -495,11 +529,70 @@ export const Navbar: React.FC = () => {
                 </NavLink>
               );
             })}
+<<<<<<< Updated upstream
+=======
+
+            {/* Movies Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setMoviesDropdownOpen((open) => !open)}
+                className={cn(
+                  'flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold transition-all cursor-pointer',
+                  isMoviesActive
+                    ? 'text-foreground font-black'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/10'
+                )}
+              >
+                <Clapperboard className={cn('h-3.5 w-3.5', isMoviesActive ? 'text-[var(--primary)]' : '')} />
+                Movies
+                <ChevronDown className={cn('h-3 w-3 transition-transform', moviesDropdownOpen && 'rotate-180')} />
+              </button>
+
+              <AnimatePresence>
+                {moviesDropdownOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setMoviesDropdownOpen(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute left-0 top-full mt-2 z-50 w-64 rounded-2xl border border-border bg-card p-2 text-card-foreground shadow-2xl"
+                    >
+                      {MOVIE_MENU_ITEMS.map((item) => {
+                        const Icon = item.icon;
+
+                        return (
+                          <button
+                            key={item.name}
+                            type="button"
+                            onClick={() => {
+                              navigate(item.path);
+                              closeMenus();
+                            }}
+                            className="flex w-full items-start gap-3 rounded-xl p-2.5 text-left transition hover:bg-accent/10"
+                          >
+                            <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" />
+                            <div>
+                              <span className="block text-xs font-bold text-foreground">{item.name}</span>
+                              <span className="block text-[10px] text-muted-foreground">{item.description}</span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
+>>>>>>> Stashed changes
           </nav>
 
           <CinemaSelector onSelect={closeMenus} />
         </PageContainer>
       </div>
+<<<<<<< Updated upstream
 
       <AnimatePresence>
         {mobileMenuOpen && (
@@ -564,6 +657,8 @@ export const Navbar: React.FC = () => {
         )}
       </AnimatePresence>
 
+=======
+>>>>>>> Stashed changes
     </header>
   );
 };

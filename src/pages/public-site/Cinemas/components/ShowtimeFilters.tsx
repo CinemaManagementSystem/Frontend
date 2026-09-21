@@ -44,9 +44,9 @@ export const ShowtimeFilters: React.FC<ShowtimeFiltersProps> = ({
   const activeCount = (selectedFormat !== 'ALL' ? 1 : 0) + (selectedTimeFilter !== 'ALL' ? 1 : 0);
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 space-y-5">
-      <div className="flex items-center justify-between pb-4 border-b border-white/10">
-        <h3 className="text-sm font-black uppercase tracking-wider text-white flex items-center gap-2">
+    <div className="rounded-xl border border-border bg-card/60 p-4 space-y-5">
+      <div className="flex items-center justify-between pb-4 border-b border-border">
+        <h3 className="text-sm font-black uppercase tracking-wider text-foreground flex items-center gap-2">
           <Filter className="w-4 h-4 text-[var(--primary)]" />
           <span>Filter Showtimes</span>
           {activeCount > 0 && (
@@ -69,7 +69,7 @@ export const ShowtimeFilters: React.FC<ShowtimeFiltersProps> = ({
       </div>
 
       <div className="space-y-3">
-        <span className="text-[11px] font-bold text-white/50 uppercase tracking-widest block">
+        <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest block">
           Format
         </span>
         <div className="flex flex-col gap-1.5">
@@ -85,7 +85,7 @@ export const ShowtimeFilters: React.FC<ShowtimeFiltersProps> = ({
                   'w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all border cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]',
                   isSelected
                     ? 'bg-[var(--primary)] text-white border-transparent shadow-md shadow-[var(--primary)]/20 font-bold'
-                    : 'bg-white/[0.03] border-white/10 text-white/50 hover:bg-white/5 hover:border-white/25 hover:text-white'
+                    : 'bg-card border-border text-muted-foreground hover:bg-accent/10 hover:border-foreground/30 hover:text-foreground'
                 )}
               >
                 {fmt.label}
@@ -95,8 +95,8 @@ export const ShowtimeFilters: React.FC<ShowtimeFiltersProps> = ({
         </div>
       </div>
 
-      <div className="space-y-3 pt-2 border-t border-white/10">
-        <span className="text-[11px] font-bold text-white/50 uppercase tracking-widest block">
+      <div className="space-y-3 pt-2 border-t border-border">
+        <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest block">
           Showtime Time
         </span>
         <div className="flex flex-col gap-1.5">
@@ -112,7 +112,7 @@ export const ShowtimeFilters: React.FC<ShowtimeFiltersProps> = ({
                   'w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all border cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]',
                   isSelected
                     ? 'bg-[var(--primary)] text-white border-transparent shadow-md shadow-[var(--primary)]/20 font-bold'
-                    : 'bg-white/[0.03] border-white/10 text-white/50 hover:bg-white/5 hover:border-white/25 hover:text-white'
+                    : 'bg-card border-border text-muted-foreground hover:bg-accent/10 hover:border-foreground/30 hover:text-foreground'
                 )}
               >
                 {t.label}

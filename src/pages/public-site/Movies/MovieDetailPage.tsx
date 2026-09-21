@@ -104,8 +104,8 @@ export const MovieDetailPage: React.FC = () => {
   if (!movie) {
     return (
       <div className="container-main py-20 text-center space-y-4">
-        <h2 className="text-2xl font-bold text-white">Movie Not Found</h2>
-        <p className="text-sm text-white/50">The requested movie could not be found in our catalog.</p>
+        <h2 className="text-2xl font-bold text-foreground">Movie Not Found</h2>
+        <p className="text-sm text-muted-foreground">The requested movie could not be found in our catalog.</p>
         <Link
           to="/movies"
           className="inline-flex items-center gap-2 rounded-lg bg-[var(--primary)] px-4 py-2 text-xs font-bold text-white"
@@ -130,21 +130,33 @@ export const MovieDetailPage: React.FC = () => {
         <img
           src={movie.backdropUrl || movie.posterUrl}
           alt=""
+<<<<<<< Updated upstream
           className="h-full w-full scale-125 object-cover object-center opacity-45 blur-[80px] saturate-150"
         />
         <div className="absolute inset-0 bg-black/35" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0a0204]/65 to-[#0a0204]" />
+=======
+          className="h-full w-full object-cover object-top opacity-30 dark:opacity-40 blur-2xl"
+          style={{ filter: 'saturate(1.4) brightness(0.6) blur(80px)' }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/60 to-background" />
+>>>>>>> Stashed changes
       </div>
 
       <section className="container-main pt-8">
         <Link
           to="/movies"
+<<<<<<< Updated upstream
           className="mb-5 inline-flex items-center gap-2 text-xs font-semibold text-white/50 transition-colors hover:text-white"
+=======
+          className="inline-flex items-center gap-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+>>>>>>> Stashed changes
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Movies
         </Link>
 
+<<<<<<< Updated upstream
         <div className="w-full">
           <div className="relative aspect-[16/9] overflow-hidden rounded-2xl bg-black shadow-[0_28px_90px_rgba(0,0,0,0.55)] sm:aspect-[16/7]">
             <img
@@ -155,6 +167,13 @@ export const MovieDetailPage: React.FC = () => {
             <div className="absolute inset-0 bg-gradient-to-r from-black via-black/90 via-45% to-black/10" />
             <div className="absolute inset-y-0 left-0 z-10 flex w-full max-w-[470px] flex-col justify-center px-7 sm:px-12">
               <h1 className="text-3xl font-extrabold tracking-[-0.03em] text-white sm:text-4xl">
+=======
+        <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_360px] lg:gap-14">
+          {/* Movie Info */}
+          <div className="space-y-6">
+            <div>
+              <h1 className="text-4xl font-black uppercase leading-[0.95] tracking-[-0.03em] text-foreground sm:text-5xl lg:text-6xl">
+>>>>>>> Stashed changes
                 {movie.title}
               </h1>
 
@@ -171,7 +190,23 @@ export const MovieDetailPage: React.FC = () => {
               </div>
             </div>
 
+<<<<<<< Updated upstream
             {movie.trailerUrl && (
+=======
+            <div className="space-y-3">
+              {metaRows.map(({ icon: Icon, label, value }) => (
+                <div key={label} className="flex items-center gap-3">
+                  <span className="meta-icon-square">
+                    <Icon className="h-3.5 w-3.5 text-primary" />
+                  </span>
+                  <span className="w-28 shrink-0 text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</span>
+                  <span className="text-sm font-bold text-foreground">{value}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+>>>>>>> Stashed changes
               <button
                 type="button"
                 onClick={() => setTrailerOpen(true)}
@@ -183,6 +218,7 @@ export const MovieDetailPage: React.FC = () => {
             )}
           </div>
 
+<<<<<<< Updated upstream
           <div className="mt-14 flex items-center justify-center gap-5" role="tablist" aria-label="Movie detail tabs">
             <button
               type="button"
@@ -209,16 +245,61 @@ export const MovieDetailPage: React.FC = () => {
             >
               Detail
             </button>
+=======
+          {/* Movie Poster */}
+          <div className="relative order-first lg:order-none">
+            <div className="relative mx-auto aspect-[2/3] w-full max-w-[300px] lg:max-w-none">
+              <div className="absolute inset-0 -left-8 -z-10 bg-gradient-to-r from-background via-background to-transparent" />
+              <img
+                src={movie.posterUrl}
+                alt={`${movie.title} poster`}
+                className="aspect-[2/3] w-full rounded-lg object-cover shadow-2xl shadow-black/20 dark:shadow-black/60"
+              />
+            </div>
+>>>>>>> Stashed changes
           </div>
         </div>
       </section>
 
+<<<<<<< Updated upstream
       <div className="mt-8 border-t border-white/10" />
+=======
+      {/* Tabs */}
+      <section className="container-main mt-12">
+        <div className="flex items-center gap-6 border-b border-border" role="tablist" aria-label="Movie detail tabs">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'SHOWTIME'}
+            onClick={() => setActiveTab('SHOWTIME')}
+            className={cn(
+              'py-3 text-base font-black uppercase tracking-wide transition-colors',
+              activeTab === 'SHOWTIME' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            Showtime
+          </button>
+          <div className="h-5 w-px bg-border" aria-hidden="true" />
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'DETAIL'}
+            onClick={() => setActiveTab('DETAIL')}
+            className={cn(
+              'py-3 text-base font-black uppercase tracking-wide transition-colors',
+              activeTab === 'DETAIL' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            Detail
+          </button>
+        </div>
+>>>>>>> Stashed changes
 
       <section className="container-main pt-9">
         <div className="w-full" role="tabpanel">
           {activeTab === 'SHOWTIME' ? (
             <div className="space-y-6">
+<<<<<<< Updated upstream
               <h2 className="text-3xl font-extrabold tracking-[-0.03em] text-white">Showtime</h2>
 
               <div className="relative">
@@ -307,17 +388,60 @@ export const MovieDetailPage: React.FC = () => {
               </div>
 
               {showtimeGroups.length > 0 ? (
+=======
+              <div>
+                <h2 className="text-2xl font-black uppercase tracking-tight text-foreground">Showtime</h2>
+
+                <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
+                  <span className="inline-flex items-center gap-1.5 font-semibold text-foreground">
+                    <MapPin className="h-3.5 w-3.5 text-[var(--primary)]" />
+                    {selectedCinemaId === 'ALL' ? 'All Locations' : selectedCinemaName}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="View all cinemas"
+                    onClick={() => { selectCinema('ALL'); setSelectedDate(''); }}
+                    className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-[var(--primary)] transition-colors hover:bg-primary/20"
+                  >
+                    <ChevronDown className="h-3 w-3 inline mr-1" />
+                    All Locations
+                  </button>
+                </div>
+              </div>
+
+              <div className="rounded-lg bg-muted/40 p-2">
+                <DateSelector
+                  dateList={showDates}
+                  selectedDate={activeDate}
+                  onSelectDate={setSelectedDate}
+                  className="border-0 bg-transparent px-0 py-0"
+                  showLabel={false}
+                />
+              </div>
+
+              {catalogRequiresSignIn ? (
+                <div className="rounded-2xl border border-border bg-card p-8 text-center space-y-3">
+                  <p className="text-sm text-muted-foreground">Sign in to see cinema halls and reserve your seats.</p>
+                  <Link
+                    to={`/login?redirect=${encodeURIComponent(`/movies/${movie.id}`)}`}
+                    className="inline-flex rounded-xl bg-[var(--primary)] px-5 py-3 text-sm font-bold text-white"
+                  >
+                    Sign in to view showtimes
+                  </Link>
+                </div>
+              ) : showtimeGroups.length > 0 ? (
+>>>>>>> Stashed changes
                 <ShowtimeList
                   groups={showtimeGroups}
                   onBookShowtime={(show) => navigate(`/booking/${show.id}?movieId=${movie.id}`)}
                 />
               ) : (
-                <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-8 text-center space-y-2">
-                  <Ticket className="mx-auto h-8 w-8 text-white/40" />
-                  <p className="text-sm font-semibold text-white">
+                <div className="rounded-2xl border border-border bg-card p-8 text-center space-y-2">
+                  <Ticket className="mx-auto h-8 w-8 text-muted-foreground/60" />
+                  <p className="text-sm font-semibold text-foreground">
                     {selectedCinemaId === 'ALL' ? 'No upcoming showtimes currently available' : `No upcoming showtimes at ${selectedCinemaName}`}
                   </p>
-                  <p className="text-xs text-white/40">
+                  <p className="text-xs text-muted-foreground">
                     {selectedCinemaId === 'ALL' ? 'Please check back shortly for new screenings.' : 'Choose All Locations above to check other cinemas.'}
                   </p>
                 </div>
@@ -326,30 +450,30 @@ export const MovieDetailPage: React.FC = () => {
           ) : (
             <div className="space-y-8">
               <div className="space-y-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-white/50">Synopsis</h3>
-                <p className="text-sm leading-relaxed text-white">{movie.description}</p>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Synopsis</h3>
+                <p className="text-sm leading-relaxed text-foreground">{movie.description}</p>
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="space-y-1 rounded-xl border border-white/10 bg-white/[0.02] p-4">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-white/50">Director</span>
-                  <p className="text-sm font-semibold text-white">{movie.director}</p>
+                <div className="space-y-1 rounded-xl border border-border bg-card p-4">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Director</span>
+                  <p className="text-sm font-semibold text-foreground">{movie.director}</p>
                 </div>
-                <div className="space-y-1 rounded-xl border border-white/10 bg-white/[0.02] p-4">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-white/50">Starring Cast</span>
-                  <p className="text-sm font-semibold text-white">{movie.cast.join(', ')}</p>
+                <div className="space-y-1 rounded-xl border border-border bg-card p-4">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Starring Cast</span>
+                  <p className="text-sm font-semibold text-foreground">{movie.cast.join(', ')}</p>
                 </div>
               </div>
 
               <div className="flex flex-wrap items-center gap-3 text-xs">
-                <span className="inline-flex items-center gap-1.5 text-amber-300">
+                <span className="inline-flex items-center gap-1.5 text-amber-500 font-semibold">
                   <Star className="h-3.5 w-3.5 fill-current" />
                   {movie.rating.toFixed(1)} / 10 ({movie.voteCount} votes)
                 </span>
-                <span className="text-white/20">·</span>
-                <span className="text-white/60">{movie.genres.join(' · ')}</span>
-                <span className="text-white/20">·</span>
-                <span className="inline-flex items-center gap-1 text-white/60">
+                <span className="text-muted-foreground/40">·</span>
+                <span className="text-muted-foreground">{movie.genres.join(' · ')}</span>
+                <span className="text-muted-foreground/40">·</span>
+                <span className="inline-flex items-center gap-1 text-muted-foreground">
                   <Film className="h-3.5 w-3.5" />
                   {movie.status.replace('_', ' ')}
                 </span>
