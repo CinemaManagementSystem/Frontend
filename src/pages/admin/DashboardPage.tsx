@@ -31,12 +31,14 @@ import { Button } from '@/components/ui/Button/Button';
 import { formatCurrency, formatDate, formatDateTime } from '@/utils/formatDate';
 import { cn } from '@/lib/utils';
 
-type ChartRange = '7D' | '30D' | '12M';
+type ChartRange = 'today' | 'this_week' | 'this_month' | 'this_year' | 'all_time';
 
-const RANGES: { value: ChartRange; label: string }[] = [
-  { value: '7D', label: '7 Days' },
-  { value: '30D', label: '30 Days' },
-  { value: '12M', label: '12 Months' },
+const RANGES: { value: ChartRange; label: string; description: string }[] = [
+  { value: 'today', label: 'Today', description: "Today's hourly revenue breakdown" },
+  { value: 'this_week', label: 'This Week', description: 'Revenue for this week (Mon - Sun)' },
+  { value: 'this_month', label: 'This Month', description: 'Weekly revenue for this month' },
+  { value: 'this_year', label: 'This Year', description: 'Monthly revenue for this year' },
+  { value: 'all_time', label: 'All Time', description: 'Historical revenue by year' },
 ];
 
 interface ChartBucket {
@@ -83,10 +85,53 @@ function buildChartData(bookings: Booking[], range: ChartRange): ChartBucket[] {
   const now = new Date();
   const buckets: ChartBucket[] = [];
 
-  if (range === '7D') {
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(now.getDate() - i);
+  if (range === 'today') {
+    const intervals = [
+      { label: '00:00 - 04:00', shortLabel: '04:00', minH: 0, maxH: 4, key: 'h0-4' },
+      { label: '04:00 - 08:00', shortLabel: '08:00', minH: 4, maxH: 8, key: 'h4-8' },
+      { label: '08:00 - 12:00', shortLabel: '12:00', minH: 8, maxH: 12, key: 'h8-12' },
+      { label: '12:00 - 16:00', shortLabel: '16:00', minH: 12, maxH: 16, key: 'h12-16' },
+      { label: '16:00 - 20:00', shortLabel: '20:00', minH: 16, maxH: 20, key: 'h16-20' },
+      { label: '20:00 - 24:00', shortLabel: '23:59', minH: 20, maxH: 24, key: 'h20-24' },
+    ];
+    intervals.forEach((inv) => {
+      buckets.push({
+        label: inv.shortLabel,
+        key: inv.key,
+        revenue: 0,
+        count: 0,
+      });
+    });
+
+    const todayStr = now.toDateString();
+    bookings
+      .filter((b) => b.status === 'CONFIRMED')
+      .forEach((b) => {
+        const d = new Date(b.bookingDate);
+        if (Number.isNaN(d.getTime())) return;
+        if (d.toDateString() !== todayStr) return;
+        const hour = d.getHours();
+        const matched = intervals.find((inv) => hour >= inv.minH && hour < inv.maxH);
+        if (matched) {
+          const bucket = buckets.find((x) => x.key === matched.key);
+          if (bucket) {
+            bucket.revenue += b.totalAmount;
+            bucket.count += 1;
+          }
+        }
+      });
+    return buckets;
+  }
+
+  if (range === 'this_week') {
+    const currentDay = (now.getDay() + 6) % 7; // 0 = Mon, 6 = Sun
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - currentDay);
+    monday.setHours(0, 0, 0, 0);
+
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
       buckets.push({
         label: d.toLocaleDateString('en-US', { weekday: 'short' }),
         key: d.toDateString(),
@@ -94,27 +139,101 @@ function buildChartData(bookings: Booking[], range: ChartRange): ChartBucket[] {
         count: 0,
       });
     }
-  } else if (range === '30D') {
-    for (let i = 29; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(now.getDate() - i);
+
+    bookings
+      .filter((b) => b.status === 'CONFIRMED')
+      .forEach((b) => {
+        const d = new Date(b.bookingDate);
+        if (Number.isNaN(d.getTime())) return;
+        const bucket = buckets.find((x) => x.key === d.toDateString());
+        if (bucket) {
+          bucket.revenue += b.totalAmount;
+          bucket.count += 1;
+        }
+      });
+    return buckets;
+  }
+
+  if (range === 'this_month') {
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const lastDate = new Date(year, month + 1, 0).getDate();
+
+    const weeks = [
+      { label: 'W1 (1-7)', key: 'w1', minDay: 1, maxDay: 7 },
+      { label: 'W2 (8-14)', key: 'w2', minDay: 8, maxDay: 14 },
+      { label: 'W3 (15-21)', key: 'w3', minDay: 15, maxDay: 21 },
+      { label: 'W4 (22-28)', key: 'w4', minDay: 22, maxDay: 28 },
+    ];
+    if (lastDate > 28) {
+      weeks.push({ label: `W5 (29-${lastDate})`, key: 'w5', minDay: 29, maxDay: lastDate });
+    }
+
+    weeks.forEach((w) => {
       buckets.push({
-        label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        key: d.toDateString(),
+        label: w.label,
+        key: w.key,
         revenue: 0,
         count: 0,
       });
-    }
-  } else {
-    for (let i = 11; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    });
+
+    bookings
+      .filter((b) => b.status === 'CONFIRMED')
+      .forEach((b) => {
+        const d = new Date(b.bookingDate);
+        if (Number.isNaN(d.getTime())) return;
+        if (d.getFullYear() !== year || d.getMonth() !== month) return;
+        const day = d.getDate();
+        const matched = weeks.find((w) => day >= w.minDay && day <= w.maxDay);
+        if (matched) {
+          const bucket = buckets.find((x) => x.key === matched.key);
+          if (bucket) {
+            bucket.revenue += b.totalAmount;
+            bucket.count += 1;
+          }
+        }
+      });
+    return buckets;
+  }
+
+  if (range === 'this_year') {
+    const currentYear = now.getFullYear();
+    for (let m = 0; m < 12; m++) {
+      const d = new Date(currentYear, m, 1);
       buckets.push({
         label: d.toLocaleDateString('en-US', { month: 'short' }),
-        key: `${d.getFullYear()}-${d.getMonth()}`,
+        key: `${currentYear}-${m}`,
         revenue: 0,
         count: 0,
       });
     }
+
+    bookings
+      .filter((b) => b.status === 'CONFIRMED')
+      .forEach((b) => {
+        const d = new Date(b.bookingDate);
+        if (Number.isNaN(d.getTime())) return;
+        if (d.getFullYear() !== currentYear) return;
+        const key = `${currentYear}-${d.getMonth()}`;
+        const bucket = buckets.find((x) => x.key === key);
+        if (bucket) {
+          bucket.revenue += b.totalAmount;
+          bucket.count += 1;
+        }
+      });
+    return buckets;
+  }
+
+  // all_time (past 5 years up to current year)
+  const currentYear = now.getFullYear();
+  for (let y = currentYear - 4; y <= currentYear; y++) {
+    buckets.push({
+      label: String(y),
+      key: String(y),
+      revenue: 0,
+      count: 0,
+    });
   }
 
   bookings
@@ -122,10 +241,7 @@ function buildChartData(bookings: Booking[], range: ChartRange): ChartBucket[] {
     .forEach((b) => {
       const d = new Date(b.bookingDate);
       if (Number.isNaN(d.getTime())) return;
-      const key =
-        range === '12M'
-          ? `${d.getFullYear()}-${d.getMonth()}`
-          : d.toDateString();
+      const key = String(d.getFullYear());
       const bucket = buckets.find((x) => x.key === key);
       if (bucket) {
         bucket.revenue += b.totalAmount;
@@ -145,7 +261,7 @@ export const DashboardPage: React.FC = () => {
     error: bookingsError,
     fetchAll: fetchAdminBookings,
   } = useBookingAdminStore();
-  const [range, setRange] = useState<ChartRange>('7D');
+  const [range, setRange] = useState<ChartRange>('this_week');
   const [liveShows, setLiveShows] = useState<Show[]>([]);
   const [liveScreens, setLiveScreens] = useState<Screen[]>([]);
   const [liveSeats, setLiveSeats] = useState<ApiSeat[]>([]);
@@ -453,7 +569,7 @@ export const DashboardPage: React.FC = () => {
             <div>
               <h3 className="text-sm font-bold text-foreground tracking-tight">Box Office Revenue</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {range === '7D' ? 'Revenue for the last 7 days' : range === '30D' ? 'Revenue for the last 30 days' : 'Revenue for the last 12 months'}
+                {RANGES.find((r) => r.value === range)?.description ?? 'Revenue overview'}
               </p>
             </div>
             <div className="flex items-center gap-1 p-1 rounded-lg bg-muted border border-border">
