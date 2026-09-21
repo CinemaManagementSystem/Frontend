@@ -41,8 +41,8 @@ export const SectionTabs: React.FC<SectionTabsProps> = ({
                 : 'section-tab',
               variant === 'home'
                 ? activeTab === tab.id
-                  ? 'text-white'
-                  : 'text-neutral-400 hover:text-white/80'
+                  ? 'text-foreground font-black'
+                  : 'text-muted-foreground hover:text-foreground'
                 : activeTab === tab.id ? 'section-tab-active' : 'section-tab-inactive'
             )}
           >
@@ -52,14 +52,14 @@ export const SectionTabs: React.FC<SectionTabsProps> = ({
                 'inline-flex items-center justify-center min-w-[28px] h-7 rounded-full text-[11px] font-black uppercase tracking-wider',
                 activeTab === tab.id
                   ? 'bg-[var(--primary)] text-white'
-                  : 'bg-white/10 text-white/50'
+                  : 'bg-muted text-muted-foreground'
               )}>
                 {tab.count}
               </span>
             )}
           </button>
           {index < tabs.length - 1 && (
-            <div className={variant === 'home' ? 'h-8 w-px bg-white/20' : 'section-tab-divider'} aria-hidden="true" />
+            <div className={variant === 'home' ? 'h-8 w-px bg-border' : 'section-tab-divider'} aria-hidden="true" />
           )}
         </React.Fragment>
       ))}

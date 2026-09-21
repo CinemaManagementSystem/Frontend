@@ -28,13 +28,8 @@ const SOCIAL_LINKS = [
 const circleButton = 'inline-flex h-8 w-8 items-center justify-center rounded-full border border-border text-foreground transition hover:border-[var(--primary)] hover:bg-[var(--primary)]/15 hover:text-[var(--primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-background';
 
 export const Footer: React.FC = () => (
-<<<<<<< Updated upstream
-  <footer className="border-t border-white/10 bg-[var(--card)] text-white">
-    <PageContainer className="pb-8 pt-12 sm:pt-16">
-=======
   <footer className="border-t border-border bg-card text-card-foreground">
-    <div className="container-main pb-8 pt-12 sm:pt-16">
->>>>>>> Stashed changes
+    <PageContainer className="pb-8 pt-12 sm:pt-16">
       <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1.2fr] lg:gap-12">
         <FooterColumn title="Company" links={COMPANY_LINKS} />
         <FooterColumn title="Cinemas" links={[{ name: 'Find a cinema', to: '/cinemas' }, { name: 'Now showing', to: '/movies' }, { name: 'Coming soon', to: '/coming-soon' }]} />

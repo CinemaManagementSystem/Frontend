@@ -80,15 +80,9 @@ export const ShowcasePage: React.FC = () => {
   return (
     <div className="pb-24 bg-background min-h-screen text-foreground selection:bg-[var(--primary)]">
       {/* Hero */}
-<<<<<<< Updated upstream
-      <section className="relative w-full py-16 overflow-hidden border-b border-white/5 bg-gradient-to-b from-zinc-900 to-[#0f0f10]">
-        <PageContainer className="space-y-6">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#E50914]/15 border border-[#E50914]/30 text-[#E50914] text-[10px] font-black uppercase tracking-widest">
-=======
       <section className="relative w-full py-16 overflow-hidden border-b border-border bg-card/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <PageContainer className="space-y-6">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[var(--primary)]/15 border border-[var(--primary)]/30 text-[var(--primary)] text-[10px] font-black uppercase tracking-widest">
->>>>>>> Stashed changes
             <Sparkles className="w-3.5 h-3.5" />
             Live From The API
           </span>
@@ -104,13 +98,8 @@ export const ShowcasePage: React.FC = () => {
       </section>
 
       {/* Filters */}
-<<<<<<< Updated upstream
       <PageContainer as="section" className="py-6 space-y-4">
-        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-300">
-=======
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4">
         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
->>>>>>> Stashed changes
           <span>Showtimes: {selectedCinemaId === 'ALL' ? 'All cinemas' : selectedCinemaName}</span>
           {selectedCinemaId !== 'ALL' && <button type="button" onClick={() => selectCinema('ALL')} className="font-semibold text-primary underline underline-offset-4">View all cinemas</button>}
         </div>
@@ -241,15 +230,8 @@ export const ShowcasePage: React.FC = () => {
                       {movie.description || 'No synopsis available.'}
                     </p>
 
-<<<<<<< Updated upstream
-                    <div className="flex items-center gap-2 pt-4 mt-4 border-t border-white/5">
-                      {hasShows ? (
-=======
                     <div className="flex items-center gap-2 pt-4 mt-4 border-t border-border">
-                      {catalogRequiresSignIn ? (
-                        <Link to={`/login?redirect=${encodeURIComponent('/showcase')}`} className="text-xs font-semibold text-primary underline underline-offset-4">Sign in to view showtimes</Link>
-                      ) : hasShows ? (
->>>>>>> Stashed changes
+                      {hasShows ? (
                         <button
                           onClick={() => setActiveMovie(activeMovie === movie.id ? null : movie.id)}
                           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--primary)] hover:bg-[#ff1f2d] text-white text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-[var(--primary)]/30"
