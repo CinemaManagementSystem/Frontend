@@ -18,3 +18,5 @@ export interface ProductInput {
   isAvailable: boolean;
   productCategoryId: number;
 }
+
+export type FnbItem = Product;

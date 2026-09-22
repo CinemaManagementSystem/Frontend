@@ -1,18 +1,26 @@
 import React, { useEffect } from 'react';
-import { CrudTable, CrudColumn, CrudField, CrudValue } from '@/components/admin/CrudTable/CrudTable';
+import { CheckCircle2, ShieldCheck, Users, UserX } from 'lucide-react';
+import {
+  CrudTable,
+  CrudColumn,
+  CrudField,
+  CrudFilter,
+  CrudStat,
+  CrudValue,
+} from '@/components/admin/CrudTable/CrudTable';
 import { Badge } from '@/components/ui/Badge/Badge';
 import { useUserAdminStore } from '@/store/userAdminStore';
 import { User, UserInput, Role } from '@/types/user';
 
 const ROLES = [
-  { value: 'USER', label: 'USER' },
-  { value: 'STAFF', label: 'STAFF' },
-  { value: 'ADMIN', label: 'ADMIN' },
+  { value: 'USER', label: 'Member' },
+  { value: 'STAFF', label: 'Staff' },
+  { value: 'ADMIN', label: 'Admin' },
 ];
 
 const STATUSES = [
-  { value: 'ACTIVE', label: 'ACTIVE' },
-  { value: 'DISABLED', label: 'DISABLED' },
+  { value: 'ACTIVE', label: 'Active' },
+  { value: 'DISABLED', label: 'Disabled' },
 ];
 
 const roleOptionsForEdit = (values: Record<string, CrudValue>) => {
@@ -35,15 +43,33 @@ function statusVariant(status?: string): 'success' | 'destructive' | 'outline' {
 }
 
 const columns: CrudColumn<User>[] = [
-  { key: 'username', header: 'Username', render: (row) => (
-      <span className="font-bold text-foreground">{row.username}</span>
-    ) },
-  { key: 'email', header: 'Email', render: (row) => <span className="text-muted-foreground">{row.email}</span> },
+  {
+    key: 'id',
+    header: 'ID',
+    render: (row) => <span className="font-mono text-xs font-semibold text-foreground">#{row.id}</span>,
+  },
+  {
+    key: 'username',
+    header: 'User',
+    render: (row) => (
+      <div>
+        <h4 className="font-bold text-foreground text-sm">{row.username}</h4>
+        <p className="text-[11px] text-muted-foreground">{row.name && row.name !== row.username ? row.name : row.email}</p>
+      </div>
+    ),
+  },
+  {
+    key: 'email',
+    header: 'Email',
+    render: (row) => <span className="text-muted-foreground text-xs font-mono">{row.email}</span>,
+  },
   {
     key: 'role',
     header: 'Role',
     render: (row) => (
-      <Badge variant={roleVariant(row.role)} size="sm">{row.role}</Badge>
+      <Badge variant={roleVariant(row.role)} size="sm">
+        {row.role.replace(/^ROLE_/, '')}
+      </Badge>
     ),
   },
   {
@@ -51,7 +77,7 @@ const columns: CrudColumn<User>[] = [
     header: 'Status',
     render: (row) => (
       <Badge variant={statusVariant(row.status)} size="sm">
-        {row.status ?? '—'}
+        {row.status ?? 'Active'}
       </Badge>
     ),
   },
@@ -65,7 +91,6 @@ function toInput(values: Record<string, CrudValue>): UserInput {
   return {
     ...(username ? { username } : {}),
     email,
-    // The API requires `name`, while the modal intentionally does not expose it.
     name: username || email,
     ...(password ? { password } : {}),
     role: String(values.role ?? 'USER') as Role,
@@ -79,6 +104,48 @@ export const UsersPage: React.FC = () => {
   useEffect(() => {
     void fetchAll();
   }, [fetchAll]);
+
+  const stats: CrudStat[] = [
+    {
+      label: 'Total Registered Users',
+      value: users.length,
+      icon: Users,
+      tone: 'border-border bg-muted text-foreground',
+    },
+    {
+      label: 'Active Accounts',
+      value: users.filter((u) => u.status !== 'DISABLED').length,
+      icon: CheckCircle2,
+      tone: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400',
+    },
+    {
+      label: 'Staff & Administrators',
+      value: users.filter((u) => u.role.includes('ADMIN') || u.role.includes('STAFF')).length,
+      icon: ShieldCheck,
+      tone: 'border-sky-500/20 bg-sky-500/10 text-sky-400',
+    },
+    {
+      label: 'Disabled Accounts',
+      value: users.filter((u) => u.status === 'DISABLED').length,
+      icon: UserX,
+      tone: 'border-amber-500/20 bg-amber-500/10 text-amber-400',
+    },
+  ];
+
+  const filters: CrudFilter<User>[] = [
+    {
+      key: 'role',
+      label: 'Filter by role',
+      options: [{ value: 'ALL', label: 'All roles' }, ...ROLES],
+      getValue: (u) => u.role.replace(/^ROLE_/, ''),
+    },
+    {
+      key: 'status',
+      label: 'Filter by status',
+      options: [{ value: 'ALL', label: 'All statuses' }, ...STATUSES],
+      getValue: (u) => u.status ?? 'ACTIVE',
+    },
+  ];
 
   const fields: CrudField[] = [
     { name: 'username', label: 'Username', placeholder: '3-50 characters (optional)', required: false },
@@ -115,14 +182,19 @@ export const UsersPage: React.FC = () => {
   return (
     <CrudTable
       title="Users"
-      subtitle="Manage customer accounts, staff and administrators"
+      subtitle="Manage customer accounts, roles, access permissions and system administrators"
       items={users}
       loading={loading}
       columns={columns}
       fields={fields}
+      stats={stats}
+      filters={filters}
+      searchPlaceholder="Search by username, email, role, or ID..."
       searchKeys={['username', 'email', 'role', 'status']}
+      searchText={(u) => `${u.id} ${u.username} ${u.email} ${u.role} ${u.status ?? ''}`}
       createLabel="Add User"
       createUrl="/admin/users/create"
+      pageSize={10}
       getId={(row) => row.id}
       getDisplayName={(row) => row.username}
       onSave={async (values, id) => {

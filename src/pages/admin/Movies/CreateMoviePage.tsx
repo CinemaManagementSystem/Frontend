@@ -19,6 +19,7 @@ import { AdminFormField, adminInputClass, adminTextareaClass } from '@/component
 import { AdminSectionCard } from '@/components/admin/Form/AdminSectionCard';
 import { useMovieAdminStore } from '@/store/movieAdminStore';
 import { useCategoryStore } from '@/store/categoryStore';
+import { getApiErrorMessage } from '@/services/apiClient';
 import type { ApiMovieInput } from '@/types/movieApi';
 
 type MovieDraft = {
@@ -134,7 +135,7 @@ export const CreateMoviePage: React.FC = () => {
       await create(payload);
       navigate('/admin/movies');
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Movie could not be created. Try again.');
+      setError(getApiErrorMessage(reason, 'movie creation'));
     } finally {
       setSaving(false);
     }

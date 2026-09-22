@@ -119,7 +119,7 @@ describe('cinema discovery and screening selection', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Central Cinema Level 3, Central Mall/ }));
     expect(useCinemaStore.getState().selectedCinemaId).toBe('c-1');
-    expect(screen.getByLabelText('Current route')).toHaveTextContent('/cinemas?cinema=c-1&from=footer');
+    expect(screen.getByLabelText('Current route')).toHaveTextContent('/cinemas/c-1');
     expect(screen.queryByRole('button', { name: /Book .*Riverside Cinema/ })).not.toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /^Book / })).toHaveLength(2);
     expect(screen.getByRole('link', { name: 'Directions' })).toHaveAttribute('href', cinemas[0].googleMapsUrl);

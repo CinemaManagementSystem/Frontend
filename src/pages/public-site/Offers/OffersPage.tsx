@@ -9,6 +9,7 @@ import { formatCurrency } from '@/utils/formatDate';
 import type { Product } from '@/types/product';
 import type { ProductCategory } from '@/types/productCategory';
 import { SnackImage } from '../Booking/SnackImage';
+import popcornBanner from '@/assets/banner/image copy 3.png';
 
 const SAVED_ITEMS_KEY = 'cinematique_saved_menu_items_v1';
 const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background';
@@ -71,7 +72,7 @@ export function OffersPage() {
     return products.filter((product) => (!savedOnly || savedIds.includes(product.id)) && (categoryId === 'all' || String(product.productCategoryId) === categoryId) && (!term || `${product.name} ${categoryMap.get(product.productCategoryId)?.name || ''}`.toLowerCase().includes(term)))
       .sort((first, second) => sort === 'price-low' ? first.price - second.price || first.name.localeCompare(second.name) : sort === 'price-high' ? second.price - first.price || first.name.localeCompare(second.name) : first.name.localeCompare(second.name));
   }, [products, savedOnly, savedIds, categoryId, query, sort, categoryMap]);
-  const heroImage = products.find((product) => product.imageUrl)?.imageUrl || null;
+  const heroImage = isFoodPage ? popcornBanner : products.find((product) => product.imageUrl)?.imageUrl || null;
 
   function toggleSaved(product: Product) {
     const alreadySaved = savedIds.includes(product.id);
@@ -87,17 +88,17 @@ export function OffersPage() {
 
   return (
     <div className="min-h-screen bg-background pb-20 text-foreground">
-      <section className="relative isolate overflow-hidden border-b border-border bg-card/50">
-        {heroImage && <div aria-hidden="true" className="absolute inset-0 -z-10 scale-110 bg-cover bg-center opacity-30 dark:opacity-35 blur-2xl" style={{ backgroundImage: `url(${heroImage})` }} />}
-        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_18%,rgba(229,9,20,.15),transparent_48%)] dark:bg-[radial-gradient(circle_at_50%_18%,rgba(229,9,20,.3),transparent_48%)]" />
-        <div className="mx-auto max-w-5xl px-4 pb-12 pt-8 sm:px-6 sm:pt-12">
-          <div className="relative mx-auto aspect-[2.45/1] max-w-[806px] overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-red-950 via-[#1b060b] to-black shadow-2xl shadow-black/20 dark:shadow-black/50">
-            {heroImage && <img src={heroImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-75" />}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/35 to-transparent" />
-            <div className="relative flex h-full max-w-md flex-col justify-center px-7 py-8 sm:px-12">
-              <span className="mb-3 inline-flex w-fit items-center gap-2 rounded-full border border-red-400/40 bg-red-500/15 px-3 py-1 text-[10px] font-black uppercase tracking-[.2em] text-red-200"><Ticket className="h-3.5 w-3.5" aria-hidden="true" />Legend Cinema</span>
-              <h1 className="text-4xl font-black tracking-[-.055em] text-white sm:text-6xl">{heroTitle}</h1>
-              <p className="mt-3 max-w-sm text-sm leading-6 text-white/80 sm:text-base">{heroCopy}</p>
+      <section className="relative isolate overflow-hidden bg-transparent py-4 sm:py-6">
+        {heroImage && <div aria-hidden="true" className="absolute inset-0 -z-10 scale-110 bg-cover bg-center opacity-40 blur-3xl" style={{ backgroundImage: `url(${heroImage})` }} />}
+        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-b from-transparent via-background/55 to-background" />
+        <div className="container-main">
+          <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#7d0009] via-[#1b060b] to-black shadow-[0_20px_60px_rgba(0,0,0,0.35)] sm:aspect-[16/6]">
+            {heroImage && <img src={heroImage} alt="" className="absolute inset-0 h-full w-full object-cover object-center opacity-95 saturate-110" />}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/88 via-black/42 to-black/5" />
+            <div className="relative flex h-full max-w-[520px] flex-col justify-center px-6 py-8 sm:px-10 lg:px-16">
+              <span className="mb-3 inline-flex w-fit items-center gap-2 rounded-full border border-red-400/50 bg-red-950/30 px-4 py-1.5 text-xs font-semibold tracking-[0.2em] text-white"><Ticket className="h-3.5 w-3.5" aria-hidden="true" />Legend Cinema</span>
+              <h1 className="text-4xl font-extrabold leading-[0.95] text-white drop-shadow-[0_4px_18px_rgba(0,0,0,.45)] sm:text-5xl lg:text-6xl">{heroTitle}</h1>
+              <p className="mt-5 max-w-md text-base leading-relaxed text-white/78 sm:text-lg">{heroCopy}</p>
               <a href="#food-menu" className={`${PRIMARY_BUTTON} mt-6 w-fit`}>{isFoodPage ? 'Browse menu' : 'View promotions'} <ArrowRight className="h-4 w-4" aria-hidden="true" /></a>
             </div>
           </div>
@@ -105,7 +106,7 @@ export function OffersPage() {
         </div>
       </section>
 
-      <main className="mx-auto max-w-5xl px-4 sm:px-6">
+      <main className="container-main">
         {isFoodPage && isAuthenticated && <section className="pt-8" aria-labelledby="cinema-title"><div className="mb-4 flex items-end justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-primary">Pick up at</p><h2 id="cinema-title" className="mt-1 text-2xl font-black sm:text-3xl text-foreground">Choose Cinema</h2></div><Link to="/cinemas" className={`hidden items-center gap-2 text-xs font-bold text-primary sm:inline-flex ${FOCUS}`}>View locations <ArrowRight className="h-3.5 w-3.5" /></Link></div><div className="grid gap-2 sm:grid-cols-2">{cinemas.slice(0, 12).map((cinema) => <button type="button" key={cinema.id} onClick={() => selectCinema(cinema.id)} className={`flex items-center gap-3 rounded-lg border px-2.5 py-2 text-left transition ${selectedCinemaId === cinema.id ? 'border-primary bg-primary/10' : 'border-border bg-card hover:border-primary/60'} ${FOCUS}`}><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-red-500/80 to-orange-400/60 text-white"><MapPin className="h-4 w-4" /></span><span className="min-w-0 flex-1 truncate text-xs font-bold text-foreground">{cinema.name}</span><ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" /></button>)}{cinemas.length === 0 && <Link to="/cinemas" className={`rounded-lg border border-dashed border-border px-4 py-5 text-sm text-muted-foreground ${FOCUS}`}>Browse available cinema locations <ArrowRight className="ml-1 inline h-4 w-4" /></Link>}</div></section>}
 
         {!isFoodPage && <section aria-label="Promotion availability" className="pt-10"><div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-3"><span className="rounded-lg bg-primary/15 p-2.5 text-primary"><Ticket className="h-5 w-5" /></span><div><h2 className="text-sm font-bold text-foreground">Online promotions are not available yet</h2><p className="mt-1 text-xs text-muted-foreground">Explore current concession prices and plan your visit below.</p></div></div><Link to="/cinemas" className={`inline-flex items-center gap-2 text-xs font-bold text-primary ${FOCUS}`}><MapPin className="h-4 w-4" />Explore cinemas <ArrowRight className="h-4 w-4" /></Link></div></section>}

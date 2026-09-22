@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Database, Plus, Edit2, Trash2, Search, ChevronDown, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Database, Plus, Edit2, Trash2, Search, ChevronDown, X } from 'lucide-react';
 import { Modal, type ModalProps } from '@/components/ui/Modal/Modal';
 import { Button } from '@/components/ui/Button/Button';
 import { Input } from '@/components/ui/Input/Input';
@@ -91,6 +91,16 @@ export interface CrudTableProps<T> {
   extraActions?: CrudRowAction<T>[];
   stats?: CrudStat[];
   filters?: CrudFilter<T>[];
+  initialFilterValues?: Record<string, string>;
+  pageSize?: number;
+  sortItems?: (items: T[]) => T[];
+  pagination?: {
+    page: number;
+    totalPages: number;
+    totalElements: number;
+    pageSize: number;
+    onPageChange: (page: number) => void;
+  };
   searchPlaceholder?: string;
   searchText?: (row: T) => string;
   error?: string;
@@ -116,6 +126,10 @@ export function CrudTable<T>({
   extraActions = [],
   stats = [],
   filters = [],
+  initialFilterValues = {},
+  pageSize,
+  sortItems,
+  pagination,
   searchPlaceholder = 'Search records...',
   searchText,
   error = '',
@@ -129,7 +143,8 @@ export function CrudTable<T>({
 }: CrudTableProps<T>) {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const [filterValues, setFilterValues] = useState<Record<string, string>>({});
+  const [filterValues, setFilterValues] = useState<Record<string, string>>(initialFilterValues);
+  const [currentPage, setCurrentPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formValues, setFormValues] = useState<Record<string, CrudValue>>({});
@@ -147,7 +162,7 @@ export function CrudTable<T>({
 
   const filteredItems = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return items.filter((item) =>
+    const nextItems = items.filter((item) =>
       (!query ||
         (searchText ? searchText(item).toLowerCase().includes(query) : false) ||
         searchKeys.some((key) => {
@@ -159,13 +174,36 @@ export function CrudTable<T>({
         return selectedValue === 'ALL' || filter.getValue(item) === selectedValue;
       }),
     );
-  }, [filters, filterValues, items, search, searchKeys, searchText]);
+    return sortItems ? sortItems(nextItems) : nextItems;
+  }, [filters, filterValues, items, search, searchKeys, searchText, sortItems]);
 
-  const hasFilters = search.trim() !== '' || Object.values(filterValues).some((value) => value !== 'ALL');
+  const totalPages = pagination ? Math.max(1, pagination.totalPages) : pageSize ? Math.max(1, Math.ceil(filteredItems.length / pageSize)) : 1;
+  const safeCurrentPage = pagination ? pagination.page + 1 : Math.min(currentPage, totalPages);
+  const visibleItems = pagination
+    ? filteredItems
+    : pageSize
+    ? filteredItems.slice((safeCurrentPage - 1) * pageSize, safeCurrentPage * pageSize)
+    : filteredItems;
+
+  React.useEffect(() => {
+    if (!pagination) setCurrentPage(1);
+  }, [filterValues, pagination, search]);
+
+  React.useEffect(() => {
+    if (!pagination && currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, pagination, totalPages]);
+
+  const hasFilters = search.trim() !== ''
+    || Object.entries(filterValues).some(([key, value]) => value !== (initialFilterValues[key] ?? 'ALL'));
+  const rowNumberOffset = pagination
+    ? pagination.page * pagination.pageSize
+    : pageSize
+    ? (safeCurrentPage - 1) * pageSize
+    : 0;
 
   const clearFilters = () => {
     setSearch('');
-    setFilterValues({});
+    setFilterValues(initialFilterValues);
   };
 
   const buildDefaultValues = (): Record<string, CrudValue> => {
@@ -370,8 +408,8 @@ export function CrudTable<T>({
       )}
 
       <section className="rounded-xl border border-border bg-card p-4">
-        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px_auto]">
-          <div className="relative">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap lg:flex-nowrap lg:items-center">
+          <div className="relative min-w-[200px] flex-1">
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               type="search"
@@ -382,7 +420,7 @@ export function CrudTable<T>({
             />
           </div>
           {filters.map((filter) => (
-            <div key={filter.key} className="relative">
+            <div key={filter.key} className="relative w-full sm:w-48 lg:w-44 shrink-0">
               <select
                 value={filterValues[filter.key] ?? 'ALL'}
                 onChange={(event) =>
@@ -400,7 +438,7 @@ export function CrudTable<T>({
               <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             </div>
           ))}
-          <Button type="button" variant="outline" size="md" onClick={clearFilters} disabled={!hasFilters} className="h-10">
+          <Button type="button" variant="outline" size="md" onClick={clearFilters} disabled={!hasFilters} className="h-10 shrink-0">
             <X className="mr-2 h-4 w-4" />
             Clear filters
           </Button>
@@ -427,7 +465,7 @@ export function CrudTable<T>({
             <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="text-sm font-bold text-foreground">{title} overview</h2>
               <p className="text-xs text-muted-foreground">
-                Showing {filteredItems.length} of {items.length} records
+                Showing {visibleItems.length} of {pagination ? pagination.totalElements : filteredItems.length} records
               </p>
             </div>
           </div>
@@ -485,7 +523,7 @@ export function CrudTable<T>({
                     animate="show"
                     variants={{ hidden: {}, show: { transition: { staggerChildren: 0.03 } } }}
                   >
-                    {filteredItems.map((row, index) => (
+                    {visibleItems.map((row, index) => (
                       <motion.tr
                         key={getId(row)}
                         variants={{
@@ -494,7 +532,9 @@ export function CrudTable<T>({
                         }}
                         className="border-b border-border transition-colors hover:bg-muted/40"
                       >
-                        <td className="px-4 py-3 text-xs text-muted-foreground">{index + 1}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">
+                          {rowNumberOffset + index + 1}
+                        </td>
                         {columns.map((col) => (
                           <td key={col.key} className="px-4 py-3 text-sm text-foreground">
                             {col.render
@@ -510,14 +550,16 @@ export function CrudTable<T>({
               </div>
 
               <div className="divide-y divide-border md:hidden">
-                {filteredItems.map((row, index) => (
+                {visibleItems.map((row, index) => (
                   <article key={getId(row)} className="space-y-4 p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-bold text-foreground">
                           {getDisplayName ? getDisplayName(row) : `${title} #${getId(row)}`}
                         </p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">Record {index + 1} · ID #{getId(row)}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          Record {rowNumberOffset + index + 1} · ID #{getId(row)}
+                        </p>
                       </div>
                     </div>
                     <dl className="grid grid-cols-2 gap-3">
@@ -536,6 +578,47 @@ export function CrudTable<T>({
                   </article>
                 ))}
               </div>
+              {(pagination || (pageSize && filteredItems.length > pageSize)) && totalPages > 1 && (
+                <div className="flex flex-col gap-3 border-t border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-xs text-muted-foreground">
+                    Page {safeCurrentPage} of {totalPages} · {pagination?.pageSize ?? pageSize} records per page
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (pagination) {
+                          pagination.onPageChange(Math.max(0, pagination.page - 1));
+                          return;
+                        }
+                        setCurrentPage((page) => Math.max(1, page - 1));
+                      }}
+                      disabled={safeCurrentPage <= 1}
+                    >
+                      <ChevronLeft className="mr-1 h-4 w-4" />
+                      Previous
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (pagination) {
+                          pagination.onPageChange(Math.min(totalPages - 1, pagination.page + 1));
+                          return;
+                        }
+                        setCurrentPage((page) => Math.min(totalPages, page + 1));
+                      }}
+                      disabled={safeCurrentPage >= totalPages}
+                    >
+                      Next
+                      <ChevronRight className="ml-1 h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </section>

@@ -1,6 +1,18 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Coffee, MapPin, Search, Sparkles, Ticket } from 'lucide-react';
+import {
+  ArrowRight,
+  Calendar,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Coffee,
+  Crown,
+  Film,
+  MapPin,
+  Sparkles,
+  Ticket,
+} from 'lucide-react';
 import { useMovieStore } from '@/store/movieStore';
 import { useCinemaStore } from '@/store/cinemaStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -11,6 +23,9 @@ import { MovieGrid } from '@/components/common/MovieGrid/MovieGrid';
 import { MovieCardSkeleton } from '@/components/common/Skeleton/Skeleton';
 import { getCinemaDate, isUpcomingShowtime, parseShowtimeStart } from '@/lib/showtime';
 import { useHeroBackdrop } from '@/context/HeroBackdropContext';
+import { productService } from '@/services/productService';
+import type { FnbItem } from '@/types/product';
+import { FeaturedFnbPreview } from './components/FeaturedFnbPreview';
 import septemberBanner from '@/assets/banner/image.png';
 import grabBanner from '@/assets/banner/image copy.png';
 import goldClassBanner from '@/assets/banner/image copy 2.png';
@@ -26,38 +41,108 @@ const HOME_BANNER_SLIDES = [
   { id: 'home-big-bucket', image: popcornBanner, fallbackImage: popcornBanner, title: 'Big Bucket Free Drink' },
 ];
 
+const WHATS_NEW_PROMOS = [
+  {
+    id: 'big-bucket-free-drink',
+    image: popcornBanner,
+    kicker: 'Food and drinks',
+    title: 'Big Bucket, Free Drink',
+    description: 'Grab the premium popcorn bucket and get a refreshing Coke for your movie night.',
+    cta: 'Learn more',
+    to: '/fnb',
+  },
+  {
+    id: 'september-special',
+    image: septemberBanner,
+    kicker: 'Limited offer',
+    title: 'September Special',
+    description: 'Fresh ticket and snack offers are ready for your next cinema visit.',
+    cta: 'View offers',
+    to: '/promotion',
+  },
+  {
+    id: 'grab-delivery-promotion',
+    image: grabBanner,
+    kicker: 'Delivery perk',
+    title: 'Grab Delivery Promotion',
+    description: 'Plan snacks and cinema treats with our newest delivery-friendly promotion.',
+    cta: 'Explore deal',
+    to: '/promotion',
+  },
+  {
+    id: 'gold-class-ticket-package',
+    image: goldClassBanner,
+    kicker: 'Premium experience',
+    title: 'Gold Class Ticket Package',
+    description: 'Upgrade the night with a more comfortable premium cinema package.',
+    cta: 'Discover',
+    to: '/premiere',
+  },
+];
+
 const dateFormatter = (date: string, options: Intl.DateTimeFormatOptions) =>
   new Intl.DateTimeFormat('en-US', { ...options, timeZone: 'UTC' }).format(new Date(`${date}T12:00:00Z`));
 
 const getDateString = (date: Date) => date.toISOString().slice(0, 10);
+
 export const HomePage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { setCurrentImage } = useHeroBackdrop();
-  const { movies, showtimes, searchQuery, setSearchQuery, fetchCatalog, loading, error } = useMovieStore();
-  const { cinemas, selectedCinemaId } = useCinemaStore();
+  const { movies, showtimes, searchQuery, fetchCatalog, loading, error } = useMovieStore();
+  const { cinemas, selectedCinemaId, selectCinema } = useCinemaStore();
   const language = useSettingsStore((state) => state.language);
+
   const [activeListingTab, setActiveListingTab] = useState<ListingTab>('NOW_SHOWING');
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('');
+  const [featuredFnb, setFeaturedFnb] = useState<FnbItem[]>([]);
+  const [fnbLoading, setFnbLoading] = useState(true);
+  const [activePromoIndex, setActivePromoIndex] = useState(0);
+
+  // Quick booking widget state
+  const [quickMovieId, setQuickMovieId] = useState('');
 
   useEffect(() => {
     void fetchCatalog();
   }, [fetchCatalog]);
 
-  const today = getCinemaDate();
-  const selectedCinema = cinemas.find((cinema) => cinema.id === selectedCinemaId);
-  const upcomingShowtimes = useMemo(() => showtimes
-    .filter((showtime) => isUpcomingShowtime(showtime))
-    .filter((showtime) => selectedCinemaId === 'ALL' || showtime.cinemaId === selectedCinemaId)
-    .sort((first, second) => parseShowtimeStart(first.startTime) - parseShowtimeStart(second.startTime)),
-  [showtimes, selectedCinemaId]);
+  useEffect(() => {
+    let cancelled = false;
+    setFnbLoading(true);
+    productService
+      .getFeaturedFnbItems(6)
+      .then((items) => {
+        if (!cancelled) setFeaturedFnb(items);
+      })
+      .catch(() => {
+        if (!cancelled) setFeaturedFnb([]);
+      })
+      .finally(() => {
+        if (!cancelled) setFnbLoading(false);
+      });
 
-  const availableDates = useMemo(() => [...new Set(upcomingShowtimes.map((showtime) => showtime.date))], [upcomingShowtimes]);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const today = getCinemaDate();
+
+  const upcomingShowtimes = useMemo(() => {
+    return showtimes
+      .filter((showtime) => isUpcomingShowtime(showtime))
+      .filter((showtime) => selectedCinemaId === 'ALL' || showtime.cinemaId === selectedCinemaId)
+      .sort((first, second) => parseShowtimeStart(first.startTime) - parseShowtimeStart(second.startTime));
+  }, [showtimes, selectedCinemaId]);
+
+  const availableDates = useMemo(() => {
+    return [...new Set(upcomingShowtimes.map((showtime) => showtime.date))];
+  }, [upcomingShowtimes]);
 
   const dateCards = useMemo(() => {
     const firstDate = new Date(`${today}T12:00:00Z`);
-    const dates = Array.from({ length: 6 }, (_, index) => {
+    const dates = Array.from({ length: 7 }, (_, index) => {
       const date = new Date(firstDate);
       date.setUTCDate(firstDate.getUTCDate() + index);
       return getDateString(date);
@@ -74,50 +159,189 @@ export const HomePage: React.FC = () => {
 
   useEffect(() => {
     const firstBookableDate = availableDates.find((date) => date >= today) ?? today;
-    setSelectedDate((current) => dateCards.some((date) => date.dateStr === current) ? current : firstBookableDate);
+    setSelectedDate((current) => (dateCards.some((date) => date.dateStr === current) ? current : firstBookableDate));
   }, [availableDates, dateCards, today]);
 
-  const selectedDateShowtimes = useMemo(() => upcomingShowtimes.filter((showtime) => showtime.date === selectedDate), [selectedDate, upcomingShowtimes]);
-  const selectedMovieIds = useMemo(() => new Set(selectedDateShowtimes.map((showtime) => showtime.movieId)), [selectedDateShowtimes]);
+  const selectedDateShowtimes = useMemo(() => {
+    return upcomingShowtimes.filter((showtime) => showtime.date === selectedDate);
+  }, [selectedDate, upcomingShowtimes]);
 
-  const comingSoonMonths = useMemo(() => [...new Set(movies
-    .filter((movie) => movie.status === 'COMING_SOON')
-    .map((movie) => movie.releaseDate.slice(0, 7)))].sort().slice(0, 6), [movies]);
+  const selectedMovieIds = useMemo(() => {
+    return new Set(selectedDateShowtimes.map((showtime) => showtime.movieId));
+  }, [selectedDateShowtimes]);
 
-  const monthCards = useMemo(() => comingSoonMonths.map((month) => ({
-    id: month,
-    label: new Intl.DateTimeFormat(language === 'km' ? 'km-KH' : 'en-US', {
-      month: 'long',
-      timeZone: 'UTC',
-    }).format(new Date(`${month}-01T12:00:00Z`)),
-  })), [comingSoonMonths, language]);
+  const comingSoonMonths = useMemo(() => {
+    return [...new Set(movies.filter((movie) => movie.status === 'COMING_SOON').map((movie) => movie.releaseDate.slice(0, 7)))]
+      .sort()
+      .slice(0, 6);
+  }, [movies]);
+
+  const monthCards = useMemo(() => {
+    return comingSoonMonths.map((month) => ({
+      id: month,
+      label: new Intl.DateTimeFormat(language === 'km' ? 'km-KH' : 'en-US', {
+        month: 'long',
+        timeZone: 'UTC',
+      }).format(new Date(`${month}-01T12:00:00Z`)),
+    }));
+  }, [comingSoonMonths, language]);
 
   useEffect(() => {
-    setSelectedMonth((current) => comingSoonMonths.includes(current) ? current : (comingSoonMonths[0] ?? ''));
+    setSelectedMonth((current) => (comingSoonMonths.includes(current) ? current : (comingSoonMonths[0] ?? '')));
   }, [comingSoonMonths]);
+
+  const nowShowingMovies = useMemo(() => {
+    return movies.filter((m) => m.status === 'NOW_SHOWING' || m.status === 'FEATURED');
+  }, [movies]);
 
   const filteredMovies = useMemo(() => {
     const normalizedSearch = searchQuery.trim().toLowerCase();
     const hasDateListings = activeListingTab === 'NOW_SHOWING' && selectedDate !== '';
     return movies.filter((movie) => {
-      const matchesListing = movie.status === activeListingTab || (activeListingTab === 'NOW_SHOWING' && movie.status === 'FEATURED');
+      const matchesListing =
+        movie.status === activeListingTab || (activeListingTab === 'NOW_SHOWING' && movie.status === 'FEATURED');
       const matchesDate = !hasDateListings || selectedMovieIds.has(movie.id);
-      const matchesMonth = activeListingTab !== 'COMING_SOON' || !selectedMonth || movie.releaseDate.startsWith(selectedMonth);
-      const matchesSearch = !normalizedSearch || movie.title.toLowerCase().includes(normalizedSearch) || movie.genres.some((genre) => genre.toLowerCase().includes(normalizedSearch));
+      const matchesMonth =
+        activeListingTab !== 'COMING_SOON' || !selectedMonth || movie.releaseDate.startsWith(selectedMonth);
+      const matchesSearch =
+        !normalizedSearch ||
+        movie.title.toLowerCase().includes(normalizedSearch) ||
+        movie.genres.some((genre) => genre.toLowerCase().includes(normalizedSearch));
       return matchesListing && matchesDate && matchesMonth && matchesSearch;
     });
   }, [activeListingTab, movies, searchQuery, selectedDate, selectedMonth, selectedMovieIds]);
 
-  const nowShowingCount = useMemo(() => movies.filter((m) => m.status === 'NOW_SHOWING' || m.status === 'FEATURED').length, [movies]);
-  const comingSoonCount = useMemo(() => movies.filter((m) => m.status === 'COMING_SOON').length, [movies]);
+  const nowShowingCount = useMemo(
+    () => movies.filter((m) => m.status === 'NOW_SHOWING' || m.status === 'FEATURED').length,
+    [movies],
+  );
+  const comingSoonCount = useMemo(
+    () => movies.filter((m) => m.status === 'COMING_SOON').length,
+    [movies],
+  );
+  const activePromo = WHATS_NEW_PROMOS[activePromoIndex];
+
+  // Quick Find CTA
+  const handleQuickFind = () => {
+    if (quickMovieId) {
+      navigate(`/movies/${quickMovieId}`);
+    } else {
+      const el = document.getElementById('home-movies');
+      el?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const showPreviousPromo = () => {
+    setActivePromoIndex((current) => (current === 0 ? WHATS_NEW_PROMOS.length - 1 : current - 1));
+  };
+
+  const showNextPromo = () => {
+    setActivePromoIndex((current) => (current + 1) % WHATS_NEW_PROMOS.length);
+  };
 
   return (
     <div className="home-page min-h-screen overflow-hidden bg-background pb-20 text-foreground">
+      {/* 1. Hero Carousel */}
       <HeroCarousel
         slides={HOME_BANNER_SLIDES}
         autoPlayInterval={5000}
         onActiveImageChange={setCurrentImage}
       />
+
+      {/* 2. "Plan Your Visit" / Quick-Booking Mini-Widget directly beneath the Carousel */}
+      <div className="relative z-20 -mt-6 sm:-mt-10 container-main mb-6">
+        <div className="rounded-2xl border border-white/15 bg-card/95 backdrop-blur-xl p-4 sm:p-6 shadow-2xl shadow-black/80">
+          <div className="flex items-center gap-2 mb-3 text-xs font-bold uppercase tracking-[0.2em] text-[#E50914]">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Plan Your Visit · Quick Showtime Finder</span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-[1fr_1.2fr_1fr_auto] gap-3 items-center">
+            {/* Step 1: Select Cinema */}
+            <div className="relative">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                1. Select Cinema
+              </label>
+              <div className="relative flex items-center">
+                <MapPin className="absolute left-3 w-4 h-4 text-[#E50914] pointer-events-none" />
+                <select
+                  value={selectedCinemaId}
+                  onChange={(e) => selectCinema(e.target.value)}
+                  aria-label="Select Cinema"
+                  className="w-full h-11 pl-9 pr-8 bg-muted/70 text-foreground text-xs font-semibold rounded-xl border border-border focus:border-[#E50914] outline-none cursor-pointer appearance-none"
+                >
+                  <option value="ALL">All Cinemas</option>
+                  {cinemas.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Step 2: Select Movie */}
+            <div className="relative">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                2. Select Movie
+              </label>
+              <div className="relative flex items-center">
+                <Film className="absolute left-3 w-4 h-4 text-[#E50914] pointer-events-none" />
+                <select
+                  value={quickMovieId}
+                  onChange={(e) => setQuickMovieId(e.target.value)}
+                  aria-label="Select Movie"
+                  className="w-full h-11 pl-9 pr-8 bg-muted/70 text-foreground text-xs font-semibold rounded-xl border border-border focus:border-[#E50914] outline-none cursor-pointer appearance-none"
+                >
+                  <option value="">Choose a movie...</option>
+                  {nowShowingMovies.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.title}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Step 3: Select Date */}
+            <div className="relative">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                3. Select Date
+              </label>
+              <div className="relative flex items-center">
+                <Calendar className="absolute left-3 w-4 h-4 text-[#E50914] pointer-events-none" />
+                <select
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  aria-label="Select Date"
+                  className="w-full h-11 pl-9 pr-8 bg-muted/70 text-foreground text-xs font-semibold rounded-xl border border-border focus:border-[#E50914] outline-none cursor-pointer appearance-none"
+                >
+                  {dateCards.map((d) => (
+                    <option key={d.dateStr} value={d.dateStr}>
+                      {d.isToday ? `Today (${d.dayNum} ${d.monthName})` : `${d.dayName}, ${d.dayNum} ${d.monthName}`}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Action Button: Find Showtimes */}
+            <div className="sm:self-end pt-1 sm:pt-0">
+              <button
+                type="button"
+                onClick={handleQuickFind}
+                className="w-full sm:w-auto h-11 px-6 rounded-xl bg-[#E50914] hover:bg-[#ff1f2d] text-white text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-[#E50914]/30 hover:shadow-[#E50914]/50 flex items-center justify-center gap-2"
+              >
+                <Ticket className="w-4 h-4" />
+                <span>Find Showtimes</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {error && movies.length === 0 && (
         <section className="container-main py-24 text-center" role="alert">
@@ -134,44 +358,36 @@ export const HomePage: React.FC = () => {
         </section>
       )}
 
-      <section id="home-movies" className="container-main scroll-mt-24 pt-10">
-        <div className="flex flex-col gap-5">
-          <div>
-            <SectionTabs
-              tabs={[
-                { id: 'NOW_SHOWING', label: t.home.nowShowing, count: nowShowingCount },
-                { id: 'COMING_SOON', label: t.home.comingSoon, count: comingSoonCount },
-              ]}
-              activeTab={activeListingTab}
-              onTabChange={(tab) => setActiveListingTab(tab as ListingTab)}
-              variant="home"
-            />
-            <p className="hidden mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-              <MapPin className="h-3.5 w-3.5 text-[var(--primary)]" />
-              {selectedCinema ? selectedCinema.name : t.nav.allCinemas} · Cambodia local time
-            </p>
-          </div>
-
-          <label className="relative hidden w-full sm:max-w-xs">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-            <span className="sr-only">{t.nav.searchMovies}</span>
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder={t.nav.searchPlaceholder}
-              className="search-pill"
-            />
-          </label>
+      {/* 3. Primary Movie Section (Browse Movies & Pick Showtime) */}
+      <section id="home-movies" className="container-main scroll-mt-24 pt-4">
+        {/* Listing Tabs */}
+        <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
+          <SectionTabs
+            tabs={[
+              { id: 'NOW_SHOWING', label: t.home.nowShowing, count: nowShowingCount },
+              { id: 'COMING_SOON', label: t.home.comingSoon, count: comingSoonCount },
+            ]}
+            activeTab={activeListingTab}
+            onTabChange={(tab) => setActiveListingTab(tab as ListingTab)}
+            variant="home"
+          />
         </div>
 
         {loading ? (
           <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
-            {Array.from({ length: 8 }).map((_, i) => <MovieCardSkeleton key={i} />)}
+            {Array.from({ length: 8 }).map((_, i) => (
+              <MovieCardSkeleton key={i} />
+            ))}
           </div>
         ) : (
           <>
-            <div className="mt-10" role="tabpanel" id={`panel-${activeListingTab}`} aria-labelledby={`tab-${activeListingTab}`}>
+            {/* Date / Month Picker */}
+            <div
+              className="mt-6 mb-8"
+              role="tabpanel"
+              id={`panel-${activeListingTab}`}
+              aria-labelledby={`tab-${activeListingTab}`}
+            >
               {activeListingTab === 'NOW_SHOWING' ? (
                 <DateSelector
                   dateList={dateCards}
@@ -189,7 +405,11 @@ export const HomePage: React.FC = () => {
                       type="button"
                       onClick={() => setSelectedMonth(month.id)}
                       aria-pressed={selectedMonth === month.id}
-                      className={`h-20 min-w-[140px] snap-start rounded-xl border px-4 py-2.5 text-base font-black transition-colors duration-200 hover:border-foreground/40 ${selectedMonth === month.id ? 'border-[var(--primary)] bg-[var(--primary)]/10 text-foreground shadow-[0_0_20px_rgba(225,29,46,0.25)]' : 'border-border bg-card/60 text-muted-foreground'}`}
+                      className={`h-16 min-w-[130px] snap-start rounded-xl border px-4 py-2 text-sm font-black transition-colors duration-200 hover:border-foreground/40 ${
+                        selectedMonth === month.id
+                          ? 'border-[var(--primary)] bg-[var(--primary)]/10 text-foreground shadow-[0_0_20px_rgba(225,29,46,0.25)]'
+                          : 'border-border bg-card/60 text-muted-foreground'
+                      }`}
                     >
                       {month.label}
                     </button>
@@ -198,50 +418,146 @@ export const HomePage: React.FC = () => {
               )}
             </div>
 
+            {/* Movie Grid */}
             <MovieGrid
               key={`${activeListingTab}-${selectedDate}-${searchQuery}`}
               movies={filteredMovies}
               onMovieClick={(movie) => navigate(`/movies/${movie.id}`)}
               emptyMessage={activeListingTab === 'COMING_SOON' ? t.home.noUpcoming : t.home.noFilmsMatch}
-              className="mt-12"
+              className="mt-6"
               variant="home"
             />
           </>
         )}
 
-        <div className="mt-14 flex flex-col gap-4 border-t border-border py-8 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--primary)]">{t.home.planYourVisit}</p>
-            <h2 className="mt-2 text-xl font-black text-foreground">{t.home.findRightScreen}</h2>
-          </div>
-          <button type="button" onClick={() => navigate('/cinemas')} className="inline-flex items-center gap-2 self-start rounded-full border border-border px-5 py-3 text-xs font-bold text-muted-foreground transition hover:border-[var(--primary)] hover:text-foreground">
-            {t.home.exploreCinemas} <ArrowRight className="h-4 w-4" />
-          </button>
+        {/* 4. Popular Food & Drinks Section (5-6 products, 3 cols, realistic prices, + Add on hover) */}
+        <div className="mt-16 border-t border-border pt-4">
+          <FeaturedFnbPreview items={featuredFnb} loading={fnbLoading} />
         </div>
 
-        <section className="grid gap-4 pb-12 pt-2 md:grid-cols-[1.3fr_0.7fr]" aria-label="Cinema experiences">
-          <article className="group relative overflow-hidden rounded-2xl border border-border bg-card p-6 sm:p-8">
+        {/* 5. Bottom Promo Cards: Pre-order & Premiere Circle */}
+        <section className="grid gap-6 pb-12 pt-8 md:grid-cols-[1.2fr_0.8fr]" aria-label="Cinema experiences">
+          {/* Card 1: Seats, Snacks, and a Story (Pre-order for pickup) */}
+          <article className="group relative overflow-hidden rounded-2xl border border-white/10 bg-card p-6 sm:p-8 flex flex-col justify-between shadow-lg">
             <div className="relative z-10 max-w-md">
-              <p className="eyebrow">{t.home.makeItNightOut}</p>
-              <h2 className="mt-3 text-2xl font-black tracking-tight text-foreground sm:text-3xl">{t.home.seatsSnacksStory}</h2>
-              <p className="mt-3 text-sm leading-6 text-muted-foreground">{t.home.seatsSnacksDesc}</p>
-              <button type="button" onClick={() => navigate('/fnb')} className="btn-pill-outline mt-6">
-                {t.home.exploreFnb} <Coffee className="h-4 w-4" />
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#E50914]">
+                CONCESSION PRE-ORDER
+              </p>
+              <h2 className="mt-2 text-2xl font-black tracking-tight text-foreground sm:text-3xl">
+                Seats, Snacks &amp; A Great Story
+              </h2>
+              <p className="mt-3 text-xs sm:text-sm leading-relaxed text-muted-foreground">
+                Skip the lobby queues. Pre-order your favorite butter popcorn, nachos, and cold fountain beverages for express counter pickup when you arrive.
+              </p>
+              <button
+                type="button"
+                onClick={() => navigate('/fnb')}
+                className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/20 bg-white/5 hover:border-[#E50914] hover:bg-[#E50914] text-white text-xs font-bold transition-all shadow-sm"
+              >
+                <span>Pre-order for pickup</span>
+                <Coffee className="h-4 w-4" />
               </button>
             </div>
-            <div className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full border-[28px] border-primary/5 transition-transform duration-500 group-hover:scale-110" />
+            <div className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full border-[28px] border-primary/5 transition-transform duration-500 group-hover:scale-110" />
           </article>
 
-          <article className="surface-panel rounded-2xl p-6 sm:p-8">
-            <Sparkles className="h-6 w-6 text-[var(--primary)]" />
-            <p className="eyebrow mt-5">{t.home.premiereCircle}</p>
-            <h2 className="mt-3 text-xl font-black text-foreground">{t.home.getCloserFilms}</h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">{t.home.membershipDesc}</p>
-            <button type="button" onClick={() => navigate('/membership')} className="mt-5 inline-flex items-center gap-2 text-sm font-black text-[var(--primary)] hover:gap-3">
-              {t.home.discoverMembership} <ArrowRight className="h-4 w-4" />
+          {/* Card 2: Premiere Circle Membership (With large luxury gold Crown badge) */}
+          <article className="group relative overflow-hidden rounded-2xl border border-amber-500/30 bg-gradient-to-br from-card via-amber-500/[0.04] to-amber-500/[0.08] p-6 sm:p-8 flex flex-col justify-between shadow-lg">
+            <div>
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-md shadow-amber-500/10 mb-4">
+                <Crown className="h-6 w-6" />
+              </div>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-400">
+                PREMIERE CIRCLE VIP
+              </p>
+              <h2 className="mt-2 text-xl sm:text-2xl font-black text-foreground">
+                Get Closer To The Films You Love
+              </h2>
+              <p className="mt-2 text-xs sm:text-sm leading-relaxed text-muted-foreground">
+                Unlock 10% off tickets, free birthday popcorn, VIP lounge access, and exclusive advance screening invitations.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => navigate('/membership')}
+              className="mt-6 inline-flex items-center gap-2 text-xs font-black text-amber-400 hover:text-amber-300 transition-colors"
+            >
+              <span>Discover Membership Benefits</span>
+              <ArrowRight className="h-4 w-4" />
             </button>
           </article>
         </section>
+      </section>
+
+      <section className="container-main my-10 sm:my-12" aria-labelledby="whats-new-title">
+        <div className="mb-5 flex items-center justify-between gap-4">
+          <h2 id="whats-new-title" className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
+            What's new?
+          </h2>
+          <div className="hidden items-center gap-2 sm:flex">
+            <button
+              type="button"
+              onClick={showPreviousPromo}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-card/80 text-muted-foreground transition hover:border-[#E50914]/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914]"
+              aria-label="Previous promotion"
+            >
+              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={showNextPromo}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-card/80 text-muted-foreground transition hover:border-[#E50914]/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914]"
+              aria-label="Next promotion"
+            >
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+
+        <article className="group relative min-h-[330px] overflow-hidden rounded-2xl border border-white/10 bg-[#320006] shadow-2xl shadow-black/50 sm:min-h-[390px]">
+          <img
+            src={activePromo.image}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover object-center transition duration-500 group-hover:scale-[1.02]"
+            aria-hidden="true"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#9f0009] via-[#9f0009]/75 to-black/10" aria-hidden="true" />
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/45 to-transparent" aria-hidden="true" />
+
+          <div className="relative z-10 flex min-h-[330px] max-w-lg flex-col justify-center px-6 py-8 sm:min-h-[390px] sm:px-10 lg:px-12">
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-white/75">{activePromo.kicker}</p>
+            <h3 className="mt-3 max-w-sm text-3xl font-black leading-tight tracking-tight text-white sm:text-4xl">
+              {activePromo.title}
+            </h3>
+            <p className="mt-4 max-w-sm text-sm font-medium leading-6 text-white/85 sm:text-base">
+              {activePromo.description}
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate(activePromo.to)}
+              className="mt-7 inline-flex h-12 w-fit items-center justify-center gap-2 rounded-full bg-white px-7 text-sm font-black text-[#c00012] transition hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#9f0009]"
+            >
+              {activePromo.cta}
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+        </article>
+
+        <div className="mt-4 flex items-center justify-center gap-2">
+          {WHATS_NEW_PROMOS.map((promo, index) => (
+            <button
+              key={promo.id}
+              type="button"
+              onClick={() => setActivePromoIndex(index)}
+              className={`h-2 rounded-full transition-all ${
+                index === activePromoIndex ? 'w-12 bg-white' : 'w-2 bg-white/35 hover:bg-white/60'
+              }`}
+              aria-label={`Show ${promo.title}`}
+              aria-pressed={index === activePromoIndex}
+            />
+          ))}
+        </div>
       </section>
     </div>
   );

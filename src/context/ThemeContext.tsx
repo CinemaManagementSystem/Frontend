@@ -37,6 +37,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [theme])
 
   const setTheme = useCallback((_next: Theme) => {
+    void _next;
     setThemeState(FORCED_THEME)
   }, [])
 
