@@ -31,18 +31,15 @@ import { PageContainer } from '@/components/layout/PageContainer';
 import type { User } from '@/types/auth';
 import './Navbar.css';
 
-const NAV_LINKS = [
-  { name: 'Home', path: '/', icon: Home, end: true },
-  { name: 'Cinemas', path: '/cinemas', icon: MapPin, end: true },
-  { name: 'Offers', path: '/promotion', icon: Gift, end: true },
-  { name: 'F&B', path: '/fnb', icon: ShoppingBag, end: true },
-  { name: 'Membership', path: '/membership', icon: Crown, end: true },
-];
-
 const LANGUAGE_OPTIONS: { value: AppLanguage; label: string; shortLabel: string; flag: string }[] = [
   { value: 'en', label: 'English', shortLabel: 'EN', flag: '🇬🇧' },
   { value: 'km', label: 'ភាសាខ្មែរ', shortLabel: 'KH', flag: '🇰🇭' },
 ];
+
+interface CinemaSelectorProps {
+  onSelect: () => void;
+  mobile?: boolean;
+}
 
 const dropdownPanelClass =
   'absolute z-50 mt-2 origin-top rounded-2xl border border-white/10 bg-black/95 backdrop-blur-xl p-2 text-white shadow-2xl';
@@ -52,6 +49,7 @@ interface UserMenuProps {
 }
 
 const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { logoutAsync, isLoggingOut } = useAuthStore();
@@ -117,7 +115,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
                     className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-white hover:bg-white/5"
                   >
                     <Shield className="h-4 w-4 text-[var(--primary)]" />
-                    Admin Dashboard
+                    {t.nav.adminPanel}
                   </button>
                 )}
                 <button
@@ -147,7 +145,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
                     className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-rose-400 transition hover:bg-rose-500/10"
                   >
                     <LogOut className="h-4 w-4" />
-                    Sign Out
+                    {t.nav.logout}
                   </button>
                 </div>
               </motion.div>
@@ -166,12 +164,8 @@ const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
   );
 };
 
-interface CinemaSelectorProps {
-  onSelect: () => void;
-  mobile?: boolean;
-}
-
 const CinemaSelector: React.FC<CinemaSelectorProps> = ({ onSelect, mobile = false }) => {
+  const { t } = useTranslation();
   const { cinemas, selectedCinemaId, loading, error, fetchCinemas, selectCinema } = useCinemaStore();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -197,7 +191,7 @@ const CinemaSelector: React.FC<CinemaSelectorProps> = ({ onSelect, mobile = fals
         <button
           type="button"
           className="cinema-nav-picker-control w-full text-left"
-          aria-label="Choose a cinema"
+          aria-label={t.cinemas.chooseCinema}
           aria-haspopup="listbox"
           aria-expanded={open}
           disabled={loading && cinemas.length === 0}
@@ -206,7 +200,7 @@ const CinemaSelector: React.FC<CinemaSelectorProps> = ({ onSelect, mobile = fals
         >
           <MapPin className="h-3.5 w-3.5 shrink-0 text-[var(--primary)]" aria-hidden="true" />
           <span className="min-w-0 flex-1 truncate">
-            {loading && cinemas.length === 0 ? 'Loading cinemas...' : selectedCinema?.name ?? 'All Cinemas'}
+            {loading && cinemas.length === 0 ? t.common.loading : selectedCinema?.name ?? t.nav.allCinemas}
           </span>
           <ChevronDown className={cn('h-3 w-3 shrink-0 text-white/50 transition-transform', open && 'rotate-180')} aria-hidden="true" />
         </button>
@@ -224,7 +218,7 @@ const CinemaSelector: React.FC<CinemaSelectorProps> = ({ onSelect, mobile = fals
               )}
               <button type="button" role="option" aria-selected={selectedCinemaId === 'ALL'} className={cn('cinema-nav-picker-option', selectedCinemaId === 'ALL' && 'cinema-nav-picker-option-selected')} onClick={() => handleSelect('ALL')}>
                 <MapPin className="h-4 w-4" aria-hidden="true" />
-                <span>All Cinemas</span>
+                <span>{t.nav.allCinemas}</span>
               </button>
               {filteredCinemas.map((cinema) => (
                 <button key={cinema.id} type="button" role="option" aria-selected={selectedCinemaId === cinema.id} className={cn('cinema-nav-picker-option', selectedCinemaId === cinema.id && 'cinema-nav-picker-option-selected')} onClick={() => handleSelect(cinema.id)}>
@@ -239,7 +233,7 @@ const CinemaSelector: React.FC<CinemaSelectorProps> = ({ onSelect, mobile = fals
       </div>
       {error && (
         <p role="status" className="cinema-nav-picker-error">
-          Cinema list unavailable. <button type="button" onClick={() => void fetchCinemas(true)} disabled={loading}>{loading ? 'Loading...' : 'Retry'}</button>
+          Cinema list unavailable. <button type="button" onClick={() => void fetchCinemas(true)} disabled={loading}>{loading ? t.common.loading : t.common.retry}</button>
         </p>
       )}
       {!loading && !error && cinemas.length === 0 && (
@@ -250,6 +244,7 @@ const CinemaSelector: React.FC<CinemaSelectorProps> = ({ onSelect, mobile = fals
 };
 
 export const Navbar: React.FC = () => {
+  const { t, language } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isAuthenticated } = useAuthStore();
@@ -262,6 +257,14 @@ export const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const languageRef = useRef<HTMLDivElement>(null);
+
+  const navLinks = [
+    { name: t.nav.home, path: '/', icon: Home, end: true },
+    { name: t.nav.cinemas, path: '/cinemas', icon: MapPin, end: true },
+    { name: t.nav.offers, path: '/promotion', icon: Gift, end: true },
+    { name: t.nav.fnb, path: '/fnb', icon: ShoppingBag, end: true },
+    { name: t.nav.membership, path: '/membership', icon: Crown, end: true },
+  ];
 
   useEffect(() => {
     setLanguageOpen(false);
@@ -313,8 +316,8 @@ export const Navbar: React.FC = () => {
   return (
     <header
       className={cn(
-        'sticky top-0 z-30 w-full text-white transition-colors duration-200',
-        scrolled ? 'border-b border-white/10 bg-black/30 backdrop-blur-xl' : 'border-b border-white/10 bg-transparent',
+        'sticky top-0 z-30 w-full text-foreground transition-colors duration-200 border-b border-border',
+        scrolled ? 'bg-background/90 backdrop-blur-xl shadow-sm' : 'bg-background/60 backdrop-blur-md',
       )}
     >
       {/* Row 1: Search | Logo | Actions */}
@@ -324,8 +327,8 @@ export const Navbar: React.FC = () => {
           <button
             type="button"
             onClick={() => navigate('/movies')}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/40 text-white/80 transition-colors hover:bg-white/10 hover:text-white lg:hidden"
-            aria-label="Search movies"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-foreground transition-colors hover:bg-accent/10 lg:hidden"
+            aria-label={t.nav.searchMovies}
           >
             <Search className="h-4 w-4" />
           </button>
@@ -350,16 +353,16 @@ export const Navbar: React.FC = () => {
           <CinematiqueLogo className="h-7 w-auto object-contain md:h-10" />
         </Link>
 
-          {/* Right: Actions (Ticket, User/Join, Bell, Language) */}
-        <div className="flex min-w-0 items-center justify-end gap-3">
+        {/* Right: Actions (Ticket, User/Join, Bell, Language) */}
+        <div className="flex min-w-0 items-center justify-end gap-2.5 sm:gap-3">
           {/* Ticket Button */}
           <button
             type="button"
             onClick={handleTicketClick}
             className="hidden h-10 items-center gap-2 rounded-full border border-white/10 bg-black/40 px-5 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:flex"
           >
-            <Ticket className="h-4 w-4 text-white" />
-            Ticket
+            <Ticket className="h-4 w-4 text-[var(--primary)]" />
+            {t.nav.ticket}
           </button>
 
           {/* Account / Join Now */}
@@ -371,7 +374,7 @@ export const Navbar: React.FC = () => {
               className="avatar-pill"
             >
               <UserIcon className="h-3.5 w-3.5 text-[var(--primary)]" />
-              Join Now
+              {t.nav.joinNow}
             </Link>
           )}
 
@@ -379,7 +382,7 @@ export const Navbar: React.FC = () => {
           <button
             type="button"
             className="relative icon-btn-circle"
-            aria-label="Notifications"
+            aria-label={t.nav.notifications}
           >
             <Bell className="h-4 w-4" />
             <span className="notification-dot" aria-hidden="true" />
@@ -389,8 +392,8 @@ export const Navbar: React.FC = () => {
           <div ref={languageRef} className="relative hidden sm:block">
             <button
               type="button"
-              className="inline-flex h-10 items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3 text-sm font-semibold text-white transition-colors hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
-              aria-label="Select language"
+              className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-card/70 px-3 text-sm font-semibold text-foreground transition-colors hover:border-[var(--primary)]/60 hover:bg-accent/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+              aria-label={t.nav.selectLanguage}
               aria-haspopup="menu"
               aria-expanded={languageOpen}
               onClick={() => setLanguageOpen((open) => !open)}
@@ -399,11 +402,11 @@ export const Navbar: React.FC = () => {
                 {selectedLanguageOption.flag}
               </span>
               <span className="font-semibold uppercase">{selectedLanguageOption.shortLabel}</span>
-              <ChevronDown className={cn('h-4 w-4 text-white/80 transition-transform', languageOpen && 'rotate-180')} />
+              <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', languageOpen && 'rotate-180')} />
             </button>
             {languageOpen && (
               <div
-                className="absolute right-0 top-full z-[100] mt-2 w-44 overflow-hidden rounded-xl border border-white/10 bg-black/90 p-1 text-white shadow-xl backdrop-blur-md"
+                className="absolute right-0 top-full z-[100] mt-2 w-44 overflow-hidden rounded-xl border border-border bg-card p-1 text-card-foreground shadow-2xl backdrop-blur-md"
                 role="menu"
                 aria-label="Language options"
               >
@@ -419,8 +422,8 @@ export const Navbar: React.FC = () => {
                         setLanguageOpen(false);
                       }}
                       className={cn(
-                        'flex h-11 w-full items-center justify-between gap-3 rounded-lg px-3 text-left text-sm font-semibold transition-colors hover:bg-white/[0.06]',
-                        selected ? 'text-[var(--primary)]' : 'text-white/85',
+                        'flex h-11 w-full items-center justify-between gap-3 rounded-lg px-3 text-left text-sm font-semibold transition-colors hover:bg-accent/10',
+                        selected ? 'text-[var(--primary)] font-bold' : 'text-foreground/85',
                       )}
                     >
                       <span className="flex min-w-0 items-center gap-2.5">
@@ -429,7 +432,7 @@ export const Navbar: React.FC = () => {
                         </span>
                         <span className="truncate">{option.label}</span>
                       </span>
-                      {selected && <Check className="h-4 w-4 shrink-0 text-white" aria-hidden="true" />}
+                      {selected && <Check className="h-4 w-4 shrink-0 text-[var(--primary)]" aria-hidden="true" />}
                     </button>
                   );
                 })}
@@ -439,7 +442,7 @@ export const Navbar: React.FC = () => {
 
           <button
             type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/40 text-white transition-colors hover:bg-white/10 lg:hidden"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-foreground transition-colors hover:bg-accent/10 lg:hidden"
             onClick={() => setMobileMenuOpen((open) => !open)}
             aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
             aria-expanded={mobileMenuOpen}
@@ -455,7 +458,7 @@ export const Navbar: React.FC = () => {
         <PageContainer className="flex h-[52px] items-center justify-between">
           {/* Nav Links */}
           <nav className="flex items-center gap-8" aria-label="Public sub navigation">
-            {NAV_LINKS.map((link) => {
+            {navLinks.map((link) => {
               const Icon = link.icon;
 
               return (
@@ -465,7 +468,7 @@ export const Navbar: React.FC = () => {
                   end={link.end}
                   className={({ isActive }) =>
                     cn(
-                      'flex items-center gap-2 text-sm font-medium text-neutral-300 transition-colors md:text-[15px]',
+                      'flex items-center gap-2 text-sm font-medium transition-colors md:text-[15px]',
                       isActive
                         ? 'font-bold text-white'
                         : 'hover:text-white'
@@ -474,7 +477,7 @@ export const Navbar: React.FC = () => {
                 >
                   {({ isActive }) => (
                     <>
-                      <Icon className={cn('h-[18px] w-[18px]', isActive ? 'text-red-500' : '')} />
+                      <Icon className={cn('h-[18px] w-[18px]', isActive ? 'text-[var(--primary)]' : '')} />
                       {link.name}
                     </>
                   )}
@@ -492,7 +495,7 @@ export const Navbar: React.FC = () => {
           <>
             <motion.button
               type="button"
-              className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
               aria-label="Close navigation menu"
               onClick={() => setMobileMenuOpen(false)}
               initial={{ opacity: 0 }}
@@ -500,7 +503,7 @@ export const Navbar: React.FC = () => {
               exit={{ opacity: 0 }}
             />
             <motion.div
-              className="fixed bottom-0 right-0 top-0 z-50 flex w-[min(360px,88vw)] flex-col border-l border-white/10 bg-black/95 p-4 pt-20 text-white shadow-2xl backdrop-blur-xl lg:hidden"
+              className="fixed bottom-0 right-0 top-0 z-50 flex w-[min(360px,88vw)] flex-col border-l border-border bg-card p-4 pt-20 text-card-foreground shadow-2xl backdrop-blur-xl lg:hidden"
               initial={{ opacity: 0, x: 36 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 36 }}
@@ -517,7 +520,7 @@ export const Navbar: React.FC = () => {
               </div>
 
               <nav className="space-y-1" aria-label="Mobile public navigation">
-                {NAV_LINKS.map((link) => {
+                {navLinks.map((link) => {
                   const Icon = link.icon;
                   return (
                     <NavLink
@@ -527,7 +530,7 @@ export const Navbar: React.FC = () => {
                       className={({ isActive }) =>
                         cn(
                           'flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition-colors',
-                          isActive ? 'bg-white/5 text-white' : 'text-white/65 hover:bg-white/5 hover:text-white',
+                          isActive ? 'bg-accent/15 text-foreground font-bold' : 'text-muted-foreground hover:bg-accent/10 hover:text-foreground',
                         )
                       }
                     >
@@ -542,7 +545,7 @@ export const Navbar: React.FC = () => {
                 })}
               </nav>
 
-              <div className="mt-4 border-t border-white/10 pt-4">
+              <div className="mt-4 border-t border-border pt-4">
                 <CinemaSelector onSelect={closeMenus} mobile />
               </div>
             </motion.div>

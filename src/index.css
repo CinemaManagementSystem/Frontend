@@ -153,12 +153,8 @@ body::before {
   inset: 0;
   z-index: -1;
   background: 
-<<<<<<< Updated upstream
-    radial-gradient(ellipse at 50% 0%, rgba(120, 10, 25, 0.25), transparent 60%),
-=======
     radial-gradient(ellipse 80% 60% at 50% 0%, var(--radial-1), transparent 70%),
     radial-gradient(ellipse 60% 40% at 100% 100%, var(--radial-2), transparent 60%),
->>>>>>> Stashed changes
     var(--background);
   pointer-events: none;
 }
@@ -294,11 +290,7 @@ html.light .skeleton {
 }
 
 .date-card-unselected {
-<<<<<<< Updated upstream
-  @apply border-white/20 bg-black/60 text-white/50 hover:border-white/35 hover:text-white;
-=======
   @apply border-border bg-card/60 text-muted-foreground hover:border-foreground/30 hover:text-foreground hover:bg-accent/10;
->>>>>>> Stashed changes
 }
 
 /* Movie card */

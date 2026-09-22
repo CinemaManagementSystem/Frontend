@@ -3,21 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, BadgePercent, CheckCircle2, ChevronLeft, ChevronRight, Coffee, Crown, MapPin, Popcorn, Search, Ticket } from 'lucide-react';
 import { useMovieStore } from '@/store/movieStore';
 import { useCinemaStore } from '@/store/cinemaStore';
-import { useSettingsStore } from '@/store/settingsStore';
-import { useAuthStore } from '@/store/authStore';
-import { productService } from '@/services/productService';
 import { HeroCarousel } from '@/components/common/HeroCarousel/HeroCarousel';
 import { SectionTabs } from '@/components/common/SectionTabs/SectionTabs';
 import { DateSelector } from '@/components/common/DateSelector/DateSelector';
 import { MovieGrid } from '@/components/common/MovieGrid/MovieGrid';
 import { MovieCardSkeleton } from '@/components/common/Skeleton/Skeleton';
-import { PageContainer } from '@/components/layout/PageContainer';
-import { SnackImage } from '@/pages/public-site/Booking/SnackImage';
 import { getCinemaDate, isUpcomingShowtime, parseShowtimeStart } from '@/lib/showtime';
 import { useHeroBackdrop } from '@/context/HeroBackdropContext';
-import { formatCurrency } from '@/utils/formatCurrency';
-import type { Product } from '@/types/product';
-import { PROMOTIONS } from '@/pages/public-site/promotion/Promotion';
+import { useTranslation } from '@/i18n';
 import septemberBanner from '@/assets/banner/image.png';
 import grabBanner from '@/assets/banner/image copy.png';
 import goldClassBanner from '@/assets/banner/image copy 2.png';
@@ -334,40 +327,18 @@ function PlanVisitSection({ products, isAuthenticated }: { products: Product[]; 
 }
 
 export const HomePage: React.FC = () => {
+  const { t, language } = useTranslation();
   const navigate = useNavigate();
   const { setCurrentImage } = useHeroBackdrop();
   const { movies, showtimes, searchQuery, setSearchQuery, fetchCatalog, loading, error } = useMovieStore();
   const { cinemas, selectedCinemaId } = useCinemaStore();
-  const language = useSettingsStore((state) => state.language);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const [activeListingTab, setActiveListingTab] = useState<ListingTab>('NOW_SHOWING');
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('');
-  const [popularProducts, setPopularProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     void fetchCatalog();
   }, [fetchCatalog]);
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setPopularProducts([]);
-      return;
-    }
-    let cancelled = false;
-    void productService.list()
-      .then((products) => {
-        if (cancelled) return;
-        setPopularProducts(products
-          .filter((product) => product.isAvailable && product.stockQuantity > 0 && Number.isFinite(product.price) && product.price >= 0)
-          .sort((first, second) => Number(Boolean(second.imageUrl)) - Number(Boolean(first.imageUrl)) || first.name.localeCompare(second.name))
-          .slice(0, 4));
-      })
-      .catch(() => {
-        if (!cancelled) setPopularProducts([]);
-      });
-    return () => { cancelled = true; };
-  }, [isAuthenticated]);
 
   const today = getCinemaDate();
   const selectedCinema = cinemas.find((cinema) => cinema.id === selectedCinemaId);
@@ -388,13 +359,13 @@ export const HomePage: React.FC = () => {
     });
     return [...new Set([...dates, ...availableDates])].sort().map((date) => ({
       dateStr: date,
-      dayName: date === today ? 'Today' : dateFormatter(date, { weekday: 'short' }),
+      dayName: date === today ? t.home.today : dateFormatter(date, { weekday: 'short' }),
       dayNum: dateFormatter(date, { day: 'numeric' }),
       monthName: dateFormatter(date, { month: 'short' }),
       isToday: date === today,
       hasShowtimes: availableDates.includes(date),
     }));
-  }, [availableDates, today]);
+  }, [availableDates, today, t.home.today]);
 
   useEffect(() => {
     const firstBookableDate = availableDates.find((date) => date >= today) ?? today;
@@ -436,11 +407,7 @@ export const HomePage: React.FC = () => {
   const comingSoonCount = useMemo(() => movies.filter((m) => m.status === 'COMING_SOON').length, [movies]);
 
   return (
-<<<<<<< Updated upstream
-    <div className="home-page min-h-screen overflow-hidden bg-transparent pb-20 text-white">
-=======
     <div className="home-page min-h-screen overflow-hidden bg-background pb-20 text-foreground">
->>>>>>> Stashed changes
       <HeroCarousel
         slides={HOME_BANNER_SLIDES}
         autoPlayInterval={5000}
@@ -450,14 +417,14 @@ export const HomePage: React.FC = () => {
       {error && movies.length === 0 && (
         <section className="container-main py-24 text-center" role="alert">
           <Ticket className="mx-auto h-10 w-10 text-[var(--primary)]" />
-          <h1 className="mt-5 text-3xl font-black text-foreground">Unable to load movies.</h1>
-          <p className="mt-3 text-sm text-muted-foreground">The catalogue could not be loaded right now.</p>
+          <h1 className="mt-5 text-3xl font-black text-foreground">{t.home.unableToLoad}</h1>
+          <p className="mt-3 text-sm text-muted-foreground">{t.home.catalogueError}</p>
           <button
             type="button"
             onClick={() => void fetchCatalog()}
             className="mt-6 rounded-full bg-[var(--primary)] px-5 py-3 text-sm font-bold text-white transition hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
-            Try Again
+            {t.home.tryAgain}
           </button>
         </section>
       )}
@@ -467,8 +434,8 @@ export const HomePage: React.FC = () => {
           <div>
             <SectionTabs
               tabs={[
-                { id: 'NOW_SHOWING', label: 'Now Showing', count: nowShowingCount },
-                { id: 'COMING_SOON', label: 'Coming Soon', count: comingSoonCount },
+                { id: 'NOW_SHOWING', label: t.home.nowShowing, count: nowShowingCount },
+                { id: 'COMING_SOON', label: t.home.comingSoon, count: comingSoonCount },
               ]}
               activeTab={activeListingTab}
               onTabChange={(tab) => setActiveListingTab(tab as ListingTab)}
@@ -476,18 +443,18 @@ export const HomePage: React.FC = () => {
             />
             <p className="hidden mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
               <MapPin className="h-3.5 w-3.5 text-[var(--primary)]" />
-              {selectedCinema ? selectedCinema.name : 'All cinemas'} · Cambodia local time
+              {selectedCinema ? selectedCinema.name : t.nav.allCinemas} · Cambodia local time
             </p>
           </div>
 
           <label className="relative hidden w-full sm:max-w-xs">
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-            <span className="sr-only">Search movies</span>
+            <span className="sr-only">{t.nav.searchMovies}</span>
             <input
               type="search"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Search movies..."
+              placeholder={t.nav.searchPlaceholder}
               className="search-pill"
             />
           </label>
@@ -517,11 +484,7 @@ export const HomePage: React.FC = () => {
                       type="button"
                       onClick={() => setSelectedMonth(month.id)}
                       aria-pressed={selectedMonth === month.id}
-<<<<<<< Updated upstream
-                      className={`h-16 min-w-[110px] snap-start rounded-lg border bg-black px-5 text-base font-bold text-white transition-colors duration-200 hover:border-white/50 ${selectedMonth === month.id ? 'border-red-600 shadow-[0_0_20px_rgba(225,29,46,.25)]' : 'border-white/20'}`}
-=======
                       className={`h-20 min-w-[140px] snap-start rounded-xl border px-4 py-2.5 text-base font-black transition-colors duration-200 hover:border-foreground/40 ${selectedMonth === month.id ? 'border-[var(--primary)] bg-[var(--primary)]/10 text-foreground shadow-[0_0_20px_rgba(225,29,46,0.25)]' : 'border-border bg-card/60 text-muted-foreground'}`}
->>>>>>> Stashed changes
                     >
                       {month.label}
                     </button>
@@ -534,39 +497,31 @@ export const HomePage: React.FC = () => {
               key={`${activeListingTab}-${selectedDate}-${searchQuery}`}
               movies={filteredMovies}
               onMovieClick={(movie) => navigate(`/movies/${movie.id}`)}
-              emptyMessage={activeListingTab === 'COMING_SOON' ? 'No upcoming movies this month' : 'No films match that selection'}
+              emptyMessage={activeListingTab === 'COMING_SOON' ? t.home.noUpcoming : t.home.noFilmsMatch}
               className="mt-12"
               variant="home"
             />
           </>
         )}
-<<<<<<< Updated upstream
-      </section>
-
-      <WhatsNewSection />
-
-      <PlanVisitSection products={popularProducts} isAuthenticated={isAuthenticated} />
-
-=======
 
         <div className="mt-14 flex flex-col gap-4 border-t border-border py-8 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--primary)]">Plan your visit</p>
-            <h2 className="mt-2 text-xl font-black text-foreground">Find the right screen for your night.</h2>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--primary)]">{t.home.planYourVisit}</p>
+            <h2 className="mt-2 text-xl font-black text-foreground">{t.home.findRightScreen}</h2>
           </div>
           <button type="button" onClick={() => navigate('/cinemas')} className="inline-flex items-center gap-2 self-start rounded-full border border-border px-5 py-3 text-xs font-bold text-muted-foreground transition hover:border-[var(--primary)] hover:text-foreground">
-            Explore cinemas <ArrowRight className="h-4 w-4" />
+            {t.home.exploreCinemas} <ArrowRight className="h-4 w-4" />
           </button>
         </div>
 
         <section className="grid gap-4 pb-12 pt-2 md:grid-cols-[1.3fr_0.7fr]" aria-label="Cinema experiences">
           <article className="group relative overflow-hidden rounded-2xl border border-border bg-card p-6 sm:p-8">
             <div className="relative z-10 max-w-md">
-              <p className="eyebrow">Make it a night out</p>
-              <h2 className="mt-3 text-2xl font-black tracking-tight text-foreground sm:text-3xl">Seats, snacks, and a story worth staying for.</h2>
-              <p className="mt-3 text-sm leading-6 text-muted-foreground">Choose your cinema, find the right showtime, and add your favourite bites before you arrive.</p>
+              <p className="eyebrow">{t.home.makeItNightOut}</p>
+              <h2 className="mt-3 text-2xl font-black tracking-tight text-foreground sm:text-3xl">{t.home.seatsSnacksStory}</h2>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">{t.home.seatsSnacksDesc}</p>
               <button type="button" onClick={() => navigate('/fnb')} className="btn-pill-outline mt-6">
-                Explore food & drinks <Coffee className="h-4 w-4" />
+                {t.home.exploreFnb} <Coffee className="h-4 w-4" />
               </button>
             </div>
             <div className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full border-[28px] border-primary/5 transition-transform duration-500 group-hover:scale-110" />
@@ -574,16 +529,15 @@ export const HomePage: React.FC = () => {
 
           <article className="surface-panel rounded-2xl p-6 sm:p-8">
             <Sparkles className="h-6 w-6 text-[var(--primary)]" />
-            <p className="eyebrow mt-5">Premiere circle</p>
-            <h2 className="mt-3 text-xl font-black text-foreground">Get closer to the films you love.</h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">Early access, member events, and rewards for every visit.</p>
+            <p className="eyebrow mt-5">{t.home.premiereCircle}</p>
+            <h2 className="mt-3 text-xl font-black text-foreground">{t.home.getCloserFilms}</h2>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">{t.home.membershipDesc}</p>
             <button type="button" onClick={() => navigate('/membership')} className="mt-5 inline-flex items-center gap-2 text-sm font-black text-[var(--primary)] hover:gap-3">
-              Discover membership <ArrowRight className="h-4 w-4" />
+              {t.home.discoverMembership} <ArrowRight className="h-4 w-4" />
             </button>
           </article>
         </section>
       </section>
->>>>>>> Stashed changes
     </div>
   );
 };

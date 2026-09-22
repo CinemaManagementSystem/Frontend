@@ -51,20 +51,12 @@
   width: min(320px, calc(100vw - 2rem));
   max-height: min(360px, calc(100vh - 7rem));
   overflow-y: auto;
-<<<<<<< Updated upstream
-  padding: 0.35rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 0.5rem;
-  background: rgba(0, 0, 0, 0.94);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-=======
   padding: 0.4rem;
   border: 1px solid var(--border);
   border-radius: 0.9rem;
   background: var(--card);
   color: var(--card-foreground);
   box-shadow: var(--shadow-soft);
->>>>>>> Stashed changes
   backdrop-filter: blur(18px);
 }
 
@@ -117,11 +109,7 @@
 }
 
 .cinema-nav-picker-option svg { color: var(--primary); }
-<<<<<<< Updated upstream
-.cinema-nav-picker-option-selected { background: rgba(225, 29, 46, 0.08); color: var(--primary); }
-=======
 .cinema-nav-picker-option-selected { background: rgba(225, 29, 46, 0.14); color: var(--foreground); }
->>>>>>> Stashed changes
 .cinema-nav-picker-option-selected svg { filter: drop-shadow(0 0 5px rgba(225, 29, 46, 0.6)); }
 
 .cinema-nav-picker-error {
