@@ -10,11 +10,9 @@ import {
   LogOut,
   MapPin,
   Menu,
-  Moon,
   Search,
   Shield,
   ShoppingBag,
-  Sun,
   Ticket,
   User as UserIcon,
   X,
@@ -30,8 +28,6 @@ import { LogoutModal } from '@/components/common/LogoutModal/LogoutModal';
 import { Avatar } from '@/components/ui/Avatar/Avatar';
 import { CinematiqueLogo } from '@/components/common/CinematiqueLogo';
 import { PageContainer } from '@/components/layout/PageContainer';
-import { useTheme } from '@/context/ThemeContext';
-import { useTranslation } from '@/i18n';
 import type { User } from '@/types/auth';
 import './Navbar.css';
 
@@ -46,7 +42,7 @@ interface CinemaSelectorProps {
 }
 
 const dropdownPanelClass =
-  'absolute z-50 mt-2 origin-top rounded-2xl border border-border bg-card p-2 text-card-foreground shadow-2xl';
+  'absolute z-50 mt-2 origin-top rounded-2xl border border-white/10 bg-black/95 backdrop-blur-xl p-2 text-white shadow-2xl';
 
 interface UserMenuProps {
   user: User;
@@ -87,7 +83,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
         >
           <Avatar src={user.avatar} alt={user.username} className="h-6 w-6 border border-[var(--primary)]" />
           <span className="max-w-[90px] truncate">{user.username}</span>
-          <ChevronDown className={cn('h-3.5 w-3.5 text-muted-foreground transition-transform', open && 'rotate-180')} />
+          <ChevronDown className={cn('h-3.5 w-3.5 text-white/50 transition-transform', open && 'rotate-180')} />
         </button>
 
         <AnimatePresence>
@@ -101,11 +97,11 @@ const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
                 transition={{ duration: 0.15 }}
                 className={cn(dropdownPanelClass, 'right-0 top-full w-60')}
               >
-                <div className="mb-1 flex items-center gap-2.5 border-b border-border px-3 py-2.5">
+                <div className="mb-1 flex items-center gap-2.5 border-b border-white/10 px-3 py-2.5">
                   <Avatar src={user.avatar} alt={user.username} className="h-9 w-9 border border-[var(--primary)]" />
                   <div className="min-w-0">
-                    <p className="truncate text-xs font-bold text-foreground">{user.username}</p>
-                    <p className="truncate text-[10px] text-muted-foreground">{user.email}</p>
+                    <p className="truncate text-xs font-bold text-white">{user.username}</p>
+                    <p className="truncate text-[10px] text-white/50">{user.email}</p>
                     <span className="mt-0.5 inline-block rounded bg-[var(--primary)]/20 px-2 py-0.5 text-[9px] font-black uppercase text-[var(--primary)]">
                       {user.role}
                     </span>
@@ -116,7 +112,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
                   <button
                     type="button"
                     onClick={() => go('/admin/dashboard')}
-                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-foreground hover:bg-accent/10"
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-white hover:bg-white/5"
                   >
                     <Shield className="h-4 w-4 text-[var(--primary)]" />
                     {t.nav.adminPanel}
@@ -125,28 +121,28 @@ const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
                 <button
                   type="button"
                   onClick={() => go('/settings')}
-                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-muted-foreground hover:bg-accent/10 hover:text-foreground"
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-white/80 hover:bg-white/5 hover:text-white"
                 >
-                  <UserIcon className="h-4 w-4 text-muted-foreground" />
-                  {t.nav.settings}
+                  <UserIcon className="h-4 w-4 text-white/50" />
+                  Profile & Settings
                 </button>
                 <button
                   type="button"
                   onClick={() => go('/history')}
-                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-muted-foreground hover:bg-accent/10 hover:text-foreground"
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-white/80 hover:bg-white/5 hover:text-white"
                 >
-                  <Ticket className="h-4 w-4 text-amber-500" />
-                  {t.nav.bookingHistory}
+                  <Ticket className="h-4 w-4 text-amber-400" />
+                  My Tickets
                 </button>
 
-                <div className="my-1 border-t border-border pt-1">
+                <div className="my-1 border-t border-white/10 pt-1">
                   <button
                     type="button"
                     onClick={() => {
                       setOpen(false);
                       setLogoutOpen(true);
                     }}
-                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-rose-500 transition hover:bg-rose-500/10"
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium text-rose-400 transition hover:bg-rose-500/10"
                   >
                     <LogOut className="h-4 w-4" />
                     {t.nav.logout}
@@ -206,7 +202,7 @@ const CinemaSelector: React.FC<CinemaSelectorProps> = ({ onSelect, mobile = fals
           <span className="min-w-0 flex-1 truncate">
             {loading && cinemas.length === 0 ? t.common.loading : selectedCinema?.name ?? t.nav.allCinemas}
           </span>
-          <ChevronDown className={cn('h-3 w-3 shrink-0 text-muted-foreground transition-transform', open && 'rotate-180')} aria-hidden="true" />
+          <ChevronDown className={cn('h-3 w-3 shrink-0 text-white/50 transition-transform', open && 'rotate-180')} aria-hidden="true" />
         </button>
 
         {open && (
@@ -215,9 +211,9 @@ const CinemaSelector: React.FC<CinemaSelectorProps> = ({ onSelect, mobile = fals
             <div className="cinema-nav-picker-menu" role="listbox" aria-label="Cinema locations">
               {cinemas.length > 8 && (
                 <label className="cinema-nav-picker-search">
-                  <Search className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
-                  <span className="sr-only">{t.cinemas.searchMoviesGenres}</span>
-                  <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t.cinemas.chooseCinema} autoFocus />
+                  <Search className="h-3.5 w-3.5 text-white/40" aria-hidden="true" />
+                  <span className="sr-only">Search cinemas</span>
+                  <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search cinemas" autoFocus />
                 </label>
               )}
               <button type="button" role="option" aria-selected={selectedCinemaId === 'ALL'} className={cn('cinema-nav-picker-option', selectedCinemaId === 'ALL' && 'cinema-nav-picker-option-selected')} onClick={() => handleSelect('ALL')}>
@@ -230,7 +226,7 @@ const CinemaSelector: React.FC<CinemaSelectorProps> = ({ onSelect, mobile = fals
                   <span className="min-w-0 truncate">{cinema.name}{cinema.city ? ` · ${cinema.city}` : ''}</span>
                 </button>
               ))}
-              {filteredCinemas.length === 0 && <p className="px-3 py-4 text-xs text-muted-foreground">No cinemas match that search.</p>}
+              {filteredCinemas.length === 0 && <p className="px-3 py-4 text-xs text-white/45">No cinemas match that search.</p>}
             </div>
           </>
         )}
@@ -252,8 +248,7 @@ export const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isAuthenticated } = useAuthStore();
-  const { setLanguage } = useSettingsStore();
-  const { theme, toggleTheme } = useTheme();
+  const { language, setLanguage } = useSettingsStore();
   const selectedLanguageOption =
     LANGUAGE_OPTIONS.find((option) => option.value === language) ?? LANGUAGE_OPTIONS[0];
 
@@ -352,7 +347,7 @@ export const Navbar: React.FC = () => {
         <Link
           to="/"
           onClick={closeMenus}
-          className="flex items-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          className="flex items-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
           aria-label="Legend Cinema Home"
         >
           <CinematiqueLogo className="h-7 w-auto object-contain md:h-10" />
@@ -364,7 +359,7 @@ export const Navbar: React.FC = () => {
           <button
             type="button"
             onClick={handleTicketClick}
-            className="hidden h-10 items-center gap-2 rounded-full border border-border bg-card/70 px-4 sm:px-5 text-sm font-semibold text-foreground transition-colors hover:border-[var(--primary)]/60 hover:bg-accent/10 sm:flex"
+            className="hidden h-10 items-center gap-2 rounded-full border border-white/10 bg-black/40 px-5 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:flex"
           >
             <Ticket className="h-4 w-4 text-[var(--primary)]" />
             {t.nav.ticket}
@@ -391,17 +386,6 @@ export const Navbar: React.FC = () => {
           >
             <Bell className="h-4 w-4" />
             <span className="notification-dot" aria-hidden="true" />
-          </button>
-
-          {/* Theme Toggle */}
-          <button
-            type="button"
-            className="hidden icon-btn-circle sm:flex"
-            onClick={toggleTheme}
-            aria-label={theme === 'dark' ? t.nav.switchLight : t.nav.switchDark}
-            title={theme === 'dark' ? t.nav.switchLight : t.nav.switchDark}
-          >
-            {theme === 'dark' ? <Sun className="h-4 w-4 text-yellow-400" /> : <Moon className="h-4 w-4 text-foreground" />}
           </button>
 
           {/* Language Selector */}
@@ -470,7 +454,7 @@ export const Navbar: React.FC = () => {
       </PageContainer>
 
       {/* Row 2: Nav Links | Cinema Selector */}
-      <div className="hidden border-t border-border bg-transparent lg:block">
+      <div className="hidden border-t border-white/10 lg:block">
         <PageContainer className="flex h-[52px] items-center justify-between">
           {/* Nav Links */}
           <nav className="flex items-center gap-8" aria-label="Public sub navigation">
@@ -486,8 +470,8 @@ export const Navbar: React.FC = () => {
                     cn(
                       'flex items-center gap-2 text-sm font-medium transition-colors md:text-[15px]',
                       isActive
-                        ? 'font-bold text-foreground'
-                        : 'text-muted-foreground hover:text-foreground',
+                        ? 'font-bold text-white'
+                        : 'hover:text-white'
                     )
                   }
                 >
@@ -568,6 +552,7 @@ export const Navbar: React.FC = () => {
           </>
         )}
       </AnimatePresence>
+
     </header>
   );
 };

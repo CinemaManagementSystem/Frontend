@@ -5,7 +5,11 @@ export interface PaymentGatewayState {
   orderId?: number | string | null;
   bookingId?: number | string | null;
   paymentId?: number | string | null;
+  userMembershipId?: string | null;
+  returnTo?: string | null;
   totalAmount?: number | string | null;
+  promotionCode?: string | null;
+  discountAmount?: number | string | null;
   paymentMethod?: 'KHQR' | 'ABA_PAY' | 'CASH';
   formData?: { bookingId?: number; customerId?: number; orderNumber?: string; name?: string; email?: string };
   cartItems?: CheckoutOrderLine[];
@@ -17,4 +21,5 @@ export interface GatewaySession {
   expiresAt: number;
   manualChecks: number;
   storageKey: string;
+  returnTo?: string | null;
 }

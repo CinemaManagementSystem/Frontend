@@ -24,11 +24,11 @@ export const authService = {
     return data;
   },
 
-  async logout(): Promise<void> {
+  async logout(refreshToken?: string | null): Promise<void> {
     // Best-effort server-side token revocation; the local session is always
     // cleared afterwards by authStore.logout/logoutAsync regardless of outcome.
     await apiClient
-      .post('/auth/logout')
+      .post('/auth/logout', refreshToken ? { refreshToken } : undefined)
       .catch(() => undefined);
   },
 };

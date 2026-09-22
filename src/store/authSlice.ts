@@ -5,20 +5,22 @@ import { normalizeUserRole } from '@/lib/authRole';
 import { normalizeAvatar } from '@/lib/avatar';
 
 const TOKEN_KEY = 'token';
+const REFRESH_TOKEN_KEY = 'refresh_token';
 const USER_KEY = 'auth_user';
 
 function mapUser(user: User): User {
   return { ...user, role: normalizeUserRole(user.role), avatar: normalizeAvatar(user.avatar) };
 }
 
-function loadPersisted(): { user: User | null; token: string | null } {
+function loadPersisted(): { user: User | null; token: string | null; refreshToken: string | null } {
   try {
     const token = localStorage.getItem(TOKEN_KEY);
+    const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
     const rawUser = localStorage.getItem(USER_KEY);
-    if (!token || !rawUser) return { user: null, token: null };
-    return { user: mapUser(JSON.parse(rawUser) as User), token };
+    if (!token || !rawUser) return { user: null, token: null, refreshToken: null };
+    return { user: mapUser(JSON.parse(rawUser) as User), token, refreshToken };
   } catch {
-    return { user: null, token: null };
+    return { user: null, token: null, refreshToken: null };
   }
 }
 
@@ -30,6 +32,7 @@ const initialState: AuthState = {
   isAuthLoading: false,
   isLoggingOut: false,
   token: persisted.token,
+  refreshToken: persisted.refreshToken,
 };
 
 export const login = createAsyncThunk<User, { principal: string; password: string }>(
@@ -40,6 +43,7 @@ export const login = createAsyncThunk<User, { principal: string; password: strin
     const response: AuthResponse = await authService.login(payload);
     const user = mapUser(response.user);
     localStorage.setItem(TOKEN_KEY, response.accessToken);
+    localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken);
     localStorage.setItem(USER_KEY, JSON.stringify(user));
     return user;
   },
@@ -59,9 +63,11 @@ const authSlice = createSlice({
   reducers: {
     logout: (state) => {
       localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(REFRESH_TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
       state.user = null;
       state.token = null;
+      state.refreshToken = null;
       state.isAuthenticated = false;
     },
   },
@@ -73,6 +79,7 @@ const authSlice = createSlice({
       .addCase(login.fulfilled, (state, action) => {
         state.user = mapUser(action.payload);
         state.token = localStorage.getItem(TOKEN_KEY);
+        state.refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
         state.isAuthenticated = true;
         state.isAuthLoading = false;
       })

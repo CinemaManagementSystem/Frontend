@@ -17,11 +17,12 @@ export const AdminRoute: React.FC = () => {
   }
 
   if (!isAuthenticated || !user) {
+    const redirect = `${location.pathname}${location.search}`;
     return (
       <Navigate
-        to="/login"
+        to={`/login?redirect=${encodeURIComponent(redirect)}`}
         replace
-        state={{ from: `${location.pathname}${location.search}` }}
+        state={{ from: redirect }}
       />
     );
   }

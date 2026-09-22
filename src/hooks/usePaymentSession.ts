@@ -8,6 +8,8 @@ import type { Payment } from '@/types/payment';
 
 type Phase = 'waiting' | 'finalizing' | 'paid' | 'cash' | 'expired' | 'unverified' | 'failed';
 type CheckSource = 'scheduled' | 'manual' | 'final';
+const TEMPORARY_VERIFICATION_MESSAGE =
+  'Payment received? We are still verifying your payment. Please keep this page open or check your booking history before paying again.';
 
 export function usePaymentSession(session: GatewaySession) {
   const [payment, setPayment] = useState(session.payment);
@@ -45,8 +47,14 @@ export function usePaymentSession(session: GatewaySession) {
     if (!alive.current || !['waiting', 'finalizing'].includes(phaseRef.current)) return null;
     if (pending.current) {
       const previous = await pending.current;
-      if (source !== 'final' || !alive.current || phaseRef.current !== 'finalizing') return previous;
-      // The final check always follows any earlier in-flight request. It is never skipped.
+      if (source === 'final' && alive.current && phaseRef.current === 'finalizing') {
+        // The final check always follows any earlier in-flight request. It is never skipped.
+      } else if (source === 'manual' && alive.current && phaseRef.current === 'waiting') {
+        // A user click should always own one fresh backend verification after
+        // any scheduled request has finished, unless that request already paid.
+      } else {
+        return previous;
+      }
     }
     const active = currentPayment.current;
     if (!active.khqrString || !active.md5Hash) {
@@ -62,7 +70,10 @@ export function usePaymentSession(session: GatewaySession) {
         if (alive.current && next.status === 'PENDING') setMessage('Payment is still pending. Keep this page open.');
         return next;
       } catch (error) {
-        if (alive.current) setMessage(getApiErrorMessage(error, 'payment verification'));
+        if (alive.current) {
+          const detail = getApiErrorMessage(error, 'payment verification');
+          setMessage(`${TEMPORARY_VERIFICATION_MESSAGE}${detail ? ` (${detail})` : ''}`);
+        }
         return null;
       }
     })();
@@ -100,7 +111,7 @@ export function usePaymentSession(session: GatewaySession) {
       const finalExpired = result?.status === 'EXPIRED' || result?.status === 'FAILED';
       transition(finalExpired ? 'expired' : 'unverified');
       setMessage(finalExpired ? 'Time is up. Payment has not been confirmed. Check your booking history before paying again.'
-        : 'The QR is closed, but we could not verify the payment. Check your booking history before paying again.');
+        : TEMPORARY_VERIFICATION_MESSAGE);
     }, Math.max(0, session.expiresAt - Date.now())));
     const tick = window.setInterval(() => {
       if (phaseRef.current === 'waiting') setRemaining(Math.max(0, Math.ceil((session.expiresAt - Date.now()) / 1000)));
@@ -114,7 +125,7 @@ export function usePaymentSession(session: GatewaySession) {
 
   const manualCheck = useCallback(async () => {
     if (manualRequestInFlight.current || manualCount.current >= MAX_MANUAL_CHECKS
-      || pending.current || phaseRef.current !== 'waiting') return;
+      || phaseRef.current !== 'waiting') return;
     manualRequestInFlight.current = true;
     manualCount.current += 1;
     setManualChecks(manualCount.current);

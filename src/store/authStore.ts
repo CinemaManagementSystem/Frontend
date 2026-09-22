@@ -13,20 +13,28 @@ interface AuthStore extends AuthState {
 }
 
 const TOKEN_KEY = 'token';
+const REFRESH_TOKEN_KEY = 'refresh_token';
 const USER_KEY = 'auth_user';
+
+function clearPersistedAuth() {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+}
 
 function mapUser(user: User): User {
   return { ...user, role: normalizeUserRole(user.role), avatar: normalizeAvatar(user.avatar) };
 }
 
-function loadPersisted(): { user: User | null; token: string | null } {
+function loadPersisted(): { user: User | null; token: string | null; refreshToken: string | null } {
   try {
     const token = localStorage.getItem(TOKEN_KEY);
+    const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
     const rawUser = localStorage.getItem(USER_KEY);
-    if (!token || !rawUser) return { user: null, token: null };
-    return { user: mapUser(JSON.parse(rawUser) as User), token };
+    if (!token || !rawUser) return { user: null, token: null, refreshToken: null };
+    return { user: mapUser(JSON.parse(rawUser) as User), token, refreshToken };
   } catch {
-    return { user: null, token: null };
+    return { user: null, token: null, refreshToken: null };
   }
 }
 
@@ -38,6 +46,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
   isAuthLoading: false,
   isLoggingOut: false,
   token: persisted.token,
+  refreshToken: persisted.refreshToken,
 
   login: async (principal, password) => {
     set({ isAuthLoading: true });
@@ -47,8 +56,15 @@ export const useAuthStore = create<AuthStore>((set) => ({
       const response = await authService.login(payload);
       const user = mapUser(response.user);
       localStorage.setItem(TOKEN_KEY, response.accessToken);
+      localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken);
       localStorage.setItem(USER_KEY, JSON.stringify(user));
-      set({ user, token: response.accessToken, isAuthenticated: true, isAuthLoading: false });
+      set({
+        user,
+        token: response.accessToken,
+        refreshToken: response.refreshToken,
+        isAuthenticated: true,
+        isAuthLoading: false,
+      });
       return user;
     } catch (error) {
       set({ isAuthLoading: false });
@@ -69,21 +85,19 @@ export const useAuthStore = create<AuthStore>((set) => ({
   },
 
   logout: () => {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
-    set({ user: null, token: null, isAuthenticated: false });
+    clearPersistedAuth();
+    set({ user: null, token: null, refreshToken: null, isAuthenticated: false, isAuthLoading: false });
   },
 
   logoutAsync: async () => {
     set({ isLoggingOut: true });
     try {
-      await authService.logout();
+      await authService.logout(localStorage.getItem(REFRESH_TOKEN_KEY));
     } catch {
       // Never let a failed server call block the local sign-out.
     } finally {
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(USER_KEY);
-      set({ user: null, token: null, isAuthenticated: false, isLoggingOut: false });
+      clearPersistedAuth();
+      set({ user: null, token: null, refreshToken: null, isAuthenticated: false, isAuthLoading: false, isLoggingOut: false });
     }
   },
 
@@ -97,3 +111,16 @@ export const useAuthStore = create<AuthStore>((set) => ({
     });
   },
 }));
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('cinematique:auth-expired', () => {
+    useAuthStore.setState({
+      user: null,
+      token: null,
+      refreshToken: null,
+      isAuthenticated: false,
+      isAuthLoading: false,
+      isLoggingOut: false,
+    });
+  });
+}

@@ -5,13 +5,13 @@ import {
   AlertTriangle,
   ArrowLeft,
   ArrowRight,
+  Banknote,
   Check,
   CheckCircle2,
   Clock3,
   Coffee,
   Cookie,
   Copy,
-  CreditCard,
   Download,
   GlassWater,
   Home as HomeIcon,
@@ -23,16 +23,19 @@ import {
   ShieldCheck,
   Ticket,
   Utensils,
+  type LucideIcon,
 } from 'lucide-react';
 import { useMovieStore } from '@/store/movieStore';
 import { useAuthStore } from '@/store/authStore';
 import { useCheckoutCartStore } from '@/store/checkoutCartStore';
 import { Badge } from '@/components/ui/Badge/Badge';
+import { PromoCodeInput } from '@/components/promotions';
 import { formatCurrency, formatDate } from '@/utils/formatDate';
 import { bookingAdminService } from '@/services/bookingAdminService';
 import { getApiErrorMessage } from '@/services/apiClient';
 import { paymentService } from '@/services/paymentService';
 import { paymentTransactionService } from '@/services/paymentTransactionService';
+import { promotionApi } from '@/services/promotionApi';
 import { showService } from '@/services/showService';
 import { seatService } from '@/services/seatService';
 import { bookingSeatService } from '@/services/bookingSeatService';
@@ -47,11 +50,12 @@ import { SnackImage } from './SnackImage';
 import { parseShowId, seatLabel, seatsForScreen, showUnavailableReason } from '@/lib/bookingSeats';
 import type { Seat as ApiSeat } from '@/types/seat';
 import type { Show } from '@/types/show';
+import type { CartItemForPromotion } from '@/types/promotion';
 import { getCinemaDateTime } from '@/lib/showtime';
 import { useShowtimeClock } from '@/hooks/useShowtimeClock';
 
 type FlowStepId = 'seats' | 'concessions' | 'checkout' | 'confirmation';
-type BookingPaymentMethod = 'CREDIT_CARD' | 'QR_CODE';
+type BookingPaymentMethod = 'CASH' | 'QR_CODE';
 
 interface CheckoutPayment {
   payment: ApiPayment;
@@ -88,8 +92,8 @@ const categoryIcon = (category: string) => {
   return Utensils;
 };
 
-const PAYMENT_METHODS: { id: BookingPaymentMethod; name: string; description: string; icon: typeof CreditCard }[] = [
-  { id: 'CREDIT_CARD', name: 'Credit / Debit Card', description: 'Visa, Mastercard, JCB', icon: CreditCard },
+const PAYMENT_METHODS: { id: BookingPaymentMethod; name: string; description: string; icon: LucideIcon }[] = [
+  { id: 'CASH', name: 'Cash', description: 'Pay at the cinema counter', icon: Banknote },
   { id: 'QR_CODE', name: 'QR Pay', description: 'Scan with your banking app', icon: QrCode },
 ];
 
@@ -102,16 +106,6 @@ const INPUT_CLASS =
 function parsePositiveId(value: string | null | undefined): number | null {
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
-}
-
-function formatCardNumber(value: string): string {
-  const digits = value.replace(/\D/g, '').slice(0, 16);
-  return digits.replace(/(\d{4})(?=\d)/g, '$1 ');
-}
-
-function formatExpiry(value: string): string {
-  const digits = value.replace(/\D/g, '').slice(0, 4);
-  return digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
 }
 
 export const BookingPage: React.FC = () => {
@@ -151,12 +145,11 @@ const BookingFlow: React.FC = () => {
   const [checkoutPayment, setCheckoutPayment] = useState<CheckoutPayment | null>(null);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentError, setPaymentError] = useState('');
+  const [promotionCode, setPromotionCode] = useState('');
+  const [promotionDiscount, setPromotionDiscount] = useState(0);
   const [snacksLoading, setSnacksLoading] = useState(false);
   const [billingName, setBillingName] = useState(user?.name || user?.username || '');
   const [billingEmail, setBillingEmail] = useState(user?.email || '');
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardExpiry, setCardExpiry] = useState('');
-  const [cardCvc, setCardCvc] = useState('');
   const [screenSeats, setScreenSeats] = useState<ApiSeat[]>([]);
   const [loadedShow, setLoadedShow] = useState<Show | null>(null);
   const [seatsLoading, setSeatsLoading] = useState(true);
@@ -285,6 +278,20 @@ const BookingFlow: React.FC = () => {
   // The backend has no convenience-fee field; payment totals must match its ticket/order totals.
   const serviceFee = 0;
   const grandTotal = ticketSubtotal + snacksSubtotal + serviceFee;
+  const discountedTotal = Math.max(0, Number((grandTotal - promotionDiscount).toFixed(2)));
+  const promotionCartItems = useMemo<CartItemForPromotion[]>(() => {
+    const seatItems = selectedSeats.map((seatId) => ({
+      showId: backendShowId ?? showtimeId,
+      quantity: 1,
+      unitPrice: getSeatPrice(seatId),
+    }));
+    const snackItems = selectedSnackItems.map((snack) => ({
+      productId: snack.id,
+      quantity: snackQuantities[snack.id] ?? 0,
+      unitPrice: snack.price,
+    }));
+    return [...seatItems, ...snackItems].filter((item) => item.quantity > 0);
+  }, [backendShowId, selectedSeats, selectedSnackItems, showtimeId, snackQuantities]);
 
   const updateSnackQuantity = (snackId: string, change: number) => {
     if (checkoutBusy.current || checkoutPayment) return;
@@ -405,15 +412,15 @@ const BookingFlow: React.FC = () => {
     })));
   };
 
-  const startBackendPayment = async () => {
-    if (checkoutBusy.current || paymentLoading || !isQrStep || selectedSeats.length === 0) return;
+  const startGatewayPayment = async (method: 'KHQR' | 'CASH') => {
+    if (checkoutBusy.current || paymentLoading || selectedSeats.length === 0) return;
     if (!validateBilling()) return;
     checkoutBusy.current = true;
     setPaymentError('');
 
     try {
       setPaymentLoading(true);
-      if (!user) throw new Error('Please sign in before creating a KHQR payment.');
+      if (!user) throw new Error('Please sign in before creating a payment.');
 
       const booking = await ensureBackendBookingId();
       const orderId = booking.id ? await createBackendOrder(booking.id) : backendOrderId;
@@ -425,11 +432,34 @@ const BookingFlow: React.FC = () => {
       if (Math.round(amount * 100) !== Math.round(grandTotal * 100)) {
         throw new Error('Prices have changed. Please reload and review your order before paying.');
       }
+      let finalAmount = amount;
+      let finalPromotionCode = '';
+      let finalDiscountAmount = 0;
+      if (promotionCode) {
+        const validation = await promotionApi.validate({
+          code: promotionCode,
+          cartItems: promotionCartItems,
+          subtotal: amount,
+        });
+        if (!validation.valid) {
+          setPromotionCode('');
+          setPromotionDiscount(0);
+          throw new Error(validation.message || 'Promotion code is no longer valid. You can continue without it.');
+        }
+        finalPromotionCode = validation.code ?? promotionCode;
+        finalDiscountAmount = Number(validation.discountAmount || 0);
+        finalAmount = Number((validation.total ?? Math.max(0, amount - finalDiscountAmount)).toFixed(2));
+      }
       if (booking.id) useCheckoutCartStore.getState().setCheckout(booking.id, selectedSnackItems.map((snack) => ({
         productId: Number(snack.id), quantity: snackQuantities[snack.id] ?? 0, unitPrice: snack.price,
       })));
       navigate(`/payment/${booking.id}`, { state: {
-        bookingId: booking.id, orderId, totalAmount: amount, paymentMethod: 'KHQR',
+        bookingId: booking.id,
+        orderId,
+        totalAmount: finalAmount,
+        paymentMethod: method,
+        promotionCode: finalPromotionCode || null,
+        discountAmount: finalDiscountAmount || null,
         formData: { name: billingName, email: billingEmail },
       } });
     } catch (error) {
@@ -515,32 +545,6 @@ const BookingFlow: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleCardConfirm = () => {
-    if (paymentLoading || selectedSeats.length === 0) return;
-    if (!validateBilling()) return;
-
-    const cardDigits = cardNumber.replace(/\D/g, '');
-    if (!/^\d{16}$/.test(cardDigits)) {
-      setPaymentError('Please enter a valid 16-digit card number.');
-      return;
-    }
-    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(cardExpiry)) {
-      setPaymentError('Please enter the card expiry as MM/YY.');
-      return;
-    }
-    if (!/^\d{3,4}$/.test(cardCvc)) {
-      setPaymentError('Please enter the card CVC.');
-      return;
-    }
-
-    setPaymentError('');
-    setPaymentLoading(true);
-    window.setTimeout(() => {
-      setPaymentLoading(false);
-      void confirmBooking();
-    }, 800);
-  };
-
   const paymentReference =
     checkoutPayment?.display.reference ||
     confirmedBookingId ||
@@ -548,7 +552,7 @@ const BookingFlow: React.FC = () => {
   const paymentQrUrl =
     checkoutPayment?.display.qrImageSrc ||
     `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(
-      `${paymentReference}|${grandTotal.toFixed(2)}|${movie?.title || 'Cinematique'}`,
+      `${paymentReference}|${(promotionDiscount > 0 ? discountedTotal : grandTotal).toFixed(2)}|${movie?.title || 'Cinematique'}`,
     )}`;
 
   const downloadTicket = () => {
@@ -559,7 +563,7 @@ const BookingFlow: React.FC = () => {
       `Showtime: ${showtime?.cinemaName} - ${showtime?.hallName}`,
       `Date: ${formatDate(showtime?.date || '')} at ${showtime?.time}`,
       `Seats: ${selectedSeats.join(', ')}`,
-      `Total: ${formatCurrency(grandTotal)}`,
+      `Total: ${formatCurrency(promotionDiscount > 0 ? discountedTotal : grandTotal)}`,
     ].join('\n');
     const url = URL.createObjectURL(new Blob([ticketText], { type: 'text/plain' }));
     const link = document.createElement('a');
@@ -1076,9 +1080,15 @@ const BookingFlow: React.FC = () => {
         <span>Convenience Fee</span>
         <span>{formatCurrency(serviceFee)}</span>
       </div>
+      {promotionDiscount > 0 && (
+        <div className="flex justify-between text-emerald-400">
+          <span>Promotion{promotionCode ? ` (${promotionCode})` : ''}</span>
+          <span>-{formatCurrency(promotionDiscount)}</span>
+        </div>
+      )}
       <div className="flex justify-between border-t border-border pt-3 text-base font-black text-foreground">
         <span>Total Amount</span>
-        <span className="text-[#E50914]">{formatCurrency(grandTotal)}</span>
+        <span className="text-[#E50914]">{formatCurrency(promotionDiscount > 0 ? discountedTotal : grandTotal)}</span>
       </div>
     </div>
   );
@@ -1141,7 +1151,7 @@ const BookingFlow: React.FC = () => {
           <>
             <div className="space-y-3">
               <div className="flex items-center gap-2 border-b border-border pb-4">
-                <CreditCard className="h-5 w-5 text-[#E50914]" />
+                <Banknote className="h-5 w-5 text-[#E50914]" />
                 <div>
                   <h2 className="text-lg font-black uppercase text-foreground">Payment Method</h2>
                   <p className="text-xs text-muted-foreground">Choose how you want to pay</p>
@@ -1194,42 +1204,27 @@ const BookingFlow: React.FC = () => {
                 Press “Generate QR Code” in the sticky bar below to create a KHQR payment you can scan with your banking app.
               </div>
             ) : (
-              <div className="space-y-4 rounded-xl border border-border bg-muted/40 p-4">
+              <div className="flex items-start gap-3 rounded-xl border border-border bg-muted/40 p-4">
+                <Banknote className="mt-0.5 h-5 w-5 shrink-0 text-[#E50914]" />
                 <div className="flex items-center gap-2">
-                  <CreditCard className="h-4 w-4 text-[#E50914]" />
-                  <p className="text-sm font-bold text-foreground">Card Details</p>
+                  <div>
+                    <p className="text-sm font-bold text-foreground">Cash payment</p>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      Confirm your booking now and pay cash at the cinema counter. Your booking will remain pending until staff receives payment.
+                    </p>
+                  </div>
                 </div>
-                <input
-                  className={INPUT_CLASS}
-                  placeholder="Card Number  (e.g. 4242 4242 4242 4242)"
-                  inputMode="numeric"
-                  value={cardNumber}
-                  onChange={(event) => setCardNumber(formatCardNumber(event.target.value))}
-                  aria-label="Card number"
-                />
-                <div className="grid grid-cols-2 gap-3">
-                  <input
-                    className={INPUT_CLASS}
-                    placeholder="MM/YY"
-                    inputMode="numeric"
-                    value={cardExpiry}
-                    onChange={(event) => setCardExpiry(formatExpiry(event.target.value))}
-                    aria-label="Card expiry"
-                  />
-                  <input
-                    className={INPUT_CLASS}
-                    placeholder="CVC"
-                    inputMode="numeric"
-                    value={cardCvc}
-                    onChange={(event) => setCardCvc(event.target.value.replace(/\D/g, '').slice(0, 4))}
-                    aria-label="Card CVC"
-                  />
-                </div>
-                <p className="text-[11px] text-muted-foreground">
-                  Demo checkout — no real payment is processed and your card details stay in this session.
-                </p>
               </div>
             )}
+
+            <PromoCodeInput
+              cartItems={promotionCartItems}
+              subtotal={grandTotal}
+              onAppliedChange={(code, discountAmount) => {
+                setPromotionCode(code);
+                setPromotionDiscount(Number(discountAmount || 0));
+              }}
+            />
 
             <div className="space-y-4 rounded-xl border border-border bg-muted/40 p-4">
               <div className="flex items-center gap-2">
@@ -1435,7 +1430,7 @@ const BookingFlow: React.FC = () => {
       return (
         <button
           type="button"
-          onClick={() => void startBackendPayment()}
+          onClick={() => void startGatewayPayment('KHQR')}
           disabled={paymentLoading || selectedSeats.length === 0}
           className={PRIMARY_CTA}
         >
@@ -1470,16 +1465,16 @@ const BookingFlow: React.FC = () => {
     return (
       <button
         type="button"
-        onClick={handleCardConfirm}
+        onClick={() => void startGatewayPayment('CASH')}
         disabled={paymentLoading || selectedSeats.length === 0}
         className={PRIMARY_CTA}
       >
         {paymentLoading ? (
           <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
         ) : (
-          <CreditCard className="h-4 w-4" aria-hidden="true" />
+          <Banknote className="h-4 w-4" aria-hidden="true" />
         )}
-        Pay & Confirm Booking <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        Confirm Cash Booking <ArrowRight className="h-4 w-4" aria-hidden="true" />
       </button>
     );
   };
@@ -1515,7 +1510,9 @@ const BookingFlow: React.FC = () => {
             )}
             <div className="min-w-0">
               <p className="truncate text-[11px] text-muted-foreground">{caption}</p>
-              <p className="truncate text-base font-black text-foreground tabular-nums">{formatCurrency(grandTotal)}</p>
+              <p className="truncate text-base font-black text-foreground tabular-nums">
+                {formatCurrency(promotionDiscount > 0 ? discountedTotal : grandTotal)}
+              </p>
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">{renderStickyCta()}</div>

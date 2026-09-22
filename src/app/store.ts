@@ -18,6 +18,7 @@ import { orderItemReducer } from '@/store/orderItemSlice';
 import { paymentReducer } from '@/store/paymentSlice';
 import { paymentTransactionReducer } from '@/store/paymentTransactionSlice';
 import { userAdminReducer } from '@/store/userAdminSlice';
+import { membershipReducer } from '@/store/membershipSlice';
 
 export const store = configureStore({
   reducer: {
@@ -40,6 +41,7 @@ export const store = configureStore({
     payment: paymentReducer,
     paymentTransaction: paymentTransactionReducer,
     userAdmin: userAdminReducer,
+    membership: membershipReducer,
   },
 });
 

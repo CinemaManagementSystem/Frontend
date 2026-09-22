@@ -94,14 +94,14 @@ function GatewayCheckout({ session }: { session: GatewaySession }) {
   useEffect(() => {
     if (phase !== 'paid' && phase !== 'cash') return;
     useCheckoutCartStore.getState().clearCheckout(payment.bookingId);
-    const confirmationPath = payment.bookingId
+    const confirmationPath = session.returnTo || (payment.bookingId
       ? `/order-confirmation/${payment.bookingId}?paymentId=${payment.id}`
-      : `/order-confirmation?paymentId=${payment.id}`;
+      : `/order-confirmation?paymentId=${payment.id}`);
     const timer = window.setTimeout(() => navigate(confirmationPath, {
-      replace: true, state: { paymentId: payment.id, orderId: payment.orderId, bookingId: payment.bookingId },
+      replace: true, state: { paymentId: payment.id, orderId: payment.orderId, bookingId: payment.bookingId, userMembershipId: payment.userMembershipId },
     }), phase === 'paid' ? 1500 : 0);
     return () => window.clearTimeout(timer);
-  }, [navigate, payment.bookingId, payment.id, payment.orderId, phase]);
+  }, [navigate, payment.bookingId, payment.id, payment.orderId, payment.userMembershipId, phase, session.returnTo]);
 
   const time = `${Math.floor(remaining / 60).toString().padStart(2, '0')}:${(remaining % 60).toString().padStart(2, '0')}`;
   const closed = !['waiting', 'finalizing'].includes(phase);

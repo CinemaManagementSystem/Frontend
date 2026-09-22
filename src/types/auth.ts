@@ -12,6 +12,7 @@ export interface User {
 
 export interface AuthResponse {
   accessToken: string;
+  refreshToken: string;
   tokenType: string;
   expiresIn: number;
   user: User;
@@ -28,4 +29,5 @@ export interface AuthState {
   isAuthLoading: boolean;
   isLoggingOut: boolean;
   token: string | null;
+  refreshToken: string | null;
 }

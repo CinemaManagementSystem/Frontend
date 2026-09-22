@@ -1,9 +1,19 @@
-import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosError, type AxiosRequestConfig, type InternalAxiosRequestConfig } from 'axios';
 import type { ApiResponse } from '@/types/api';
+import type { AuthResponse } from '@/types/auth';
 
 const TOKEN_KEY = 'token';
+const REFRESH_TOKEN_KEY = 'refresh_token';
 const USER_KEY = 'auth_user';
 const PUBLIC_AUTH_PATHS = ['/auth/login', '/auth/register', '/auth/refresh'];
+const PUBLIC_GET_PATHS = [
+  '/movies',
+  '/shows',
+  '/locations',
+  '/theaters',
+  '/movie-category',
+  '/memberships/plans',
+];
 export const apiBaseUrl = import.meta.env.VITE_API_URL?.trim() || '/api';
 
 const apiClient = axios.create({
@@ -25,6 +35,14 @@ const isPublicAuthRequest = (url?: string): boolean => {
   return PUBLIC_AUTH_PATHS.some((publicPath) => path === publicPath || path.endsWith(publicPath));
 };
 
+const isPublicBrowsingRequest = (config?: Pick<InternalAxiosRequestConfig, 'method' | 'url'>): boolean => {
+  if (!config?.url || (config.method ?? 'get').toLowerCase() !== 'get') return false;
+  const path = getRequestPath(config.url).replace(/\/$/, '');
+  return PUBLIC_GET_PATHS.some((publicPath) => path === publicPath || path.startsWith(`${publicPath}/`));
+};
+
+type RetryableRequestConfig = InternalAxiosRequestConfig & { _retry?: boolean };
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
@@ -35,8 +53,45 @@ export const unwrapApiResponse = <T>(value: T | ApiResponse<T>): T => {
   return value as T;
 };
 
+const clearPersistedAuth = () => {
+  window.localStorage.removeItem(TOKEN_KEY);
+  window.localStorage.removeItem(REFRESH_TOKEN_KEY);
+  window.localStorage.removeItem(USER_KEY);
+};
+
+const notifyAuthExpired = () => {
+  clearPersistedAuth();
+  window.dispatchEvent(new Event('cinematique:auth-expired'));
+};
+
+let refreshPromise: Promise<AuthResponse> | null = null;
+
+const refreshAccessToken = async (): Promise<AuthResponse> => {
+  const refreshToken = window.localStorage.getItem(REFRESH_TOKEN_KEY);
+  if (!refreshToken) throw new Error('Missing refresh token');
+
+  refreshPromise ??= axios
+    .post<AuthResponse | ApiResponse<AuthResponse>>(
+      `${apiBaseUrl.replace(/\/$/, '')}/auth/refresh`,
+      { refreshToken },
+      { headers: { Accept: 'application/json', 'Content-Type': 'application/json' } },
+    )
+    .then((response) => unwrapApiResponse(response.data))
+    .then((response) => {
+      window.localStorage.setItem(TOKEN_KEY, response.accessToken);
+      window.localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken);
+      window.localStorage.setItem(USER_KEY, JSON.stringify(response.user));
+      return response;
+    })
+    .finally(() => {
+      refreshPromise = null;
+    });
+
+  return refreshPromise;
+};
+
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  if (!isPublicAuthRequest(config.url) && typeof window !== 'undefined') {
+  if (!isPublicAuthRequest(config.url) && !isPublicBrowsingRequest(config) && typeof window !== 'undefined') {
     const token = window.localStorage.getItem(TOKEN_KEY);
     if (token) config.headers.set('Authorization', `Bearer ${token}`);
   }
@@ -48,17 +103,23 @@ apiClient.interceptors.response.use(
     response.data = unwrapApiResponse(response.data);
     return response;
   },
-  (error: AxiosError) => {
+  async (error: AxiosError) => {
+    const originalRequest = error.config as RetryableRequestConfig | undefined;
     if (
       error.response?.status === 401 &&
       typeof window !== 'undefined' &&
-      !isPublicAuthRequest(error.config?.url)
+      originalRequest &&
+      !originalRequest._retry &&
+      !isPublicAuthRequest(originalRequest.url) &&
+      !isPublicBrowsingRequest(originalRequest)
     ) {
-      window.localStorage.removeItem(TOKEN_KEY);
-      window.localStorage.removeItem(USER_KEY);
-      if (!window.location.pathname.startsWith('/login')) {
-        const returnTo = `${window.location.pathname}${window.location.search}`;
-        window.location.assign(`/login?redirect=${encodeURIComponent(returnTo)}`);
+      try {
+        originalRequest._retry = true;
+        const refreshed = await refreshAccessToken();
+        originalRequest.headers.set('Authorization', `Bearer ${refreshed.accessToken}`);
+        return apiClient(originalRequest as AxiosRequestConfig);
+      } catch {
+        notifyAuthExpired();
       }
     }
     return Promise.reject(error);

@@ -55,22 +55,28 @@ export async function initializeGateway(state: PaymentGatewayState, customerId: 
     }
     const savedOrder = orderId ? await orderService.getById(orderId) : null;
     const freshBooking = bookingId ? await bookingAdminService.getById(bookingId) : null;
-    const amount = Number((Number(freshBooking?.totalAmount || 0) + Number(savedOrder?.totalAmount || 0)).toFixed(2));
+    const backendAmount = Number((Number(freshBooking?.totalAmount || 0) + Number(savedOrder?.totalAmount || 0)).toFixed(2));
+    const requestedAmount = state.totalAmount == null ? backendAmount : Number(Number(state.totalAmount).toFixed(2));
+    const amount = state.promotionCode ? requestedAmount : backendAmount;
     if (!Number.isFinite(amount) || amount <= 0) throw new Error('Your checkout has no payable items.');
-    if (state.totalAmount != null && Math.round(Number(state.totalAmount) * 100) !== Math.round(amount * 100)) {
+    if (!state.promotionCode && state.totalAmount != null && Math.round(Number(state.totalAmount) * 100) !== Math.round(backendAmount * 100)) {
       throw new Error('Prices have changed. Return to checkout to review the total.');
     }
     payment = await paymentService.create({ amount, paymentMethod: method, customerId, bookingId, orderId });
   }
   if (payment.customerId !== customerId || (bookingId && payment.bookingId !== bookingId)
-      || (orderId && payment.orderId !== orderId)) throw new Error('Payment does not match this checkout.');
+      || (orderId && payment.orderId !== orderId)
+      || (state.userMembershipId && payment.userMembershipId !== state.userMembershipId)) {
+    throw new Error('Payment does not match this checkout.');
+  }
 
   const resumed = saved.paymentId === payment.id && Number.isFinite(saved.startedAt);
   const startedAt = resumed ? Number(saved.startedAt) : Date.now();
   let expiresAt = payment.paymentMethod === 'KHQR' ? paymentDeadline(payment, startedAt) : startedAt;
   if (resumed && Number.isFinite(saved.expiresAt)) expiresAt = Math.min(expiresAt, Number(saved.expiresAt));
   const session: GatewaySession = { payment, startedAt, expiresAt, storageKey,
-    manualChecks: resumed ? Math.max(0, Math.min(2, Number(saved.manualChecks) || 0)) : 0 };
+    manualChecks: resumed ? Math.max(0, Math.min(2, Number(saved.manualChecks) || 0)) : 0,
+    returnTo: state.returnTo ?? (payment.userMembershipId ? '/my-membership' : null) };
   saveGatewaySession(session);
   if (!resumed && payment.status === 'PENDING' && payment.paymentMethod === 'KHQR' && expiresAt > Date.now()) {
     try {

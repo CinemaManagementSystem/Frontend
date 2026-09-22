@@ -17,14 +17,12 @@ interface ThemeContextValue {
 }
 
 const STORAGE_KEY = 'cinematique-theme'
+const FORCED_THEME: Theme = 'dark'
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
 
 function getInitialTheme(): Theme {
-  if (typeof window === 'undefined') return 'dark'
-  const stored = window.localStorage.getItem(STORAGE_KEY)
-  if (stored === 'light' || stored === 'dark') return stored
-  return 'dark'
+  return FORCED_THEME
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
@@ -33,17 +31,17 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const root = document.documentElement
     root.classList.remove('light', 'dark')
-    root.classList.add(theme)
-    root.style.colorScheme = theme
-    window.localStorage.setItem(STORAGE_KEY, theme)
+    root.classList.add(FORCED_THEME)
+    root.style.colorScheme = FORCED_THEME
+    window.localStorage.setItem(STORAGE_KEY, FORCED_THEME)
   }, [theme])
 
-  const setTheme = useCallback((next: Theme) => {
-    setThemeState(next)
+  const setTheme = useCallback((_next: Theme) => {
+    setThemeState(FORCED_THEME)
   }, [])
 
   const toggleTheme = useCallback(() => {
-    setThemeState((t) => (t === 'light' ? 'dark' : 'light'))
+    setThemeState(FORCED_THEME)
   }, [])
 
   const value = useMemo<ThemeContextValue>(

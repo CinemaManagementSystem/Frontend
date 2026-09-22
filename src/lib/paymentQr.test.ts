@@ -16,6 +16,7 @@ const basePayment: Payment = {
   bookingId: 4,
   customerId: 2,
   orderId: null,
+  userMembershipId: null,
 };
 
 describe('resolvePaymentQrDisplay', () => {
