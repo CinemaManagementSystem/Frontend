@@ -31,7 +31,7 @@ const dateFormatter = (date: string, options: Intl.DateTimeFormatOptions) =>
 
 const getDateString = (date: Date) => date.toISOString().slice(0, 10);
 export const HomePage: React.FC = () => {
-  const { t, language } = useTranslation();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { setCurrentImage } = useHeroBackdrop();
   const { movies, showtimes, searchQuery, setSearchQuery, fetchCatalog, loading, error } = useMovieStore();

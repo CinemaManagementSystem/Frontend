@@ -30,7 +30,7 @@ function imageCategory(name: string): 'Popcorn' | 'Drink' | 'Combo' | 'Snacks' {
 }
 
 export function OffersPage() {
-  const { pathname, search } = useLocation();
+  const { pathname } = useLocation();
   const isFoodPage = pathname === '/fnb';
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { cinemas, fetchCinemas, selectedCinemaId, selectCinema } = useCinemaStore();
