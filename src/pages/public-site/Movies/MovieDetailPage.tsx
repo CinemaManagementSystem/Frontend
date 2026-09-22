@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { useMovieStore } from '@/store/movieStore';
 import { useCinemaStore } from '@/store/cinemaStore';
+import { useAuthStore } from '@/store/authStore';
+import { DateSelector } from '@/components/common/DateSelector/DateSelector';
 import { Modal } from '@/components/ui/Modal/Modal';
 import { ShowtimeList } from '@/components/common/ShowtimeList/ShowtimeList';
 import { getRatingBadge } from '@/components/common/RatingBadge/ratingBadge';
@@ -35,13 +37,13 @@ export const MovieDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { getMovieById, getShowtimesByMovieId, fetchCatalog } = useMovieStore();
+  const catalogRequiresSignIn = !useAuthStore((state) => state.isAuthenticated);
   const { cinemas, selectedCinemaId, selectCinema } = useCinemaStore();
   const selectedCinema = cinemas.find((cinema) => cinema.id === selectedCinemaId);
   const selectedCinemaName = selectedCinema?.name || 'your selected cinema';
   const [trailerOpen, setTrailerOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState('');
   const [activeTab, setActiveTab] = useState<DetailTab>('SHOWTIME');
-  const [locationOpen, setLocationOpen] = useState(false);
   const now = useShowtimeClock();
   const today = getCinemaDate();
 
@@ -233,94 +235,44 @@ export const MovieDetailPage: React.FC = () => {
               <div>
                 <h2 className="text-2xl font-black uppercase tracking-tight text-foreground">Showtime</h2>
 
-                <div className="mt-4 relative inline-block">
+                <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
+                  <span className="inline-flex items-center gap-1.5 font-semibold text-foreground">
+                    <MapPin className="h-3.5 w-3.5 text-[var(--primary)]" />
+                    {selectedCinemaId === 'ALL' ? 'All Locations' : selectedCinemaName}
+                  </span>
                   <button
                     type="button"
-                    onClick={() => setLocationOpen((open) => !open)}
-                    className="flex h-11 items-center gap-3 rounded-lg border border-border bg-card px-4 text-xs font-semibold text-foreground transition hover:bg-accent"
-                    aria-haspopup="listbox"
-                    aria-expanded={locationOpen}
+                    aria-label="View all cinemas"
+                    onClick={() => { selectCinema('ALL'); setSelectedDate(''); }}
+                    className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-[var(--primary)] transition-colors hover:bg-primary/20"
                   >
-                    <MapPin className="h-3.5 w-3.5 text-primary" />
-                    <span>{selectedCinemaId === 'ALL' ? 'All Locations' : selectedCinemaName}</span>
-                    <ChevronDown className={cn('h-3.5 w-3.5 text-muted-foreground transition-transform', locationOpen && 'rotate-180')} />
+                    <ChevronDown className="h-3 w-3 inline mr-1" />
+                    All Locations
                   </button>
-
-                  {locationOpen && (
-                    <>
-                      <button
-                        type="button"
-                        className="fixed inset-0 z-30 cursor-default"
-                        aria-label="Close location selector"
-                        onClick={() => setLocationOpen(false)}
-                      />
-                      <div className="absolute left-0 top-full z-40 mt-2 max-h-72 w-64 overflow-y-auto rounded-lg border border-border bg-card p-1 shadow-2xl backdrop-blur-xl" role="listbox" aria-label="Select location">
-                        <button
-                          type="button"
-                          role="option"
-                          aria-selected={selectedCinemaId === 'ALL'}
-                          onClick={() => {
-                            selectCinema('ALL');
-                            setSelectedDate('');
-                            setLocationOpen(false);
-                          }}
-                          className={cn(
-                            'flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-xs font-semibold text-foreground hover:bg-accent',
-                            selectedCinemaId === 'ALL' && 'text-primary bg-primary/10',
-                          )}
-                        >
-                          <MapPin className="h-3.5 w-3.5 text-primary" />
-                          All Locations
-                        </button>
-                        {cinemas.map((cinema) => (
-                          <button
-                            key={cinema.id}
-                            type="button"
-                            role="option"
-                            aria-selected={selectedCinemaId === cinema.id}
-                            onClick={() => {
-                              selectCinema(cinema.id);
-                              setSelectedDate('');
-                              setLocationOpen(false);
-                            }}
-                            className={cn(
-                              'flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-xs font-semibold text-foreground hover:bg-accent',
-                              selectedCinemaId === cinema.id && 'text-primary bg-primary/10',
-                            )}
-                          >
-                            <MapPin className="h-3.5 w-3.5 text-primary" />
-                            <span className="min-w-0 truncate">{cinema.name}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </>
-                  )}
                 </div>
               </div>
 
-              <div className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto">
-                {showDates.slice(0, 7).map((date) => {
-                  const active = activeDate === date.dateStr;
-                  return (
-                    <button
-                      key={date.dateStr}
-                      type="button"
-                      onClick={() => setSelectedDate(date.dateStr)}
-                      aria-pressed={active}
-                      className={cn(
-                        'date-card snap-start',
-                        active ? 'date-card-selected' : 'date-card-unselected',
-                      )}
-                    >
-                      <span className="text-[11px] leading-none text-muted-foreground">{date.isToday ? 'Today' : date.dayName}</span>
-                      <span className="mt-1 text-lg font-bold leading-none">{date.dayNum}</span>
-                      <span className="mt-1 text-[11px] leading-none text-muted-foreground">{date.monthName}</span>
-                    </button>
-                  );
-                })}
+              <div className="rounded-lg bg-muted/40 p-2">
+                <DateSelector
+                  dateList={showDates}
+                  selectedDate={activeDate}
+                  onSelectDate={setSelectedDate}
+                  className="border-0 bg-transparent px-0 py-0"
+                  showLabel={false}
+                />
               </div>
 
-              {showtimeGroups.length > 0 ? (
+              {catalogRequiresSignIn ? (
+                <div className="rounded-2xl border border-border bg-card p-8 text-center space-y-3">
+                  <p className="text-sm text-muted-foreground">Sign in to see cinema halls and reserve your seats.</p>
+                  <Link
+                    to={`/login?redirect=${encodeURIComponent(`/movies/${movie.id}`)}`}
+                    className="inline-flex rounded-xl bg-[var(--primary)] px-5 py-3 text-sm font-bold text-white"
+                  >
+                    Sign in to view showtimes
+                  </Link>
+                </div>
+              ) : showtimeGroups.length > 0 ? (
                 <ShowtimeList
                   groups={showtimeGroups}
                   onBookShowtime={(show) => navigate(`/booking/${show.id}?movieId=${movie.id}`)}

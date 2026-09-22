@@ -2,7 +2,7 @@ import { bookingAdminService } from './bookingAdminService';
 import { orderService } from './orderService';
 import { paymentService } from './paymentService';
 import { syncCheckoutOrder } from './checkoutOrderService';
-import { generateGatewayQr, paymentDeadline } from '@/lib/gatewayQr';
+import { paymentDeadline } from '@/lib/gatewayQr';
 import type { GatewaySession, PaymentGatewayState } from '@/types/paymentGateway';
 
 export function gatewayId(value: unknown): number | null {
@@ -39,13 +39,16 @@ export async function initializeGateway(state: PaymentGatewayState, customerId: 
   if (state.paymentMethod && !['KHQR', 'ABA_PAY', 'CASH'].includes(state.paymentMethod)) throw new Error('Unsupported payment method');
 
   let payment = paymentId || saved.paymentId ? await paymentService.getById(paymentId ?? saved.paymentId!) : null;
+  if (payment && payment.status !== 'PENDING' && !paymentId) payment = null;
   if (!payment) {
     // Reconcile an earlier committed POST whose response may have been lost.
     payment = (await paymentService.list()).filter((candidate) =>
-      candidate.customerId === customerId && candidate.bookingId === bookingId && candidate.orderId === orderId
+      candidate.customerId === customerId && candidate.bookingId === bookingId
+      && (orderId ? candidate.orderId === orderId : true)
       && (candidate.status === 'PENDING' || candidate.status === 'PAID'),
     ).sort((a, b) => b.id - a.id)[0] ?? null;
   }
+  if (payment?.orderId && !orderId) orderId = payment.orderId;
   if (!payment) {
     if (booking && booking.status !== 'PENDING') throw new Error('This booking is no longer awaiting payment.');
     if (!orderId && state.cartItems?.length) {
@@ -62,7 +65,13 @@ export async function initializeGateway(state: PaymentGatewayState, customerId: 
     if (!state.promotionCode && state.totalAmount != null && Math.round(Number(state.totalAmount) * 100) !== Math.round(backendAmount * 100)) {
       throw new Error('Prices have changed. Return to checkout to review the total.');
     }
-    payment = await paymentService.create({ amount, paymentMethod: method, customerId, bookingId, orderId });
+    payment = await paymentService.create({
+      amount,
+      paymentMethod: method,
+      customerId,
+      bookingId,
+      orderId,
+    });
   }
   if (payment.customerId !== customerId || (bookingId && payment.bookingId !== bookingId)
       || (orderId && payment.orderId !== orderId)
@@ -77,17 +86,6 @@ export async function initializeGateway(state: PaymentGatewayState, customerId: 
   const session: GatewaySession = { payment, startedAt, expiresAt, storageKey,
     manualChecks: resumed ? Math.max(0, Math.min(2, Number(saved.manualChecks) || 0)) : 0,
     returnTo: state.returnTo ?? (payment.userMembershipId ? '/my-membership' : null) };
-  saveGatewaySession(session);
-  if (!resumed && payment.status === 'PENDING' && payment.paymentMethod === 'KHQR' && expiresAt > Date.now()) {
-    try {
-      const generated = generateGatewayQr(payment, expiresAt);
-      session.payment = await paymentService.prepareKhqr(payment.id, generated);
-    } catch {
-      // Use the persisted backend code if SDK generation fails. Re-read in case
-      // preparation committed but its response was lost. Never display an unbound code.
-      session.payment = await paymentService.getById(payment.id);
-    }
-  }
   saveGatewaySession(session);
   return session;
 }

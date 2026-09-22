@@ -29,6 +29,7 @@ import { Avatar } from '@/components/ui/Avatar/Avatar';
 import { CinematiqueLogo } from '@/components/common/CinematiqueLogo';
 import { PageContainer } from '@/components/layout/PageContainer';
 import type { User } from '@/types/auth';
+import { useTranslation } from '@/i18n';
 import './Navbar.css';
 
 const LANGUAGE_OPTIONS: { value: AppLanguage; label: string; shortLabel: string; flag: string }[] = [
@@ -244,7 +245,7 @@ const CinemaSelector: React.FC<CinemaSelectorProps> = ({ onSelect, mobile = fals
 };
 
 export const Navbar: React.FC = () => {
-  const { t, language } = useTranslation();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isAuthenticated } = useAuthStore();
