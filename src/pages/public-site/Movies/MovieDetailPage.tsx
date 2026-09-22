@@ -6,7 +6,6 @@ import {
   ChevronDown,
   Clock,
   Film,
-  MapPin,
   Play,
   Star,
   Ticket,
@@ -69,7 +68,8 @@ export const MovieDetailPage: React.FC = () => {
       date.setUTCDate(firstDate.getUTCDate() + index);
       return getDateString(date);
     });
-    return [...new Set([...rolling, ...dateSet])].sort().map((d) => ({
+    const dates = dateSet.length ? dateSet : rolling;
+    return dates.map((d) => ({
       dateStr: d,
       dayName: d === today ? 'Today' : dateFormatter(d, { weekday: 'short' }),
       dayNum: dateFormatter(d, { day: 'numeric' }),
@@ -83,24 +83,21 @@ export const MovieDetailPage: React.FC = () => {
   const displayedShowtimes = showtimes.filter((showtime) => showtime.date === activeDate);
 
   const showtimeGroups = useMemo(() => {
-    const groupsMap = new Map<string, { cinemaId: string; cinemaName: string; hallName: string; format: string; language: string; shows: Showtime[] }>();
+    const groupsMap = new Map<string, { cinemaId: string; cinemaName: string; sessions: { hallName: string; format: string; language: string; shows: Showtime[] }[] }>();
     displayedShowtimes.forEach((show) => {
-      const key = `${show.cinemaId}-${show.hallName}-${show.format}`;
-      const existing = groupsMap.get(key);
-      if (existing) {
-        existing.shows.push(show);
-      } else {
-        groupsMap.set(key, {
-          cinemaId: show.cinemaId,
-          cinemaName: show.cinemaName,
-          hallName: show.hallName,
-          format: show.format,
-          language: 'KH/EN',
-          shows: [show],
-        });
+      let cinemaGroup = groupsMap.get(show.cinemaId);
+      if (!cinemaGroup) {
+        cinemaGroup = { cinemaId: show.cinemaId, cinemaName: show.cinemaName, sessions: [] };
+        groupsMap.set(show.cinemaId, cinemaGroup);
       }
+      const session = cinemaGroup.sessions.find((item) => item.hallName === show.hallName && item.format === show.format);
+      if (session) session.shows.push(show);
+      else cinemaGroup.sessions.push({ hallName: show.hallName, format: show.format, language: 'KH/EN', shows: [show] });
     });
-    return Array.from(groupsMap.values()).map((g) => ({ ...g, shows: [...g.shows].sort((a, b) => a.time.localeCompare(b.time)) }));
+    return Array.from(groupsMap.values()).map((group) => ({
+      ...group,
+      sessions: group.sessions.map((session) => ({ ...session, shows: [...session.shows].sort((a, b) => a.time.localeCompare(b.time)) })),
+    }));
   }, [displayedShowtimes]);
 
   if (!movie) {
@@ -122,146 +119,102 @@ export const MovieDetailPage: React.FC = () => {
   const metaRows = [
     { icon: Type, label: 'Genre', value: movie.genres.join(', ') || '—' },
     { icon: Clock, label: 'Duration', value: formatDuration(movie.durationMinutes) },
-    { icon: Calendar, label: 'Release date', value: formatDate(movie.releaseDate) },
+    { icon: Calendar, label: 'Release', value: formatDate(movie.releaseDate) },
     { icon: ShieldQuestion, label: 'Classification', value: getRatingBadge(movie.rating) },
   ];
 
   return (
     <div className="relative isolate bg-transparent pb-24 text-foreground">
-      <div className="absolute inset-x-0 top-0 -z-10 h-[560px] overflow-hidden" aria-hidden="true">
-        <img
-          src={movie.backdropUrl || movie.posterUrl}
-          alt=""
-          className="h-full w-full object-cover object-top opacity-30 dark:opacity-40 blur-2xl"
-          style={{ filter: 'saturate(1.4) brightness(0.6) blur(80px)' }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/60 to-background" />
-      </div>
-
-      <section className="container-main pt-8">
-        <Link
-          to="/movies"
-          className="inline-flex items-center gap-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Movies
-        </Link>
-
-        <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_360px] lg:gap-14">
-          {/* Movie Info */}
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-4xl font-black uppercase leading-[0.95] tracking-[-0.03em] text-foreground sm:text-5xl lg:text-6xl">
-                {movie.title}
-              </h1>
-
-              <div className="mt-7 space-y-3">
+      <section className="relative isolate overflow-hidden bg-transparent py-4 sm:py-6">
+        <div aria-hidden="true" className="absolute inset-0 -z-10 scale-110 bg-cover bg-center opacity-40 blur-3xl" style={{ backgroundImage: `url(${movie.backdropUrl || movie.posterUrl})` }} />
+        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-b from-transparent via-background/55 to-background" />
+        <div className="container-main">
+          <Link to="/movies" className="mb-4 inline-flex items-center gap-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Movies
+          </Link>
+          <div className="relative min-h-[360px] w-full overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#7d0009] via-[#1b060b] to-black shadow-[0_20px_60px_rgba(0,0,0,0.35)] sm:min-h-0 sm:aspect-[16/6]">
+            <img src={movie.backdropUrl || movie.posterUrl} alt="" className="absolute inset-0 h-full w-full object-cover object-center opacity-95 saturate-110" aria-hidden="true" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/92 via-black/58 to-black/8" aria-hidden="true" />
+            <div className="relative flex h-full max-w-[580px] flex-col justify-center px-6 py-8 sm:px-10 lg:px-16">
+              <span className="mb-3 inline-flex w-fit items-center gap-2 rounded-full border border-red-400/50 bg-red-950/35 px-4 py-1.5 text-xs font-semibold text-white">
+                <Film className="h-3.5 w-3.5" aria-hidden="true" />
+                {movie.status === 'COMING_SOON' ? 'Coming soon' : 'Now showing'}
+              </span>
+              <h1 className="max-w-xl text-3xl font-extrabold leading-[1.02] text-white drop-shadow-[0_4px_18px_rgba(0,0,0,.45)] sm:text-4xl lg:text-5xl">{movie.title}</h1>
+              <div className="mt-5 grid max-w-lg gap-x-6 gap-y-2.5 sm:grid-cols-2">
                 {metaRows.map(({ icon: Icon, label, value }) => (
-                  <div key={label} className="flex items-center gap-3">
-                    <span className="meta-icon-square">
-                      <Icon className="h-3.5 w-3.5 text-white" />
-                    </span>
-                    <span className="w-28 shrink-0 text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}:</span>
-                    <span className="text-sm font-bold text-foreground">{value}</span>
+                  <div key={label} className="flex min-w-0 items-center gap-2.5">
+                    <span className="meta-icon-square shrink-0"><Icon className="h-3.5 w-3.5 text-white" /></span>
+                    <span className="min-w-0 text-xs text-white/85"><span className="text-white/55">{label}: </span><span className="font-bold">{value}</span></span>
                   </div>
                 ))}
               </div>
-            </div>
-
-            {movie.trailerUrl && (
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={() => setTrailerOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[var(--primary)] px-5 py-3 text-xs font-bold text-white shadow-lg shadow-[var(--primary)]/30 transition hover:bg-[#ff1f2d]"
-                  aria-label={`Watch ${movie.title} trailer`}
-                >
-                  <Play className="h-4 w-4 fill-current" />
-                  Watch Trailer
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Movie Poster */}
-          <div className="relative order-first lg:order-none">
-            <div className="relative mx-auto aspect-[2/3] w-full max-w-[300px] lg:max-w-none">
-              <div className="absolute inset-0 -left-8 -z-10 bg-gradient-to-r from-background via-background to-transparent" />
-              <img
-                src={movie.posterUrl}
-                alt={`${movie.title} poster`}
-                className="aspect-[2/3] w-full rounded-lg object-cover shadow-2xl shadow-black/20 dark:shadow-black/60"
-              />
+              {movie.trailerUrl && <button type="button" onClick={() => setTrailerOpen(true)} className="mt-6 inline-flex w-fit items-center gap-2 rounded-lg bg-[var(--primary)] px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-[var(--primary)]/30 transition hover:bg-[#ff1f2d]" aria-label={`Watch ${movie.title} trailer`}><Play className="h-3.5 w-3.5 fill-current" />Watch Trailer</button>}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Tabs */}
-      <section className="container-main mt-12">
-        <div className="flex items-center gap-6 border-b border-border" role="tablist" aria-label="Movie detail tabs">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === 'SHOWTIME'}
-            onClick={() => setActiveTab('SHOWTIME')}
-            className={cn(
-              'py-3 text-base font-black uppercase tracking-wide transition-colors',
-              activeTab === 'SHOWTIME' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'
-            )}
-          >
-            Showtime
-          </button>
-          <div className="h-5 w-px bg-border" aria-hidden="true" />
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === 'DETAIL'}
-            onClick={() => setActiveTab('DETAIL')}
-            className={cn(
-              'py-3 text-base font-black uppercase tracking-wide transition-colors',
-              activeTab === 'DETAIL' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'
-            )}
-          >
-            Detail
-          </button>
+      {/* Tabs — Showtime | Detail */}
+      <section className="container-main mt-10">
+        <div
+          className="flex items-center gap-0 border-b border-border"
+          role="tablist"
+          aria-label="Movie detail tabs"
+        >
+          {(['SHOWTIME', 'DETAIL'] as const).map((tab, idx) => (
+            <React.Fragment key={tab}>
+              {idx > 0 && <div className="mx-1 h-5 w-px bg-border" aria-hidden="true" />}
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === tab}
+                onClick={() => setActiveTab(tab)}
+                className={cn(
+                  'px-4 py-3 text-sm font-bold capitalize tracking-wide transition-colors',
+                  activeTab === tab
+                    ? 'border-b-2 border-[var(--primary)] text-foreground'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                {tab.charAt(0) + tab.slice(1).toLowerCase()}
+              </button>
+            </React.Fragment>
+          ))}
         </div>
       </section>
 
-      <section className="container-main pt-9">
-        <div className="w-full" role="tabpanel">
+      {/* Tab content */}
+      <section className="container-main pt-8">
+        <div className={cn('w-full', activeTab === 'DETAIL' && 'mx-auto max-w-5xl')} role="tabpanel">
           {activeTab === 'SHOWTIME' ? (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-black uppercase tracking-tight text-foreground">Showtime</h2>
+            <div className="space-y-5">
+              <h2 className="text-2xl font-black tracking-tight text-foreground">Showtime</h2>
+              <label className="relative block">
+                <span className="sr-only">Choose a cinema location</span>
+                <select
+                  aria-label="Choose a cinema location"
+                  value={selectedCinemaId}
+                  onChange={(event) => { selectCinema(event.target.value); setSelectedDate(''); }}
+                  className="h-14 w-full appearance-none rounded-lg border border-white/10 bg-white/[0.055] px-5 pr-12 text-sm font-medium text-foreground outline-none transition focus:border-[var(--primary)]/70 focus:ring-2 focus:ring-[var(--primary)]/20"
+                >
+                  <option value="ALL" className="bg-card text-foreground">All Locations</option>
+                  {cinemas.map((cinema) => <option key={cinema.id} value={cinema.id} className="bg-card text-foreground">{cinema.name}</option>)}
+                </select>
+                <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-muted-foreground" aria-hidden="true"><ChevronDown className="h-4 w-4" /></span>
+              </label>
 
-                <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
-                  <span className="inline-flex items-center gap-1.5 font-semibold text-foreground">
-                    <MapPin className="h-3.5 w-3.5 text-[var(--primary)]" />
-                    {selectedCinemaId === 'ALL' ? 'All Locations' : selectedCinemaName}
-                  </span>
-                  <button
-                    type="button"
-                    aria-label="View all cinemas"
-                    onClick={() => { selectCinema('ALL'); setSelectedDate(''); }}
-                    className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-[var(--primary)] transition-colors hover:bg-primary/20"
-                  >
-                    <ChevronDown className="h-3 w-3 inline mr-1" />
-                    All Locations
-                  </button>
-                </div>
-              </div>
+              <DateSelector
+                dateList={showDates}
+                selectedDate={activeDate}
+                onSelectDate={setSelectedDate}
+                className="w-full"
+                showLabel={false}
+                variant="home"
+              />
 
-              <div className="rounded-lg bg-muted/40 p-2">
-                <DateSelector
-                  dateList={showDates}
-                  selectedDate={activeDate}
-                  onSelectDate={setSelectedDate}
-                  className="border-0 bg-transparent px-0 py-0"
-                  showLabel={false}
-                />
-              </div>
-
+              {/* Showtime list or states */}
               {catalogRequiresSignIn ? (
                 <div className="rounded-2xl border border-border bg-card p-8 text-center space-y-3">
                   <p className="text-sm text-muted-foreground">Sign in to see cinema halls and reserve your seats.</p>
@@ -290,6 +243,7 @@ export const MovieDetailPage: React.FC = () => {
               )}
             </div>
           ) : (
+            /* Detail tab */
             <div className="space-y-8">
               <div className="space-y-2">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Synopsis</h3>
@@ -325,7 +279,7 @@ export const MovieDetailPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Trailer Video Modal */}
+      {/* Trailer Modal */}
       <Modal
         isOpen={trailerOpen}
         onClose={() => setTrailerOpen(false)}

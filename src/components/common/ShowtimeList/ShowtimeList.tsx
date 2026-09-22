@@ -5,13 +5,17 @@ import { cn } from '@/lib/utils';
 import type { Showtime } from '@/types/movie';
 import { isUpcomingShowtime } from '@/lib/showtime';
 
-interface ShowtimeGroup {
-  cinemaId: string;
-  cinemaName: string;
+interface ShowtimeSession {
   hallName: string;
   format: string;
   language: string;
   shows: Showtime[];
+}
+
+interface ShowtimeGroup {
+  cinemaId: string;
+  cinemaName: string;
+  sessions: ShowtimeSession[];
 }
 
 interface ShowtimeListProps {
@@ -65,58 +69,59 @@ export const ShowtimeList: React.FC<ShowtimeListProps> = ({
   };
 
   return (
-    <div className={cn('space-y-4', className)} role="region" aria-label="Showtimes">
+    <div className={cn('overflow-hidden border-y border-border', className)} role="region" aria-label="Showtimes">
       {groups.map((group) => {
         const isOpen = openCinemas.has(group.cinemaId);
-        const upcomingShows = group.shows.filter(isUpcomingShowtime);
 
         return (
-          <article key={`${group.cinemaId}-${group.hallName}-${group.format}`} className="overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-sm">
+          <article key={group.cinemaId} className="border-b border-border last:border-b-0">
             <button
               type="button"
               onClick={() => toggleCinema(group.cinemaId)}
-              className="cinema-accordion-header"
+              className="cinema-accordion-header bg-white/[0.09] px-4 py-3"
               aria-expanded={isOpen}
-              aria-controls={`showtimes-${group.cinemaId}-${group.hallName}`}
+              aria-controls={`showtimes-${group.cinemaId}`}
             >
-              <span className="text-base font-bold text-foreground">{group.cinemaName}</span>
+              <span className="text-sm font-bold text-foreground">{group.cinemaName}</span>
               <ChevronDown className={cn('cinema-accordion-chevron', isOpen && 'cinema-accordion-chevron-open')} aria-hidden="true" />
             </button>
 
             <AnimatePresence>
               {isOpen && (
                 <motion.div
-                  id={`showtimes-${group.cinemaId}-${group.hallName}`}
+                  id={`showtimes-${group.cinemaId}`}
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="overflow-hidden border-t border-border p-4 pt-5"
+                  className="overflow-hidden bg-black/25 px-4 py-4 sm:px-5"
                 >
-                  <div className="flex flex-wrap items-center gap-3 mb-4">
-                    <span className={cn(getFormatBadgeClass(group.format))}>
-                      {group.format.toUpperCase()}
-                    </span>
-                    <span className="hall-label">{group.hallName}</span>
-                    <span className="lang-tag">{group.language}</span>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    {upcomingShows.map((show) => (
-                      <button
-                        key={show.id}
-                        type="button"
-                        onClick={() => onBookShowtime(show)}
-                        disabled={!isUpcomingShowtime(show)}
-                        aria-label={`${show.time} - Reserve`}
-                        className="time-slot-pill"
-                      >
-                        {formatTime12h(show.time)}
-                      </button>
-                    ))}
-                    {upcomingShows.length === 0 && (
-                      <span className="text-sm text-muted-foreground">No upcoming shows</span>
-                    )}
+                  <div className="space-y-5">
+                    {group.sessions.map((session) => {
+                      const upcomingShows = session.shows.filter(isUpcomingShowtime);
+                      return <div key={`${session.hallName}-${session.format}`}>
+                        <div className="mb-3 flex flex-wrap items-center gap-2.5">
+                          <span className={cn(getFormatBadgeClass(session.format))}>{session.format.toUpperCase()}</span>
+                          <span className="hall-label">{session.hallName}</span>
+                          <span className="lang-tag">{session.language}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-3">
+                          {upcomingShows.map((show) => (
+                            <button
+                              key={show.id}
+                              type="button"
+                              onClick={() => onBookShowtime(show)}
+                              disabled={!isUpcomingShowtime(show)}
+                              aria-label={`${show.time} - Reserve`}
+                              className="time-slot-pill px-8 py-2 text-xs"
+                            >
+                              {formatTime12h(show.time)}
+                            </button>
+                          ))}
+                          {upcomingShows.length === 0 && <span className="text-sm text-muted-foreground">No upcoming shows</span>}
+                        </div>
+                      </div>;
+                    })}
                   </div>
                 </motion.div>
               )}

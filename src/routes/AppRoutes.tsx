@@ -12,7 +12,7 @@ import { MoviesPage as PublicMoviesPage } from '@/pages/public-site/Movies/Movie
 import { MovieDetailPage } from '@/pages/public-site/Movies/MovieDetailPage';
 import { BookingPage } from '@/pages/public-site/Booking/BookingPage';
 import { HistoryPage } from '@/pages/public-site/History/HistoryPage';
-import { CinemasPage } from '@/pages/public-site/Cinemas';
+import { CinemaDetailPage, CinemasPage } from '@/pages/public-site/Cinemas';
 import { OffersPage } from '@/pages/public-site/Offers';
 import { PremierePage } from '@/pages/public-site/Premiere';
 import { MembershipPage } from '@/pages/public-site/Membership/MembershipPage';
@@ -102,6 +102,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="/showcase" element={<ShowcasePage />} />
         <Route path="/movies/:id" element={<MovieDetailPage />} />
         <Route path="/cinemas" element={<CinemasPage />} />
+        <Route path="/cinemas/:cinemaId" element={<CinemaDetailPage />} />
         <Route path="/promotion" element={<Promotion />} />
         <Route path="/promotion/:promotionId" element={<PromotionDetail />} />
         <Route path="/fnb" element={<OffersPage />} />

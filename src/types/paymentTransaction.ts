@@ -20,3 +20,11 @@ export interface PaymentTransactionInput {
   bookingId: number | null;
   orderId: number | null;
 }
+
+export interface PaymentTransactionPage {
+  content: PaymentTransaction[];
+  number: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}

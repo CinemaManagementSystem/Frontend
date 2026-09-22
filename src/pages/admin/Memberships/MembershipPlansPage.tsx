@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useId, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronRight, Crown, LoaderCircle, Plus, Save, Trash2, X } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Crown, DollarSign, LoaderCircle, Plus, Save, Trash2, X, XCircle } from 'lucide-react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { AlertDialog } from '@/components/ui/Alert/AlertDialog';
 import { Badge } from '@/components/ui/Badge/Badge';
@@ -553,6 +553,59 @@ export function MembershipPlansPage() {
           <Plus className="h-4 w-4" /> New plan
         </button>
       </div>
+
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">Total Plans</p>
+              <p className="mt-1 text-2xl font-bold text-foreground">{plans.length}</p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-muted text-foreground">
+              <Crown className="h-5 w-5" />
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">Active Tiers</p>
+              <p className="mt-1 text-2xl font-bold text-foreground">
+                {plans.filter((p) => p.active).length}
+              </p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-emerald-500/20 bg-emerald-500/10 text-emerald-400">
+              <CheckCircle2 className="h-5 w-5" />
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">Archived</p>
+              <p className="mt-1 text-2xl font-bold text-foreground">
+                {plans.filter((p) => !p.active).length}
+              </p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-amber-500/20 bg-amber-500/10 text-amber-400">
+              <XCircle className="h-5 w-5" />
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">Average Price</p>
+              <p className="mt-1 text-2xl font-bold text-foreground">
+                {formatCurrency(plans.length ? plans.reduce((s, p) => s + Number(p.price), 0) / plans.length : 0)}
+              </p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-sky-500/20 bg-sky-500/10 text-sky-400">
+              <DollarSign className="h-5 w-5" />
+            </div>
+          </div>
+        </div>
+      </section>
 
       {error && <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</p>}
 

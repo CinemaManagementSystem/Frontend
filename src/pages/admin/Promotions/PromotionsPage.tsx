@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AlertCircle, Edit2, Eye, Megaphone, Pause, Play, Plus, RefreshCw, Search, X } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Edit2, Eye, Megaphone, Pause, Play, Plus, RefreshCw, Search, TrendingUp, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button/Button';
 import { Spinner } from '@/components/ui/Spinner/Spinner';
 import { ConfirmDialog, DiscountLabel, StatusBadge, UsageProgress } from '@/components/promotions';
@@ -115,6 +115,59 @@ export function PromotionsPage() {
           <Plus className="mr-2 h-4 w-4" />
           New promotion
         </Link>
+      </section>
+
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">Total Campaigns</p>
+              <p className="mt-1 text-2xl font-bold text-foreground">{totalElements}</p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-muted text-foreground">
+              <Megaphone className="h-5 w-5" />
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">Active Offers</p>
+              <p className="mt-1 text-2xl font-bold text-foreground">
+                {promotions.filter((p) => p.status === 'ACTIVE').length}
+              </p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-emerald-500/20 bg-emerald-500/10 text-emerald-400">
+              <CheckCircle2 className="h-5 w-5" />
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">Paused / Inactive</p>
+              <p className="mt-1 text-2xl font-bold text-foreground">
+                {promotions.filter((p) => p.status === 'PAUSED' || p.status === 'EXPIRED').length}
+              </p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-amber-500/20 bg-amber-500/10 text-amber-400">
+              <Pause className="h-5 w-5" />
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">Total Redemptions</p>
+              <p className="mt-1 text-2xl font-bold text-foreground">
+                {promotions.reduce((sum, p) => sum + (p.usedCount || 0), 0)}
+              </p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-sky-500/20 bg-sky-500/10 text-sky-400">
+              <TrendingUp className="h-5 w-5" />
+            </div>
+          </div>
+        </div>
       </section>
 
       <section className="rounded-xl border border-border bg-card p-4">

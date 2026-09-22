@@ -1,9 +1,27 @@
 import { apiClient } from './apiClient';
-import { PaymentTransaction, PaymentTransactionInput } from '@/types/paymentTransaction';
+import { PaymentTransaction, PaymentTransactionInput, PaymentTransactionPage } from '@/types/paymentTransaction';
+import type { PaymentStatus } from '@/types/payment';
 
 export const paymentTransactionService = {
   async list(): Promise<PaymentTransaction[]> {
     const { data } = await apiClient.get<PaymentTransaction[]>('/payment-transactions');
+    return data;
+  },
+
+  async listPage(params: {
+    page?: number;
+    size?: number;
+    status?: PaymentStatus | 'ALL';
+    sort?: string;
+  } = {}): Promise<PaymentTransactionPage> {
+    const { data } = await apiClient.get<PaymentTransactionPage>('/payment-transactions/page', {
+      params: {
+        page: params.page ?? 0,
+        size: params.size ?? 10,
+        status: params.status && params.status !== 'ALL' ? params.status : undefined,
+        sort: params.sort ?? 'id,desc',
+      },
+    });
     return data;
   },
 
