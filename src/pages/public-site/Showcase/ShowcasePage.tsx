@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Search,
@@ -14,6 +14,7 @@ import { useMovieAdminStore } from '@/store/movieAdminStore';
 import { useCategoryStore } from '@/store/categoryStore';
 import { useMovieStore } from '@/store/movieStore';
 import { useCinemaStore } from '@/store/cinemaStore';
+import { useAuthStore } from '@/store/authStore';
 import { Badge } from '@/components/ui/Badge/Badge';
 import { PageContainer } from '@/components/layout/PageContainer';
 import { formatDuration, formatDate } from '@/utils/formatDate';
@@ -35,6 +36,7 @@ export const ShowcasePage: React.FC = () => {
   const { movies, loading, fetchAll } = useMovieAdminStore();
   const { categories, fetchAll: fetchCategories } = useCategoryStore();
   const { showtimes, fetchCatalog } = useMovieStore();
+  const catalogRequiresSignIn = !useAuthStore((state) => state.isAuthenticated);
   const { cinemas, selectedCinemaId, selectCinema } = useCinemaStore();
   const selectedCinemaName = cinemas.find((cinema) => cinema.id === selectedCinemaId)?.name || 'your selected cinema';
 
@@ -231,7 +233,9 @@ export const ShowcasePage: React.FC = () => {
                     </p>
 
                     <div className="flex items-center gap-2 pt-4 mt-4 border-t border-border">
-                      {hasShows ? (
+                      {catalogRequiresSignIn ? (
+                        <Link to={`/login?redirect=${encodeURIComponent('/showcase')}`} className="text-xs font-semibold text-primary underline underline-offset-4">Sign in to view showtimes</Link>
+                      ) : hasShows ? (
                         <button
                           onClick={() => setActiveMovie(activeMovie === movie.id ? null : movie.id)}
                           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--primary)] hover:bg-[#ff1f2d] text-white text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-[var(--primary)]/30"

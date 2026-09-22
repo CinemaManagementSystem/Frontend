@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { paymentService } from '@/services/paymentService';
 import { getApiErrorMessage } from '@/services/apiClient';
 import { saveGatewaySession } from '@/services/paymentGatewayService';
-import { MAX_MANUAL_CHECKS, SCAN_CUTOFF_SECONDS, SCHEDULED_CHECK_SECONDS } from '@/lib/gatewayQr';
+import { MAX_MANUAL_CHECKS, SCAN_CUTOFF_SECONDS, STATUS_POLL_SECONDS } from '@/lib/gatewayQr';
 import type { GatewaySession } from '@/types/paymentGateway';
 import type { Payment } from '@/types/payment';
 
@@ -26,7 +26,6 @@ export function usePaymentSession(session: GatewaySession) {
   const pending = useRef<Promise<Payment | null> | null>(null);
   const manualRequestInFlight = useRef(false);
   const finalStarted = useRef(false);
-  const fired = useRef(new Set<number>());
 
   const transition = useCallback((next: Phase) => {
     phaseRef.current = next;
@@ -37,6 +36,10 @@ export function usePaymentSession(session: GatewaySession) {
     saveGatewaySession({ ...session, payment: next, manualChecks: manualCount.current });
     if (!alive.current) return;
     setPayment(next);
+    if (typeof next.manualVerificationCount === 'number') {
+      manualCount.current = Math.max(manualCount.current, next.manualVerificationCount);
+      setManualChecks(manualCount.current);
+    }
     if (next.status === 'PAID') transition('paid');
     else if (next.paymentMethod === 'CASH' && next.status === 'PENDING') transition('cash');
     else if (next.status === 'EXPIRED') transition('expired');
@@ -57,17 +60,16 @@ export function usePaymentSession(session: GatewaySession) {
       }
     }
     const active = currentPayment.current;
-    if (!active.khqrString || !active.md5Hash) {
-      setMessage('Payment QR details are missing. Return to checkout.');
-      transition('unverified');
-      return null;
-    }
     setBusy(true);
     const request = (async () => {
       try {
-        const next = await paymentService.verifyKhqr({ paymentId: active.id, qr: active.khqrString!, md5: active.md5Hash! });
+        const next = await paymentService.checkStatus(active.id, source);
         accept(next);
-        if (alive.current && next.status === 'PENDING') setMessage('Payment is still pending. Keep this page open.');
+        if (alive.current && next.status === 'PENDING') {
+          setMessage(next.rateLimitedUntil
+            ? 'Bakong verification is temporarily unavailable. Please try again later.'
+            : next.lastVerificationError || 'Payment is still pending. Keep this page open.');
+        }
         return next;
       } catch (error) {
         if (alive.current) {
@@ -83,24 +85,18 @@ export function usePaymentSession(session: GatewaySession) {
       if (pending.current === request) pending.current = null;
       if (alive.current) setBusy(false);
     }
-  }, [accept, transition]);
+  }, [accept]);
 
   useEffect(() => {
     alive.current = true;
     if (phaseRef.current !== 'waiting') return () => { alive.current = false; };
     const timers: number[] = [];
-    // Keep automatic checks at the documented milestones. The final check
-    // below is the only request made at the hard expiry deadline.
-    const checks = [...SCHEDULED_CHECK_SECONDS];
-    for (const second of checks) {
-      const at = session.startedAt + second * 1000;
-      if (at < Date.now() || at >= session.expiresAt || fired.current.has(second)) continue;
-      timers.push(window.setTimeout(() => {
-        if (Date.now() >= session.expiresAt || fired.current.has(second)) return;
-        fired.current.add(second);
-        void verify('scheduled');
-      }, Math.max(0, at - Date.now())));
-    }
+    STATUS_POLL_SECONDS.forEach((seconds) => {
+      const delay = session.startedAt + seconds * 1000 - Date.now();
+      if (delay > 0 && session.startedAt + seconds * 1000 < session.expiresAt) {
+        timers.push(window.setTimeout(() => void verify('scheduled'), delay));
+      }
+    });
     timers.push(window.setTimeout(async () => {
       if (finalStarted.current || phaseRef.current !== 'waiting') return;
       finalStarted.current = true;

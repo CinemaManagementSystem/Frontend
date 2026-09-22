@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useCheckoutCartStore } from '@/store/checkoutCartStore';
 import { initializeGateway } from '@/services/paymentGatewayService';
 import { getApiErrorMessage } from '@/services/apiClient';
-import { MAX_MANUAL_CHECKS, renderGatewayQr } from '@/lib/gatewayQr';
+import { gatewayFallbackLink, gatewayQrPayload, MAX_MANUAL_CHECKS, renderGatewayQr } from '@/lib/gatewayQr';
 import { usePaymentSession } from '@/hooks/usePaymentSession';
 import { PageContainer } from '@/components/layout/PageContainer';
 import type { GatewaySession, PaymentGatewayState } from '@/types/paymentGateway';
@@ -81,27 +81,49 @@ function GatewayCheckout({ session }: { session: GatewaySession }) {
   const [qrImage, setQrImage] = useState<{ src: string; download: string } | null>(null);
   const [qrError, setQrError] = useState('');
   const [imageFailed, setImageFailed] = useState(false);
+  const finalizeStarted = useRef(false);
+  const qrPayload = gatewayQrPayload(payment);
+  const fallbackLink = gatewayFallbackLink(payment);
 
   useEffect(() => {
     let active = true;
-    if (payment.khqrString && payment.paymentMethod === 'KHQR') {
-      renderGatewayQr(payment.khqrString).then((image) => { if (active) setQrImage(image); })
-        .catch(() => { if (active) setQrError('The QR image could not be displayed. Return to checkout or choose cash.'); });
+    setQrImage(null);
+    setQrError('');
+    setImageFailed(false);
+    if (qrPayload && payment.paymentMethod === 'KHQR') {
+      renderGatewayQr(qrPayload).then((image) => { if (active) setQrImage(image); })
+        .catch(() => { if (active) setQrError('The QR image could not be displayed. Use the fallback link or choose cash.'); });
     }
     return () => { active = false; };
-  }, [payment.khqrString, payment.paymentMethod]);
+  }, [payment.paymentMethod, qrPayload]);
 
   useEffect(() => {
     if (phase !== 'paid' && phase !== 'cash') return;
-    useCheckoutCartStore.getState().clearCheckout(payment.bookingId);
+    if (finalizeStarted.current) return;
+    finalizeStarted.current = true;
+    let active = true;
     const confirmationPath = session.returnTo || (payment.bookingId
       ? `/order-confirmation/${payment.bookingId}?paymentId=${payment.id}`
       : `/order-confirmation?paymentId=${payment.id}`);
-    const timer = window.setTimeout(() => navigate(confirmationPath, {
-      replace: true, state: { paymentId: payment.id, orderId: payment.orderId, bookingId: payment.bookingId, userMembershipId: payment.userMembershipId },
-    }), phase === 'paid' ? 1500 : 0);
-    return () => window.clearTimeout(timer);
-  }, [navigate, payment.bookingId, payment.id, payment.orderId, payment.userMembershipId, phase, session.returnTo]);
+    const complete = async () => {
+      if (phase === 'paid') {
+        await new Promise((resolve) => window.setTimeout(resolve, 1500));
+      }
+      if (!active) return;
+      useCheckoutCartStore.getState().clearCheckout(payment.bookingId);
+      navigate(confirmationPath, {
+        replace: true,
+        state: {
+          paymentId: payment.id,
+          orderId: payment.orderId,
+          bookingId: payment.bookingId,
+          userMembershipId: payment.userMembershipId,
+        },
+      });
+    };
+    void complete();
+    return () => { active = false; };
+  }, [navigate, payment, payment.bookingId, payment.id, payment.orderId, payment.userMembershipId, phase, session.returnTo]);
 
   const time = `${Math.floor(remaining / 60).toString().padStart(2, '0')}:${(remaining % 60).toString().padStart(2, '0')}`;
   const closed = !['waiting', 'finalizing'].includes(phase);
@@ -132,7 +154,7 @@ function GatewayCheckout({ session }: { session: GatewaySession }) {
                 <div className="relative aspect-square overflow-hidden rounded-2xl bg-white">
                   {qrImage && !imageFailed ? <img src={qrImage.src} alt="KHQR payment code" onError={() => setImageFailed(true)} className="h-full w-full" />
                     : <div role="status" className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center text-sm text-zinc-700">
-                      {qrError || imageFailed ? <><QrCode className="h-8 w-8" aria-hidden="true" />{qrError || 'Use the QR download below.'}</>
+                      {qrError || imageFailed || !qrPayload ? <><QrCode className="h-8 w-8" aria-hidden="true" />{qrError || (fallbackLink ? 'Open the fallback payment link below.' : 'Payment QR details are unavailable. Choose cash or return to checkout.')}</>
                         : <><LoaderCircle className="h-7 w-7 motion-safe:animate-spin" aria-hidden="true" /> Loading QR...</>}
                     </div>}
                   {!scanningClosed && qrImage && !imageFailed && !reducedMotion && <motion.div aria-hidden="true"
@@ -154,6 +176,10 @@ function GatewayCheckout({ session }: { session: GatewaySession }) {
                 {qrImage && !scanningClosed && <a href={qrImage.download} download={`cinema-payment-${payment.id}.svg`}
                   className={`mt-3 inline-flex items-center gap-2 rounded text-xs text-muted-foreground underline underline-offset-4 ${focus}`}>
                   <Download className="h-3.5 w-3.5" aria-hidden="true" /> Download QR / fallback link
+                </a>}
+                {!qrImage && fallbackLink && <a href={fallbackLink} target="_blank" rel="noreferrer"
+                  className={`mt-3 inline-flex items-center gap-2 rounded text-xs text-muted-foreground underline underline-offset-4 ${focus}`}>
+                  <QrCode className="h-3.5 w-3.5" aria-hidden="true" /> Open fallback payment link
                 </a>}
                 <p className="mt-3 text-xs leading-5 text-muted-foreground">Scanning closes during the final minute so your bank has time to confirm.</p>
               </div>
@@ -179,6 +205,14 @@ function GatewayCheckout({ session }: { session: GatewaySession }) {
                 className={`mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border px-4 py-3 text-sm font-semibold hover:bg-muted disabled:cursor-not-allowed disabled:opacity-45 ${focus}`}>
                 <Banknote className="h-4 w-4" aria-hidden="true" /> Switch to cash
               </button>
+              {payment.paymentMethod === 'KHQR' && ['expired', 'failed', 'unverified'].includes(phase) && <button type="button"
+                onClick={() => {
+                  try { sessionStorage.removeItem(session.storageKey); } catch { /* Ignore disabled storage. */ }
+                  navigate(0);
+                }}
+                className={`mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border px-4 py-3 text-sm font-semibold hover:bg-muted ${focus}`}>
+                <QrCode className="h-4 w-4" aria-hidden="true" /> Try a new QR
+              </button>}
               <p className="mt-3 text-xs leading-5 text-muted-foreground">Cash is collected at the cinema counter. Your booking remains pending until staff receives payment.</p>
               <Link to="/history" className={`mt-6 block rounded text-center text-xs underline underline-offset-4 ${focus}`}>View payment in booking history</Link>
             </aside>

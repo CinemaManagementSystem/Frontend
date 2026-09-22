@@ -15,6 +15,12 @@ export interface Payment {
   customerId: number;
   orderId: number | null;
   userMembershipId: string | null;
+  lastVerificationAt?: string | null;
+  nextVerificationAt?: string | null;
+  verificationAttemptCount?: number;
+  manualVerificationCount?: number;
+  lastVerificationError?: string | null;
+  rateLimitedUntil?: string | null;
   qrCodeUrl?: string | null;
   qrImageUrl?: string | null;
   khqrImageUrl?: string | null;
@@ -33,6 +39,4 @@ export interface PaymentInput {
   bookingId: number | null;
   orderId: number | null;
   userMembershipId?: string | null;
-  merchantName?: string;
-  accountId?: string;
 }

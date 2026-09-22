@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { PageContainer } from '@/components/layout/PageContainer';
 
 export interface HeroSlide {
   id: string;
@@ -179,7 +178,14 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <PageContainer>
+      <div
+        className="absolute inset-0 -z-10 scale-110 bg-cover bg-center blur-3xl opacity-40"
+        style={{ backgroundImage: currentImage ? `url(${currentImage})` : undefined }}
+        aria-hidden="true"
+      />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-transparent via-background/55 to-background" aria-hidden="true" />
+
+      <div className="container-main">
         <div ref={emblaRef} className="overflow-hidden" role="region" aria-roledescription="carousel" aria-label="Featured movie banners">
           <div className="flex">{slideItems}</div>
         </div>
@@ -200,7 +206,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({
             />
           ))}
         </div>
-      </PageContainer>
+      </div>
     </section>
   );
 };

@@ -43,6 +43,7 @@ import { productService } from '@/services/productService';
 import { productCategoryService } from '@/services/productCategoryService';
 import { orderService } from '@/services/orderService';
 import { syncCheckoutOrder, type CheckoutOrderDraft } from '@/services/checkoutOrderService';
+import { QR_VALIDITY_SECONDS, STATUS_POLL_SECONDS } from '@/lib/gatewayQr';
 import { resolvePaymentQrDisplay, type PaymentQrDisplay } from '@/lib/paymentQr';
 import type { Payment as ApiPayment } from '@/types/payment';
 import type { PaymentTransaction } from '@/types/paymentTransaction';
@@ -478,12 +479,15 @@ const BookingFlow: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [backendBookingId]);
 
-  const refreshPaymentStatus = useCallback(async (showPendingMessage: boolean) => {
+  const refreshPaymentStatus = useCallback(async (
+    showPendingMessage: boolean,
+    source: 'scheduled' | 'manual' | 'final' = 'manual',
+  ) => {
     const activeCheckout = checkoutPaymentRef.current;
     if (!activeCheckout || paymentStatusRequest.current) return;
     paymentStatusRequest.current = true;
     try {
-      const payment = await paymentService.checkStatus(activeCheckout.payment.id);
+      const payment = await paymentService.checkStatus(activeCheckout.payment.id, source);
       const transactions = await paymentTransactionService
         .listByPayment(payment.id)
         .catch(() => activeCheckout.transactions);
@@ -495,8 +499,11 @@ const BookingFlow: React.FC = () => {
         completePaidCheckout(payment);
       } else if (payment.status === 'FAILED' || payment.status === 'EXPIRED') {
         setPaymentError(`Payment ${payment.status.toLowerCase()}. Please generate a new QR code and try again.`);
+      } else if (payment.rateLimitedUntil) {
+        setPaymentError('Bakong verification is temporarily unavailable. Please try again later.');
       } else if (showPendingMessage) {
-        setPaymentError('Payment is still pending. The page will confirm your booking automatically once payment is received.');
+        setPaymentError(payment.lastVerificationError
+          || 'Payment is still pending. The page will confirm your booking automatically once payment is received.');
       }
     } catch (error) {
       if (showPendingMessage) setPaymentError(getApiErrorMessage(error, 'payment status'));
@@ -510,16 +517,25 @@ const BookingFlow: React.FC = () => {
   useEffect(() => {
     if (!isQrStep || !pendingPaymentId || step !== 'checkout') return;
 
-    const poll = () => void refreshPaymentStatus(false);
-    poll();
-    const timer = window.setInterval(poll, 4_000);
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') poll();
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    const expiryValue = checkoutPaymentRef.current?.payment.expiresAt;
+    const parsedExpiry = expiryValue ? Date.parse(/[zZ]|[+-]\d\d:\d\d$/.test(expiryValue)
+      ? expiryValue : `${expiryValue}+07:00`) : NaN;
+    const startedAt = Number.isFinite(parsedExpiry)
+      ? parsedExpiry - QR_VALIDITY_SECONDS * 1000
+      : Date.now();
+    const timers = STATUS_POLL_SECONDS.flatMap((seconds) => {
+      const delay = startedAt + seconds * 1000 - Date.now();
+      return delay > 0 ? [window.setTimeout(
+        () => void refreshPaymentStatus(false, 'scheduled'), delay,
+      )] : [];
+    });
+    if (Number.isFinite(parsedExpiry) && parsedExpiry > Date.now()) {
+      timers.push(window.setTimeout(
+        () => void refreshPaymentStatus(false, 'final'), parsedExpiry - Date.now(),
+      ));
+    }
     return () => {
-      window.clearInterval(timer);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      timers.forEach(window.clearTimeout);
     };
   }, [isQrStep, pendingPaymentId, refreshPaymentStatus, step]);
 
