@@ -82,7 +82,7 @@ export const CinemaDetailPage = () => {
   const busy = loading || cinemasLoading || !loaded;
 
   if (!cinema && busy) {
-    return <div className="container-main min-h-[70vh] py-12"><div className="mx-auto h-[420px] max-w-5xl animate-pulse rounded-2xl bg-card" /></div>;
+    return <div className="container-main min-h-[70vh] py-12"><div className="aspect-[21/8.5] w-full animate-pulse rounded-2xl bg-card" /></div>;
   }
 
   if (!cinema) {
@@ -104,9 +104,9 @@ export const CinemaDetailPage = () => {
         <div aria-hidden="true" className="absolute inset-0 -z-20 bg-gradient-to-b from-red-950/25 via-background/70 to-background blur-3xl" />
         <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-b from-background/30 via-background/55 to-background" />
         <div className="container-main">
-          <div className="mx-auto max-w-5xl">
-            <Link to="/cinemas" className="mb-4 inline-flex items-center gap-2 text-xs font-semibold text-white/70 transition hover:text-white"><ArrowLeft className="h-4 w-4" />All cinemas</Link>
-            <div className="relative aspect-[16/7] overflow-hidden rounded-2xl border border-white/10 bg-black shadow-[0_24px_70px_rgba(0,0,0,.5)]">
+          <div>
+            <Link to="/cinemas" className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-white/70 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"><ArrowLeft className="h-4 w-4" />All cinemas</Link>
+            <div className="relative aspect-[21/8.5] w-full overflow-hidden rounded-2xl border border-white/10 bg-black shadow-[0_24px_70px_rgba(0,0,0,.5)]">
               <BannerCarousel
                 section="CINEMA"
                 className="absolute inset-0 border-0 shadow-none"
@@ -115,23 +115,24 @@ export const CinemaDetailPage = () => {
                 autoPlayInterval={6000}
                 showArrows={false}
                 showCaptions={false}
+                fixedFrame={false}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-transparent" aria-hidden="true" />
               <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7">
                 <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                   <div>
-                    <h1 className="text-2xl font-black text-white drop-shadow-lg sm:text-3xl">{cinema.name}</h1>
+                    <h1 className="text-2xl font-black leading-tight text-white drop-shadow-lg sm:text-3xl">{cinema.name}</h1>
                     <p className="mt-2 flex items-start gap-2 text-sm text-white/75"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" />{cinema.address || cinema.locationName || 'Address not listed'}</p>
                     <p className="mt-4 text-xs font-medium text-white/55"><Link to="/" className="hover:text-white">Home</Link><span className="px-2">/</span><Link to="/cinemas" className="hover:text-white">Cinema</Link><span className="px-2">/</span><span className="text-white/85">{cinema.name}</span></p>
                   </div>
-                  {cinema.googleMapsUrl && <a href={cinema.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex w-fit items-center gap-2 rounded-lg border border-white/20 bg-black/45 px-4 py-2.5 text-xs font-bold text-white backdrop-blur-sm hover:border-[var(--primary)]"><Navigation className="h-4 w-4 text-[var(--primary)]" />Directions<ArrowUpRight className="h-3.5 w-3.5" /></a>}
+                  {cinema.googleMapsUrl && <a href={cinema.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 w-fit items-center gap-2 rounded-xl border border-white/20 bg-black/45 px-4 py-2.5 text-xs font-bold text-white backdrop-blur-sm transition hover:border-[var(--primary)] hover:bg-black/65 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"><Navigation className="h-4 w-4 text-[var(--primary)]" />Directions<ArrowUpRight className="h-3.5 w-3.5" /></a>}
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-center gap-7 pt-6" role="tablist" aria-label="Cinema information">
-              <button type="button" role="tab" aria-selected={activeTab === 'SHOWING'} onClick={() => setActiveTab('SHOWING')} className={`border-b-2 px-1 pb-2 text-base font-bold transition ${activeTab === 'SHOWING' ? 'border-[var(--primary)] text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>Now Showing</button>
-              <button type="button" role="tab" aria-selected={activeTab === 'DETAIL'} onClick={() => setActiveTab('DETAIL')} className={`border-b-2 px-1 pb-2 text-base font-bold transition ${activeTab === 'DETAIL' ? 'border-[var(--primary)] text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>Detail</button>
+            <div className="flex justify-center gap-7 border-b border-white/10 pt-5" role="tablist" aria-label="Cinema information">
+              <button type="button" role="tab" aria-selected={activeTab === 'SHOWING'} onClick={() => setActiveTab('SHOWING')} className={`min-h-11 border-b-2 px-1 pb-3 text-base font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] ${activeTab === 'SHOWING' ? 'border-[var(--primary)] text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>Now Showing</button>
+              <button type="button" role="tab" aria-selected={activeTab === 'DETAIL'} onClick={() => setActiveTab('DETAIL')} className={`min-h-11 border-b-2 px-1 pb-3 text-base font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] ${activeTab === 'DETAIL' ? 'border-[var(--primary)] text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>Detail</button>
             </div>
           </div>
         </div>
@@ -139,8 +140,8 @@ export const CinemaDetailPage = () => {
 
       {activeTab === 'SHOWING' ? <>
         <DateSelector dateList={dateList} selectedDate={activeDate} onSelectDate={setSelectedDate} />
-        <section className="container-main py-8">
-          <div className="mx-auto max-w-5xl">
+        <section className="container-main py-8 sm:py-10">
+          <div>
             <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
               <div>
                 <h2 className="text-2xl font-black sm:text-3xl">Now Showing</h2>
@@ -152,8 +153,8 @@ export const CinemaDetailPage = () => {
           </div>
         </section>
       </> : (
-        <section className="container-main py-10">
-          <div className="mx-auto grid max-w-5xl gap-8 md:grid-cols-[minmax(0,1.4fr)_minmax(260px,.6fr)]">
+        <section className="container-main py-10 sm:py-12">
+          <div className="grid gap-8 md:grid-cols-[minmax(0,1.4fr)_minmax(260px,.6fr)]">
             <div>
               <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-[var(--primary)]"><Info className="h-4 w-4" />About this cinema</p>
               <h2 className="mt-3 text-3xl font-black">{cinema.name}</h2>

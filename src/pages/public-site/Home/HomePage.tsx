@@ -2,26 +2,20 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
-  Calendar,
-  ChevronDown,
   Coffee,
   Crown,
-  Film,
-  MapPin,
-  Sparkles,
   Ticket,
 } from 'lucide-react';
 import { useMovieStore } from '@/store/movieStore';
 import { useCinemaStore } from '@/store/cinemaStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useAuthStore } from '@/store/authStore';
-import { BannerCarousel } from '@/components/common/BannerCarousel';
+import { BannerCarousel, MarketingBannerStage } from '@/components/common/BannerCarousel';
 import { SectionTabs } from '@/components/common/SectionTabs/SectionTabs';
 import { DateSelector } from '@/components/common/DateSelector/DateSelector';
 import { MovieGrid } from '@/components/common/MovieGrid/MovieGrid';
 import { MovieCardSkeleton } from '@/components/common/Skeleton/Skeleton';
 import { getCinemaDate, isUpcomingShowtime, parseShowtimeStart } from '@/lib/showtime';
-import { useHeroBackdrop } from '@/context/HeroBackdropContext';
 import { productService } from '@/services/productService';
 import type { FnbItem } from '@/types/product';
 import { FeaturedFnbPreview } from './components/FeaturedFnbPreview';
@@ -37,9 +31,8 @@ const getDateString = (date: Date) => date.toISOString().slice(0, 10);
 export const HomePage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { setCurrentImage } = useHeroBackdrop();
   const { movies, showtimes, searchQuery, fetchCatalog, loading, error } = useMovieStore();
-  const { cinemas, selectedCinemaId, selectCinema } = useCinemaStore();
+  const selectedCinemaId = useCinemaStore((state) => state.selectedCinemaId);
   const language = useSettingsStore((state) => state.language);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
@@ -48,9 +41,6 @@ export const HomePage: React.FC = () => {
   const [selectedMonth, setSelectedMonth] = useState('');
   const [featuredFnb, setFeaturedFnb] = useState<FnbItem[]>([]);
   const [fnbLoading, setFnbLoading] = useState(true);
-
-  // Quick booking widget state
-  const [quickMovieId, setQuickMovieId] = useState('');
 
   useEffect(() => {
     void fetchCatalog();
@@ -147,10 +137,6 @@ export const HomePage: React.FC = () => {
     setSelectedMonth((current) => (comingSoonMonths.includes(current) ? current : (comingSoonMonths[0] ?? '')));
   }, [comingSoonMonths]);
 
-  const nowShowingMovies = useMemo(() => {
-    return movies.filter((m) => m.status === 'NOW_SHOWING' || m.status === 'FEATURED');
-  }, [movies]);
-
   const filteredMovies = useMemo(() => {
     const normalizedSearch = searchQuery.trim().toLowerCase();
     const hasDateListings = activeListingTab === 'NOW_SHOWING' && selectedDate !== '';
@@ -177,122 +163,9 @@ export const HomePage: React.FC = () => {
     [movies],
   );
 
-  // Quick Find CTA
-  const handleQuickFind = () => {
-    if (quickMovieId) {
-      navigate(`/movies/${quickMovieId}`);
-    } else {
-      const el = document.getElementById('home-movies');
-      el?.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
   return (
     <div className="home-page min-h-screen overflow-hidden bg-background pb-20 text-foreground">
-      {/* 1. Hero Carousel */}
-      <BannerCarousel
-        section="HOME"
-        autoPlayInterval={5000}
-        heightClass="aspect-[16/9] min-h-[260px] sm:aspect-[16/6] sm:min-h-[360px]"
-        roundedClass="rounded-2xl"
-        className="container-main py-4 sm:py-6"
-        onActiveImageChange={setCurrentImage}
-      />
-
-      {/* 2. "Plan Your Visit" / Quick-Booking Mini-Widget directly beneath the Carousel */}
-      <div className="relative z-20 -mt-6 sm:-mt-10 container-main mb-6">
-        <div className="rounded-2xl border border-white/15 bg-card/95 backdrop-blur-xl p-4 sm:p-6 shadow-2xl shadow-black/80">
-          <div className="flex items-center gap-2 mb-3 text-xs font-bold uppercase tracking-[0.2em] text-[#E50914]">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Plan Your Visit · Quick Showtime Finder</span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-[1fr_1.2fr_1fr_auto] gap-3 items-center">
-            {/* Step 1: Select Cinema */}
-            <div className="relative">
-              <label className="block text-[10px] font-bold upp  tracking-wider text-muted-foreground mb-1">
-                1. Select Cinema
-              </label>
-              <div className="relative flex items-center">
-                <MapPin className="absolute left-3 w-4 h-4 text-[#E50914] pointer-events-none" />
-                <select
-                  value={selectedCinemaId}
-                  onChange={(e) => selectCinema(e.target.value)}
-                  aria-label="Select Cinema"
-                  className="w-full h-11 pl-9 pr-8 bg-muted/70 text-foreground text-xs font-semibold rounded-xl border border-border focus:border-[#E50914] outline-none cursor-pointer appearance-none"
-                >
-                  <option value="ALL">All Cinemas</option>
-                  {cinemas.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-3 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
-              </div>
-            </div>
-
-            {/* Step 2: Select Movie */}
-            <div className="relative">
-              <label className="block text-[10px] font-bold tracking-wider text-muted-foreground mb-1">
-                2. Select Movie
-              </label>
-              <div className="relative flex items-center">
-                <Film className="absolute left-3 w-4 h-4 text-[#E50914] pointer-events-none" />
-                <select
-                  value={quickMovieId}
-                  onChange={(e) => setQuickMovieId(e.target.value)}
-                  aria-label="Select Movie"
-                  className="w-full h-11 pl-9 pr-8 bg-muted/70 text-foreground text-xs font-semibold rounded-xl border border-border focus:border-[#E50914] outline-none cursor-pointer appearance-none"
-                >
-                  <option value="">Choose a movie...</option>
-                  {nowShowingMovies.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.title}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-3 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
-              </div>
-            </div>
-
-            {/* Step 3: Select Date */}
-            <div className="relative">
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                3. Select Date
-              </label>
-              <div className="relative flex items-center">
-                <Calendar className="absolute left-3 w-4 h-4 text-[#E50914] pointer-events-none" />
-                <select
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  aria-label="Select Date"
-                  className="w-full h-11 pl-9 pr-8 bg-muted/70 text-foreground text-xs font-semibold rounded-xl border border-border focus:border-[#E50914] outline-none cursor-pointer appearance-none"
-                >
-                  {dateCards.map((d) => (
-                    <option key={d.dateStr} value={d.dateStr}>
-                      {d.isToday ? `Today (${d.dayNum} ${d.monthName})` : `${d.dayName}, ${d.dayNum} ${d.monthName}`}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-3 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
-              </div>
-            </div>
-
-            {/* Action Button: Find Showtimes */}
-            <div className="sm:self-end pt-1 sm:pt-0">
-              <button
-                type="button"
-                onClick={handleQuickFind}
-                className="w-full sm:w-auto h-11 px-6 rounded-xl bg-[#E50914] hover:bg-[#ff1f2d] text-white text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-[#E50914]/30 hover:shadow-[#E50914]/50 flex items-center justify-center gap-2"
-              >
-                <Ticket className="w-4 h-4" />
-                <span>Find Showtimes</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <MarketingBannerStage section="HOME" autoPlayInterval={5000} showCaptions={false} />
 
       {error && movies.length === 0 && (
         <section className="container-main py-24 text-center" role="alert">
@@ -309,10 +182,9 @@ export const HomePage: React.FC = () => {
         </section>
       )}
 
-      {/* 3. Primary Movie Section (Browse Movies & Pick Showtime) */}
-      <section id="home-movies" className="container-main scroll-mt-24 pt-4">
+      <section id="home-movies" className="container-main scroll-mt-24 pt-12 sm:pt-16">
         {/* Listing Tabs */}
-        <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
+        <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-5">
           <SectionTabs
             tabs={[
               { id: 'NOW_SHOWING', label: t.home.nowShowing, count: nowShowingCount },
@@ -450,8 +322,6 @@ export const HomePage: React.FC = () => {
 
         <BannerCarousel
           section="OFFER"
-          heightClass="aspect-[2.35/1] min-h-[260px] sm:min-h-[340px]"
-          roundedClass="rounded-2xl"
           autoPlayInterval={6000}
         />
       </section>

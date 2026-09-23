@@ -42,9 +42,9 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
   };
 
   return (
-    <section className="border-b border-border bg-card/60 py-3.5" aria-label="Screening dates">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-3">
+    <section className="border-y border-border bg-card/60 py-4" aria-label="Screening dates">
+      <div className="container-main">
+        <div className="flex min-w-0 items-center gap-3">
           <div className="flex items-center gap-2 shrink-0 border-r border-border pr-4 text-xs font-bold text-muted-foreground uppercase tracking-widest hidden sm:flex">
             <Calendar className="w-4 h-4 text-[var(--primary)]" />
             <span>Select Date</span>
@@ -53,7 +53,7 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
           <button
             type="button"
             onClick={() => handleScroll('left')}
-            className="p-2 rounded-xl bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+            className="min-h-10 min-w-10 shrink-0 rounded-xl border border-border bg-card p-2 text-muted-foreground transition-all hover:bg-accent/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
             aria-label="Previous dates"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -61,7 +61,7 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
 
           <div
             ref={scrollContainerRef}
-            className="no-scrollbar relative flex items-center gap-2.5 overflow-x-auto py-1 flex-1"
+            className="no-scrollbar relative flex min-w-0 flex-1 items-center gap-2.5 overflow-x-auto py-1 scroll-smooth"
           >
             {dateList.map((d) => {
               const active = selectedDate === d.dateStr;
@@ -104,7 +104,7 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
           <button
             type="button"
             onClick={() => handleScroll('right')}
-            className="p-2 rounded-xl bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+            className="min-h-10 min-w-10 shrink-0 rounded-xl border border-border bg-card p-2 text-muted-foreground transition-all hover:bg-accent/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
             aria-label="Next dates"
           >
             <ChevronRight className="w-4 h-4" />

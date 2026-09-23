@@ -1,24 +1,24 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { authReducer } from '@/store/authSlice';
-import { userReducer } from '@/store/userSlice';
-import { movieReducer } from '@/store/movieSlice';
-import { categoryReducer } from '@/store/categorySlice';
-import { locationReducer } from '@/store/locationSlice';
-import { theaterReducer } from '@/store/theaterSlice';
-import { screenReducer } from '@/store/screenSlice';
-import { seatReducer } from '@/store/seatSlice';
-import { showReducer } from '@/store/showSlice';
-import { movieAdminReducer } from '@/store/movieAdminSlice';
-import { bookingAdminReducer } from '@/store/bookingAdminSlice';
-import { bookingSeatReducer } from '@/store/bookingSeatSlice';
-import { productCategoryReducer } from '@/store/productCategorySlice';
-import { productReducer } from '@/store/productSlice';
-import { orderReducer } from '@/store/orderSlice';
-import { orderItemReducer } from '@/store/orderItemSlice';
-import { paymentReducer } from '@/store/paymentSlice';
-import { paymentTransactionReducer } from '@/store/paymentTransactionSlice';
-import { userAdminReducer } from '@/store/userAdminSlice';
-import { membershipReducer } from '@/store/membershipSlice';
+import { authReducer } from '../store/authSlice';
+import { userReducer } from '../store/userSlice';
+import { movieReducer } from '../store/movieSlice';
+import { categoryReducer } from '../store/categorySlice';
+import { locationReducer } from '../store/locationSlice';
+import { theaterReducer } from '../store/theaterSlice';
+import { screenReducer } from '../store/screenSlice';
+import { seatReducer } from '../store/seatSlice';
+import { showReducer } from '../store/showSlice';
+import { movieAdminReducer } from '../store/movieAdminSlice';
+import { bookingAdminReducer } from '../store/bookingAdminSlice';
+import { bookingSeatReducer } from '../store/bookingSeatSlice';
+import { productCategoryReducer } from '../store/productCategorySlice';
+import { productReducer } from '../store/productSlice';
+import { orderReducer } from '../store/orderSlice';
+import { orderItemReducer } from '../store/orderItemSlice';
+import { paymentReducer } from '../store/paymentSlice';
+import { paymentTransactionReducer } from '../store/paymentTransactionSlice';
+import { userAdminReducer } from '../store/userAdminSlice';
+import { membershipReducer } from '../store/membershipSlice';
 
 export const store = configureStore({
   reducer: {

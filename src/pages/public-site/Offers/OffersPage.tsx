@@ -6,7 +6,7 @@ import { productCategoryService } from '@/services/productCategoryService';
 import { useAuthStore } from '@/store/authStore';
 import { useCinemaStore } from '@/store/cinemaStore';
 import { formatCurrency } from '@/utils/formatDate';
-import { BannerCarousel } from '@/components/common/BannerCarousel';
+import { MarketingBannerStage } from '@/components/common/BannerCarousel';
 import type { Product } from '@/types/product';
 import type { ProductCategory } from '@/types/productCategory';
 import { SnackImage } from '../Booking/SnackImage';
@@ -92,10 +92,8 @@ export function OffersPage() {
 
   return (
     <div className="min-h-screen bg-background pb-20 text-foreground">
-      <BannerCarousel
+      <MarketingBannerStage
         section={isFoodPage ? 'FNB' : 'OFFER'}
-        roundedClass="rounded-none"
-        heightClass="h-[300px] sm:h-[380px] md:h-[440px]"
         autoPlayInterval={6000}
       />
 

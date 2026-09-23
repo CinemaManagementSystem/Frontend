@@ -8,7 +8,7 @@ import { membershipService } from '@/services/membershipService';
 import { getApiErrorMessage } from '@/services/apiClient';
 import { useAuthStore } from '@/store/authStore';
 import { PageContainer } from '@/components/layout/PageContainer';
-import { BannerCarousel } from '@/components/common/BannerCarousel';
+import { MarketingBannerStage } from '@/components/common/BannerCarousel';
 import { formatCurrency } from '@/utils/formatCurrency';
 import type { MembershipBenefit } from '@/types/membership';
 
@@ -59,15 +59,14 @@ export function MembershipPage() {
 
   return (
     <main className="min-h-screen bg-background pb-20 text-foreground">
-      <BannerCarousel
+      <MarketingBannerStage
         section="MEMBERSHIP"
-        roundedClass="rounded-none"
-        heightClass="h-[320px] sm:h-[400px] md:h-[460px]"
         autoPlayInterval={6000}
+        showCaptions={false}
       />
 
       <PageContainer>
-        <section id="membership-plans" className="scroll-mt-32 pt-5" aria-labelledby="membership-plans-title">
+        <section id="membership-plans" className="scroll-mt-32 pt-10 sm:pt-12" aria-labelledby="membership-plans-title">
           <div className="max-w-2xl">
             <p className="text-[10px] font-bold uppercase tracking-[.2em] text-primary">Membership plans</p>
             <h2 id="membership-plans-title" className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">Choose your cinema benefits</h2>

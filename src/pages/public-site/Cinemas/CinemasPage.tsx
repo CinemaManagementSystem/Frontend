@@ -13,15 +13,13 @@ import {
   Phone,
   RefreshCw,
   Search,
-  Tv,
-  Volume2,
   X,
 } from 'lucide-react';
 import { useMovieStore } from '@/store/movieStore';
 import { useCinemaStore } from '@/store/cinemaStore';
 import { useShowtimeClock } from '@/hooks/useShowtimeClock';
 import { isUpcomingShowtime } from '@/lib/showtime';
-import { BannerCarousel } from '@/components/common/BannerCarousel';
+import { MarketingBannerStage } from '@/components/common/BannerCarousel';
 import { getApiErrorMessage } from '@/services/apiClient';
 
 export const CinemasPage = () => {
@@ -128,49 +126,7 @@ export const CinemasPage = () => {
   return (
     <div className="min-h-screen pb-24 text-foreground">
       {/* ─── HERO BANNER SECTION ───────────────────────────────────── */}
-      <section className="relative isolate overflow-hidden pt-6 pb-10 sm:pt-8 sm:pb-14">
-        {/* Atmospheric Glow */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 -z-20 bg-gradient-to-b from-primary-950/20 via-neutral-950 to-background opacity-60 blur-3xl"
-        />
-        <div
-          className="absolute inset-0 -z-10 bg-gradient-to-b from-background/40 via-background/80 to-background"
-          aria-hidden="true"
-        />
-
-        <div className="container-main">
-          {/* Main Hero Card */}
-          <div className="relative mx-auto w-full max-w-6xl overflow-hidden rounded-3xl border border-white/10 bg-zinc-950/80 shadow-[0_24px_80px_rgba(0,0,0,0.6)] backdrop-blur-md">
-            <BannerCarousel
-              section="CINEMA"
-              heightClass="aspect-[21/9] sm:aspect-[2.4/1] w-full min-h-[300px]"
-              roundedClass="rounded-none"
-              showCaptions={true}
-            />
-
-            {/* Quick Experience Badges Bar */}
-            <div className="grid grid-cols-2 divide-x divide-y sm:divide-y-0 sm:grid-cols-4 divide-white/10 border-t border-white/10 bg-zinc-900/60 p-3 sm:p-4 text-xs font-medium text-zinc-300">
-              <div className="flex items-center justify-center gap-2 py-2 px-3">
-                <Tv className="h-4 w-4 text-[var(--primary)]" />
-                <span>IMAX &amp; Laser 4K</span>
-              </div>
-              <div className="flex items-center justify-center gap-2 py-2 px-3">
-                <Volume2 className="h-4 w-4 text-[var(--primary)]" />
-                <span>Dolby Atmos Sound</span>
-              </div>
-              <div className="flex items-center justify-center gap-2 py-2 px-3">
-                <Building2 className="h-4 w-4 text-[var(--primary)]" />
-                <span>VIP &amp; Premiere Lounges</span>
-              </div>
-              <div className="flex items-center justify-center gap-2 py-2 px-3">
-                <Film className="h-4 w-4 text-[var(--primary)]" />
-                <span>Online Reserved Seating</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <MarketingBannerStage section="CINEMA" autoPlayInterval={6000} showCaptions={false} />
 
       {/* ─── CINEMA DISCOVERY & LOCATIONS SECTION ───────────────────── */}
       <section className="container-main">

@@ -16,7 +16,7 @@ export const ShowtimeEmptyState = ({ type, cinemaName, selectedDate, errorMessag
   const formatDay = (date: string) => new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }).format(new Date(`${date}T12:00:00Z`));
   const Icon = type === 'ERROR' ? AlertCircle : type === 'FILTER_EMPTY' ? FilterX : Calendar;
   return (
-    <div className="rounded-2xl border border-border bg-card px-6 py-14 text-center text-card-foreground" role={type === 'ERROR' ? 'alert' : 'status'}>
+    <div className="flex min-h-[220px] flex-col items-center justify-center rounded-2xl border border-border bg-card px-6 py-10 text-center text-card-foreground sm:px-10" role={type === 'ERROR' ? 'alert' : 'status'}>
       <Icon className="mx-auto mb-4 h-9 w-9 text-[var(--primary)]" />
       <h3 className="text-xl font-bold tracking-tight text-foreground">{type === 'ERROR' ? 'Screenings could not be loaded' : type === 'FILTER_EMPTY' ? 'No screenings match your search' : 'No upcoming screenings on this day'}</h3>
       <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">{type === 'ERROR' ? errorMessage || 'Please try refreshing the listings.' : type === 'FILTER_EMPTY' ? `Try a different movie, format, or time at ${cinemaName} on ${formatDay(selectedDate)}.` : `There are no bookable screenings at ${cinemaName} on ${formatDay(selectedDate)}. Choose another date or explore other cinemas.`}</p>
