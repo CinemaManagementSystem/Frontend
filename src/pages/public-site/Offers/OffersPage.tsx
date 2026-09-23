@@ -6,10 +6,10 @@ import { productCategoryService } from '@/services/productCategoryService';
 import { useAuthStore } from '@/store/authStore';
 import { useCinemaStore } from '@/store/cinemaStore';
 import { formatCurrency } from '@/utils/formatDate';
+import { BannerCarousel } from '@/components/common/BannerCarousel';
 import type { Product } from '@/types/product';
 import type { ProductCategory } from '@/types/productCategory';
 import { SnackImage } from '../Booking/SnackImage';
-import popcornBanner from '@/assets/banner/image copy 3.png';
 
 const SAVED_ITEMS_KEY = 'cinematique_saved_menu_items_v1';
 const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background';
@@ -51,6 +51,14 @@ export function OffersPage() {
 
   useEffect(() => {
     let cancelled = false;
+    if (!isAuthenticated) {
+      setProducts([]);
+      setCategories([]);
+      setLoadFailed(false);
+      setLoading(false);
+      return () => { cancelled = true; };
+    }
+
     setLoading(true); setLoadFailed(false);
     void Promise.all([productService.list(), productCategoryService.list()])
       .then(([nextProducts, nextCategories]) => {
@@ -62,7 +70,7 @@ export function OffersPage() {
       .catch(() => { if (!cancelled) { setProducts([]); setCategories([]); setLoadFailed(true); } })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [refresh]);
+  }, [isAuthenticated, refresh]);
 
   const categoryMap = useMemo(() => new Map(categories.map((category) => [category.id, category])), [categories]);
   const menuCategories = categories.filter((category) => products.some((product) => product.productCategoryId === category.id));
@@ -72,7 +80,6 @@ export function OffersPage() {
     return products.filter((product) => (!savedOnly || savedIds.includes(product.id)) && (categoryId === 'all' || String(product.productCategoryId) === categoryId) && (!term || `${product.name} ${categoryMap.get(product.productCategoryId)?.name || ''}`.toLowerCase().includes(term)))
       .sort((first, second) => sort === 'price-low' ? first.price - second.price || first.name.localeCompare(second.name) : sort === 'price-high' ? second.price - first.price || first.name.localeCompare(second.name) : first.name.localeCompare(second.name));
   }, [products, savedOnly, savedIds, categoryId, query, sort, categoryMap]);
-  const heroImage = isFoodPage ? popcornBanner : products.find((product) => product.imageUrl)?.imageUrl || null;
 
   function toggleSaved(product: Product) {
     const alreadySaved = savedIds.includes(product.id);
@@ -83,28 +90,14 @@ export function OffersPage() {
   }
   function resetFilters() { setQuery(''); setCategoryId('all'); setSavedOnly(false); }
 
-  const heroTitle = isFoodPage ? 'Food & Beverage' : 'Promotions';
-  const heroCopy = isFoodPage ? 'Enjoyable movie experiences with the best food selections and our best-selling popcorn.' : 'More ways to enjoy the big screen. Discover current cinema offers and member savings.';
-
   return (
     <div className="min-h-screen bg-background pb-20 text-foreground">
-      <section className="relative isolate overflow-hidden bg-transparent py-4 sm:py-6">
-        {heroImage && <div aria-hidden="true" className="absolute inset-0 -z-10 scale-110 bg-cover bg-center opacity-40 blur-3xl" style={{ backgroundImage: `url(${heroImage})` }} />}
-        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-b from-transparent via-background/55 to-background" />
-        <div className="container-main">
-          <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#7d0009] via-[#1b060b] to-black shadow-[0_20px_60px_rgba(0,0,0,0.35)] sm:aspect-[16/6]">
-            {heroImage && <img src={heroImage} alt="" className="absolute inset-0 h-full w-full object-cover object-center opacity-95 saturate-110" />}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/88 via-black/42 to-black/5" />
-            <div className="relative flex h-full max-w-[520px] flex-col justify-center px-6 py-8 sm:px-10 lg:px-16">
-              <span className="mb-3 inline-flex w-fit items-center gap-2 rounded-full border border-red-400/50 bg-red-950/30 px-4 py-1.5 text-xs font-semibold tracking-[0.2em] text-white"><Ticket className="h-3.5 w-3.5" aria-hidden="true" />Legend Cinema</span>
-              <h1 className="text-4xl font-extrabold leading-[0.95] text-white drop-shadow-[0_4px_18px_rgba(0,0,0,.45)] sm:text-5xl lg:text-6xl">{heroTitle}</h1>
-              <p className="mt-5 max-w-md text-base leading-relaxed text-white/78 sm:text-lg">{heroCopy}</p>
-              <a href="#food-menu" className={`${PRIMARY_BUTTON} mt-6 w-fit`}>{isFoodPage ? 'Browse menu' : 'View promotions'} <ArrowRight className="h-4 w-4" aria-hidden="true" /></a>
-            </div>
-          </div>
-          <div className="mt-4 flex justify-center gap-1.5" aria-hidden="true"><span className="h-1.5 w-8 rounded-full bg-primary" /><span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/30" /><span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/30" /><span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/30" /></div>
-        </div>
-      </section>
+      <BannerCarousel
+        section={isFoodPage ? 'FNB' : 'OFFER'}
+        roundedClass="rounded-none"
+        heightClass="h-[300px] sm:h-[380px] md:h-[440px]"
+        autoPlayInterval={6000}
+      />
 
       <main className="container-main">
         {isFoodPage && isAuthenticated && <section className="pt-8" aria-labelledby="cinema-title"><div className="mb-4 flex items-end justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-primary">Pick up at</p><h2 id="cinema-title" className="mt-1 text-2xl font-black sm:text-3xl text-foreground">Choose Cinema</h2></div><Link to="/cinemas" className={`hidden items-center gap-2 text-xs font-bold text-primary sm:inline-flex ${FOCUS}`}>View locations <ArrowRight className="h-3.5 w-3.5" /></Link></div><div className="grid gap-2 sm:grid-cols-2">{cinemas.slice(0, 12).map((cinema) => <button type="button" key={cinema.id} onClick={() => selectCinema(cinema.id)} className={`flex items-center gap-3 rounded-lg border px-2.5 py-2 text-left transition ${selectedCinemaId === cinema.id ? 'border-primary bg-primary/10' : 'border-border bg-card hover:border-primary/60'} ${FOCUS}`}><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-red-500/80 to-orange-400/60 text-white"><MapPin className="h-4 w-4" /></span><span className="min-w-0 flex-1 truncate text-xs font-bold text-foreground">{cinema.name}</span><ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" /></button>)}{cinemas.length === 0 && <Link to="/cinemas" className={`rounded-lg border border-dashed border-border px-4 py-5 text-sm text-muted-foreground ${FOCUS}`}>Browse available cinema locations <ArrowRight className="ml-1 inline h-4 w-4" /></Link>}</div></section>}

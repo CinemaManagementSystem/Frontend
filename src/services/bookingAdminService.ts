@@ -12,8 +12,10 @@ export const bookingAdminService = {
     return data;
   },
 
-  async create(payload: ApiBookingInput): Promise<ApiBooking> {
-    const { data } = await apiClient.post<ApiBooking>('/bookings', payload);
+  async create(payload: ApiBookingInput, idempotencyKey?: string): Promise<ApiBooking> {
+    const { data } = await apiClient.post<ApiBooking>('/bookings', payload, {
+      headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : undefined,
+    });
     return data;
   },
 

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Building2, CheckCircle2, CircleAlert, Wrench } from 'lucide-react';
+import { Building2, CheckCircle2, CircleAlert, ImageOff, Wrench } from 'lucide-react';
 import {
   CrudTable,
   CrudColumn,
@@ -20,6 +20,19 @@ const STATUS_OPTIONS = [
 ];
 
 const columns: CrudColumn<Theater>[] = [
+  {
+    key: 'imageUrl',
+    header: 'Image',
+    render: (row) => (
+      <div className="flex h-12 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted">
+        {row.imageUrl ? (
+          <img src={row.imageUrl} alt={row.name} className="h-full w-full object-cover" />
+        ) : (
+          <ImageOff className="h-4 w-4 text-muted-foreground" />
+        )}
+      </div>
+    ),
+  },
   { key: 'name', header: 'Name' },
   { key: 'address', header: 'Address' },
   { key: 'phone', header: 'Phone' },
@@ -45,12 +58,13 @@ const columns: CrudColumn<Theater>[] = [
 
 function toInput(values: Record<string, CrudValue>): TheaterInput {
   return {
-    name: String(values.name ?? ''),
-    address: String(values.address ?? ''),
-    phone: String(values.phone ?? ''),
+    name: String(values.name ?? '').trim(),
+    address: String(values.address ?? '').trim(),
+    phone: String(values.phone ?? '').trim(),
     status: String(values.status ?? 'OPEN'),
     locationId: Number(values.locationId ?? 0),
     managerId: Number(values.managerId ?? 0),
+    imageUrl: values.imageUrl ? String(values.imageUrl).trim() : null,
   };
 }
 
@@ -115,6 +129,12 @@ export const TheatersPage: React.FC = () => {
       type: 'number',
       placeholder: 'User id of the theater manager',
       required: true,
+    },
+    {
+      name: 'imageUrl',
+      label: 'Image URL',
+      placeholder: 'https://... or hosted image URL',
+      required: false,
     },
   ];
 

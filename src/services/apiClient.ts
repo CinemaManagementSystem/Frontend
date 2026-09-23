@@ -13,6 +13,7 @@ const PUBLIC_GET_PATHS = [
   '/theaters',
   '/movie-category',
   '/memberships/plans',
+  '/banners',
 ];
 export const apiBaseUrl = import.meta.env.VITE_API_URL?.trim() || '/api';
 
@@ -126,15 +127,85 @@ apiClient.interceptors.response.use(
   },
 );
 
-const getPayloadMessage = (payload: unknown): string | undefined => {
-  if (typeof payload === 'string' && payload.trim()) return payload;
-  if (!isRecord(payload)) return undefined;
-  if (typeof payload.message === 'string' && payload.message.trim()) return payload.message;
-  if (typeof payload.error === 'string' && payload.error.trim()) return payload.error;
-  if (Array.isArray(payload.errors)) {
-    const messages = payload.errors.filter((item): item is string => typeof item === 'string');
-    if (messages.length) return messages.join(', ');
+const GENERIC_SERVER_MESSAGES = new Set([
+  'bad request',
+  'unauthorized',
+  'forbidden',
+  'not found',
+  'internal server error',
+]);
+const PRIMARY_MESSAGE_KEYS = ['message', 'detail', 'title', 'reason'];
+const ERROR_COLLECTION_KEYS = ['errors', 'fieldErrors', 'validationErrors', 'violations'];
+const STANDARD_RESPONSE_KEYS = new Set([
+  'timestamp',
+  'status',
+  'error',
+  'message',
+  'detail',
+  'title',
+  'reason',
+  'path',
+  'trace',
+  'requestId',
+]);
+
+const isUsefulMessage = (value: string): boolean => {
+  const message = value.trim();
+  return Boolean(message) && !message.startsWith('<');
+};
+
+const addMessage = (messages: string[], value: unknown, options?: { allowGeneric?: boolean }) => {
+  if (typeof value !== 'string' || !isUsefulMessage(value)) return;
+  const message = value.trim();
+  if (!options?.allowGeneric && GENERIC_SERVER_MESSAGES.has(message.toLowerCase())) return;
+  if (!messages.includes(message)) messages.push(message);
+};
+
+const collectNestedMessages = (value: unknown, messages: string[], depth = 0) => {
+  if (depth > 4) return;
+  if (typeof value === 'string') {
+    addMessage(messages, value);
+    return;
   }
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectNestedMessages(item, messages, depth + 1));
+    return;
+  }
+  if (!isRecord(value)) return;
+
+  PRIMARY_MESSAGE_KEYS.forEach((key) => addMessage(messages, value[key]));
+  ERROR_COLLECTION_KEYS.forEach((key) => collectNestedMessages(value[key], messages, depth + 1));
+
+  Object.entries(value).forEach(([key, nestedValue]) => {
+    if (STANDARD_RESPONSE_KEYS.has(key) || ERROR_COLLECTION_KEYS.includes(key)) return;
+    collectNestedMessages(nestedValue, messages, depth + 1);
+  });
+};
+
+const getPayloadMessage = (payload: unknown): string | undefined => {
+  if (typeof payload === 'string') return isUsefulMessage(payload) ? payload.trim() : undefined;
+  if (!isRecord(payload)) return undefined;
+
+  const messages: string[] = [];
+  PRIMARY_MESSAGE_KEYS.forEach((key) => addMessage(messages, payload[key]));
+  ERROR_COLLECTION_KEYS.forEach((key) => collectNestedMessages(payload[key], messages));
+
+  Object.entries(payload).forEach(([key, value]) => {
+    if (STANDARD_RESPONSE_KEYS.has(key) || ERROR_COLLECTION_KEYS.includes(key)) return;
+    collectNestedMessages(value, messages);
+  });
+
+  if (!messages.length) addMessage(messages, payload.error, { allowGeneric: false });
+  return messages.length ? messages.join(', ') : undefined;
+};
+
+const getStatusFallbackMessage = (status: number | undefined, operation: string): string | undefined => {
+  if (status === 400) return `Please check the ${operation} details and try again.`;
+  if (status === 401 && operation === 'sign in') {
+    return 'Invalid username/email or password. Please check your credentials and try again.';
+  }
+  if (status === 401) return 'Your sign-in is invalid or has expired. Please sign in again.';
+  if (status === 403) return 'You do not have permission to complete this request.';
   return undefined;
 };
 
@@ -149,7 +220,16 @@ export const getApiErrorMessage = (error: unknown, operation = 'request'): strin
     if (!error.response) {
       return `Unable to connect to the API. Make sure the backend is running at ${apiBaseUrl}.`;
     }
+    const statusFallback = getStatusFallbackMessage(error.response.status, operation);
+    if (statusFallback) return statusFallback;
     if (error.message) return error.message;
+  }
+  if (isRecord(error) && isRecord(error.response)) {
+    const response = error.response as { status?: number; data?: unknown };
+    const responseMessage = getPayloadMessage(response.data);
+    if (responseMessage) return responseMessage;
+    const statusFallback = getStatusFallbackMessage(response.status, operation);
+    if (statusFallback) return statusFallback;
   }
   if (error instanceof Error && error.message.trim()) return error.message;
   return `Unable to complete ${operation}. Please try again.`;

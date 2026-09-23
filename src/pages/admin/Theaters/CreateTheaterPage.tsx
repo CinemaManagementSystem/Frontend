@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { Building2, Gauge, Info, Link2 } from 'lucide-react';
+import { Building2, Gauge, ImagePlus, Info, Link2 } from 'lucide-react';
 import { CreateEntityPage, CreateFieldValue } from '@/components/admin/CreatePage/CreateEntityPage';
 import { useTheaterStore } from '@/store/theaterStore';
 import { useLocationStore } from '@/store/locationStore';
@@ -21,6 +21,7 @@ export const CreateTheaterPage: React.FC = () => {
       status: String(values.status ?? 'OPEN'),
       locationId: Number(values.locationId ?? 0),
       managerId: Number(values.managerId ?? 0),
+      imageUrl: values.imageUrl ? String(values.imageUrl).trim() : null,
     };
     await create(payload);
   };
@@ -85,6 +86,22 @@ export const CreateTheaterPage: React.FC = () => {
               type: 'number',
               placeholder: 'User id of the theater manager',
               required: true,
+            },
+          ],
+        },
+        {
+          title: 'Media & Branding',
+          description: 'Cinema exterior or hall photo displayed on the discovery page.',
+          icon: ImagePlus,
+          fields: [
+            {
+              name: 'imageUrl',
+              label: 'Theater Image URL',
+              type: 'imageUrl',
+              placeholder: 'https://images.unsplash.com/... or public image URL',
+              required: false,
+              spanFull: true,
+              helper: 'Provide a high-quality landscape photo of the theater branch.',
             },
           ],
         },

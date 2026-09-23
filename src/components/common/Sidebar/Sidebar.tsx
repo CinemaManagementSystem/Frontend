@@ -24,6 +24,7 @@ import {
   Settings,
   ChevronDown,
   ShieldCheck,
+  Images,
   type LucideIcon,
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
@@ -117,6 +118,7 @@ export const Sidebar: React.FC = () => {
     {
       label: "Administration",
       items: [
+        { name: "Banners", path: "/admin/banners", icon: Images },
         { name: "Users", path: "/admin/users", icon: Users },
         { name: "Security Page", path: "/admin/security", icon: ShieldCheck },
       ],

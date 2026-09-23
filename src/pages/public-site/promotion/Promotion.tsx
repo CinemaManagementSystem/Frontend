@@ -1,8 +1,6 @@
 import { ArrowRight, Gift, MapPin, Ticket } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
-import { HeroCarousel } from '@/components/common/HeroCarousel/HeroCarousel';
-import { useHeroBackdrop } from '@/context/HeroBackdropContext';
+import { BannerCarousel } from '@/components/common/BannerCarousel';
 
 const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black';
 
@@ -63,34 +61,18 @@ export const PROMOTIONS = [
   },
 ] as const;
 
-const HEROES = [PROMOTIONS[2], PROMOTIONS[0], PROMOTIONS[4]];
-
 export default function Promotion() {
-  const navigate = useNavigate();
-  const { setCurrentImage } = useHeroBackdrop();
-  const heroSlides = HEROES.map((hero) => ({
-    id: hero.id,
-    image: hero.image,
-    fallbackImage: hero.image,
-    title: hero.title,
-    description: hero.description,
-    badge: 'LEGEND CINEMA',
-    buttonText: hero.action,
-    buttonHref: hero.to,
-    showContent: true,
-  }));
-
   return (
     <div className="min-h-screen bg-background pb-20 text-foreground">
-      <HeroCarousel
-        slides={heroSlides}
+      <BannerCarousel
+        section="OFFER"
+        className="container-main py-4 sm:py-6"
+        heightClass="aspect-[16/9] min-h-[260px] sm:aspect-[16/6] sm:min-h-[360px]"
+        roundedClass="rounded-2xl"
         autoPlayInterval={7000}
-        onActiveImageChange={setCurrentImage}
-        onSlideAction={(slide) => slide.buttonHref && navigate(slide.buttonHref)}
-        showArrows
       />
 
-        <main className="container-main">
+      <main className="container-main">
         <div className="flex flex-col justify-between gap-3 pt-10 sm:flex-row sm:items-end"><div><p className="text-[10px] font-bold uppercase tracking-[.22em] text-[var(--primary)]">Make more of your visit</p><h2 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl text-foreground">Promotions</h2></div><Link to="/cinemas" className={`inline-flex items-center gap-2 text-xs font-bold text-[var(--primary)] ${FOCUS}`}><MapPin className="h-4 w-4" /> Find a cinema</Link></div>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{PROMOTIONS.map((promotion) => <Link key={promotion.id} to={`/promotion/${promotion.id}`} className={`group block overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-lg transition hover:-translate-y-1 hover:border-[var(--primary)]/60 ${FOCUS}`}><article><div className="relative aspect-[1.6/1] overflow-hidden bg-black/20"><img src={promotion.image} alt="" loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" /><div className={`absolute inset-0 bg-gradient-to-t ${promotion.tone} opacity-45 mix-blend-multiply`} /><div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent" /></div><div className="p-4"><div className="flex items-start gap-2"><Gift className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" /><div><h3 className="text-sm font-bold leading-5 text-foreground">{promotion.title}</h3><p className="mt-1.5 text-xs leading-5 text-muted-foreground">{promotion.description}</p></div></div><span className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-[var(--primary)]">View promotion <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" /></span></div></article></Link>)}</div>
         <section className="mt-12 flex flex-col justify-between gap-5 rounded-2xl border border-border bg-card p-6 sm:flex-row sm:items-center sm:p-8 text-card-foreground"><div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[var(--primary)]">Ready for your next visit?</p><h2 className="mt-2 text-2xl font-black text-foreground">Choose a movie and make it yours.</h2><p className="mt-2 max-w-lg text-sm leading-6 text-muted-foreground">Find a cinema, select your seats, and add snacks before checkout.</p></div><Link to="/cinemas" className={`inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[var(--primary)] px-5 py-3 text-sm font-bold text-white hover:brightness-110 ${FOCUS}`}><Ticket className="h-4 w-4" /> View showtimes</Link></section>

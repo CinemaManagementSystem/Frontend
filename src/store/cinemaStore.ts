@@ -17,6 +17,7 @@ export interface CinemaLocation {
   googleMapsUrl: string | null;
   latitude: number | null;
   longitude: number | null;
+  imageUrl?: string | null;
 }
 
 interface CinemaState {
@@ -71,6 +72,7 @@ export function joinCinemaLocations(theaters: Theater[], locations: Location[]):
       googleMapsUrl: safeMapUrl(location?.googleMapsUrl),
       latitude: location && Number.isFinite(location.latitude) ? location.latitude : null,
       longitude: location && Number.isFinite(location.longitude) ? location.longitude : null,
+      imageUrl: theater.imageUrl?.trim() || null,
     };
   });
 }

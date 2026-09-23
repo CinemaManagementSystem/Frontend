@@ -60,6 +60,7 @@ import { UsersPage } from '@/pages/admin/Users/UsersPage';
 import { CreateUserPage } from '@/pages/admin/Users/CreateUserPage';
 import { AuditLogsPage } from '@/pages/admin/AuditLogs/AuditLogsPage';
 import { SettingsPage as AdminSettingsPage } from '@/pages/admin/Settings';
+import { BannersPage } from '@/pages/admin/Banners/BannersPage';
 import { MembershipPlansPage } from '@/pages/admin/Memberships/MembershipPlansPage';
 import { MembershipMembersPage } from '@/pages/admin/Memberships/MembershipMembersPage';
 import { PromotionsPage } from '@/pages/admin/Promotions/PromotionsPage';
@@ -184,6 +185,7 @@ export const AppRoutes: React.FC = () => {
           <Route path="promotions/create" element={<PromotionFormPage />} />
           <Route path="promotions/:promotionId" element={<PromotionDetailPage />} />
           <Route path="promotions/:promotionId/edit" element={<PromotionFormPage />} />
+          <Route path="banners" element={<BannersPage />} />
           <Route path="membership-plans" element={<MembershipPlansPage />} />
           <Route path="membership-members" element={<MembershipMembersPage />} />
           <Route path="users" element={<UsersPage />} />

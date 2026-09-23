@@ -10,8 +10,8 @@ import { DateSelector, type DateItem } from './components/DateSelector';
 import { ShowtimeEmptyState } from './components/ShowtimeEmptyState';
 import { ShowtimeResults } from './components/ShowtimeResults';
 import { ShowtimeSkeleton } from './components/ShowtimeSkeleton';
+import { BannerCarousel } from '@/components/common/BannerCarousel';
 import type { Showtime } from '@/types/movie';
-import cinemaBanner from '@/assets/banner-cinema/cinema_banner.png';
 
 type DetailTab = 'SHOWING' | 'DETAIL';
 
@@ -101,13 +101,21 @@ export const CinemaDetailPage = () => {
   return (
     <div className="min-h-screen pb-20 text-foreground">
       <section className="relative isolate overflow-hidden pb-5 pt-8 sm:pt-10">
-        <div aria-hidden="true" className="absolute inset-0 -z-20 scale-125 bg-cover bg-center opacity-35 blur-3xl" style={{ backgroundImage: `url(${cinemaBanner})` }} />
+        <div aria-hidden="true" className="absolute inset-0 -z-20 bg-gradient-to-b from-red-950/25 via-background/70 to-background blur-3xl" />
         <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-b from-background/30 via-background/55 to-background" />
         <div className="container-main">
           <div className="mx-auto max-w-5xl">
             <Link to="/cinemas" className="mb-4 inline-flex items-center gap-2 text-xs font-semibold text-white/70 transition hover:text-white"><ArrowLeft className="h-4 w-4" />All cinemas</Link>
             <div className="relative aspect-[16/7] overflow-hidden rounded-2xl border border-white/10 bg-black shadow-[0_24px_70px_rgba(0,0,0,.5)]">
-              <img src={cinemaBanner} alt="" className="absolute inset-0 h-full w-full object-cover object-center" aria-hidden="true" />
+              <BannerCarousel
+                section="CINEMA"
+                className="absolute inset-0 border-0 shadow-none"
+                heightClass="h-full"
+                roundedClass="rounded-none"
+                autoPlayInterval={6000}
+                showArrows={false}
+                showCaptions={false}
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-transparent" aria-hidden="true" />
               <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7">
                 <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">

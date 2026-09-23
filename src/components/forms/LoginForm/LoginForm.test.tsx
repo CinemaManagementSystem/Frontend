@@ -59,4 +59,23 @@ describe('login return destination', () => {
     expect(await screen.findByText('Incorrect password')).toBeInTheDocument();
     expect(screen.queryByTestId('destination')).not.toBeInTheDocument();
   });
+
+  it('shows a clear form alert for invalid credentials', async () => {
+    login.mockRejectedValue({ response: { status: 401, data: { message: 'Unauthorized' } } });
+    openLogin();
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Invalid username/email or password. Please check your credentials and try again.',
+    );
+    expect(screen.queryByTestId('destination')).not.toBeInTheDocument();
+  });
+
+  it('clears the credential alert when the user edits either field', async () => {
+    login.mockRejectedValue({ response: { status: 401 } });
+    openLogin();
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Username or Email'), { target: { value: 'admin' } });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
 });

@@ -286,7 +286,7 @@ export const DashboardLayout: React.FC = () => {
           </div>
         </header>
 
-        <main className="flex-1 p-6 overflow-y-auto relative overflow-x-hidden">
+        <main className="relative flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-6">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
@@ -294,7 +294,7 @@ export const DashboardLayout: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -6 }}
               transition={{ duration: 0.15, ease: 'easeInOut' }}
-              className="w-full"
+              className="mx-auto w-full max-w-7xl min-w-0"
             >
               <Outlet />
             </motion.div>

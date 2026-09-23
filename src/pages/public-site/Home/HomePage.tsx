@@ -4,8 +4,6 @@ import {
   ArrowRight,
   Calendar,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   Coffee,
   Crown,
   Film,
@@ -16,7 +14,8 @@ import {
 import { useMovieStore } from '@/store/movieStore';
 import { useCinemaStore } from '@/store/cinemaStore';
 import { useSettingsStore } from '@/store/settingsStore';
-import { HeroCarousel } from '@/components/common/HeroCarousel/HeroCarousel';
+import { useAuthStore } from '@/store/authStore';
+import { BannerCarousel } from '@/components/common/BannerCarousel';
 import { SectionTabs } from '@/components/common/SectionTabs/SectionTabs';
 import { DateSelector } from '@/components/common/DateSelector/DateSelector';
 import { MovieGrid } from '@/components/common/MovieGrid/MovieGrid';
@@ -26,59 +25,9 @@ import { useHeroBackdrop } from '@/context/HeroBackdropContext';
 import { productService } from '@/services/productService';
 import type { FnbItem } from '@/types/product';
 import { FeaturedFnbPreview } from './components/FeaturedFnbPreview';
-import septemberBanner from '@/assets/banner/image.png';
-import grabBanner from '@/assets/banner/image copy.png';
-import goldClassBanner from '@/assets/banner/image copy 2.png';
-import popcornBanner from '@/assets/banner/image copy 3.png';
 import { useTranslation } from '@/i18n';
 
 type ListingTab = 'NOW_SHOWING' | 'COMING_SOON';
-
-const HOME_BANNER_SLIDES = [
-  { id: 'home-september-special', image: septemberBanner, fallbackImage: septemberBanner, title: 'September Special' },
-  { id: 'home-grab-delivery', image: grabBanner, fallbackImage: grabBanner, title: 'Grab Delivery Promotion' },
-  { id: 'home-gold-class', image: goldClassBanner, fallbackImage: goldClassBanner, title: 'Gold Class Ticket Package' },
-  { id: 'home-big-bucket', image: popcornBanner, fallbackImage: popcornBanner, title: 'Big Bucket Free Drink' },
-];
-
-const WHATS_NEW_PROMOS = [
-  {
-    id: 'big-bucket-free-drink',
-    image: popcornBanner,
-    kicker: 'Food and drinks',
-    title: 'Big Bucket, Free Drink',
-    description: 'Grab the premium popcorn bucket and get a refreshing Coke for your movie night.',
-    cta: 'Learn more',
-    to: '/fnb',
-  },
-  {
-    id: 'september-special',
-    image: septemberBanner,
-    kicker: 'Limited offer',
-    title: 'September Special',
-    description: 'Fresh ticket and snack offers are ready for your next cinema visit.',
-    cta: 'View offers',
-    to: '/promotion',
-  },
-  {
-    id: 'grab-delivery-promotion',
-    image: grabBanner,
-    kicker: 'Delivery perk',
-    title: 'Grab Delivery Promotion',
-    description: 'Plan snacks and cinema treats with our newest delivery-friendly promotion.',
-    cta: 'Explore deal',
-    to: '/promotion',
-  },
-  {
-    id: 'gold-class-ticket-package',
-    image: goldClassBanner,
-    kicker: 'Premium experience',
-    title: 'Gold Class Ticket Package',
-    description: 'Upgrade the night with a more comfortable premium cinema package.',
-    cta: 'Discover',
-    to: '/premiere',
-  },
-];
 
 const dateFormatter = (date: string, options: Intl.DateTimeFormatOptions) =>
   new Intl.DateTimeFormat('en-US', { ...options, timeZone: 'UTC' }).format(new Date(`${date}T12:00:00Z`));
@@ -92,13 +41,13 @@ export const HomePage: React.FC = () => {
   const { movies, showtimes, searchQuery, fetchCatalog, loading, error } = useMovieStore();
   const { cinemas, selectedCinemaId, selectCinema } = useCinemaStore();
   const language = useSettingsStore((state) => state.language);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   const [activeListingTab, setActiveListingTab] = useState<ListingTab>('NOW_SHOWING');
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('');
   const [featuredFnb, setFeaturedFnb] = useState<FnbItem[]>([]);
   const [fnbLoading, setFnbLoading] = useState(true);
-  const [activePromoIndex, setActivePromoIndex] = useState(0);
 
   // Quick booking widget state
   const [quickMovieId, setQuickMovieId] = useState('');
@@ -109,6 +58,14 @@ export const HomePage: React.FC = () => {
 
   useEffect(() => {
     let cancelled = false;
+    if (!isAuthenticated) {
+      setFeaturedFnb([]);
+      setFnbLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+
     setFnbLoading(true);
     productService
       .getFeaturedFnbItems(6)
@@ -125,7 +82,7 @@ export const HomePage: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isAuthenticated]);
 
   const today = getCinemaDate();
 
@@ -219,7 +176,6 @@ export const HomePage: React.FC = () => {
     () => movies.filter((m) => m.status === 'COMING_SOON').length,
     [movies],
   );
-  const activePromo = WHATS_NEW_PROMOS[activePromoIndex];
 
   // Quick Find CTA
   const handleQuickFind = () => {
@@ -231,20 +187,15 @@ export const HomePage: React.FC = () => {
     }
   };
 
-  const showPreviousPromo = () => {
-    setActivePromoIndex((current) => (current === 0 ? WHATS_NEW_PROMOS.length - 1 : current - 1));
-  };
-
-  const showNextPromo = () => {
-    setActivePromoIndex((current) => (current + 1) % WHATS_NEW_PROMOS.length);
-  };
-
   return (
     <div className="home-page min-h-screen overflow-hidden bg-background pb-20 text-foreground">
       {/* 1. Hero Carousel */}
-      <HeroCarousel
-        slides={HOME_BANNER_SLIDES}
+      <BannerCarousel
+        section="HOME"
         autoPlayInterval={5000}
+        heightClass="aspect-[16/9] min-h-[260px] sm:aspect-[16/6] sm:min-h-[360px]"
+        roundedClass="rounded-2xl"
+        className="container-main py-4 sm:py-6"
         onActiveImageChange={setCurrentImage}
       />
 
@@ -259,7 +210,7 @@ export const HomePage: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-[1fr_1.2fr_1fr_auto] gap-3 items-center">
             {/* Step 1: Select Cinema */}
             <div className="relative">
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+              <label className="block text-[10px] font-bold upp  tracking-wider text-muted-foreground mb-1">
                 1. Select Cinema
               </label>
               <div className="relative flex items-center">
@@ -283,7 +234,7 @@ export const HomePage: React.FC = () => {
 
             {/* Step 2: Select Movie */}
             <div className="relative">
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+              <label className="block text-[10px] font-bold tracking-wider text-muted-foreground mb-1">
                 2. Select Movie
               </label>
               <div className="relative flex items-center">
@@ -495,69 +446,14 @@ export const HomePage: React.FC = () => {
           <h2 id="whats-new-title" className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
             What's new?
           </h2>
-          <div className="hidden items-center gap-2 sm:flex">
-            <button
-              type="button"
-              onClick={showPreviousPromo}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-card/80 text-muted-foreground transition hover:border-[#E50914]/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914]"
-              aria-label="Previous promotion"
-            >
-              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              onClick={showNextPromo}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-card/80 text-muted-foreground transition hover:border-[#E50914]/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E50914]"
-              aria-label="Next promotion"
-            >
-              <ChevronRight className="h-4 w-4" aria-hidden="true" />
-            </button>
-          </div>
         </div>
 
-        <article className="group relative min-h-[330px] overflow-hidden rounded-2xl border border-white/10 bg-[#320006] shadow-2xl shadow-black/50 sm:min-h-[390px]">
-          <img
-            src={activePromo.image}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover object-center transition duration-500 group-hover:scale-[1.02]"
-            aria-hidden="true"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#9f0009] via-[#9f0009]/75 to-black/10" aria-hidden="true" />
-          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/45 to-transparent" aria-hidden="true" />
-
-          <div className="relative z-10 flex min-h-[330px] max-w-lg flex-col justify-center px-6 py-8 sm:min-h-[390px] sm:px-10 lg:px-12">
-            <p className="text-xs font-black uppercase tracking-[0.24em] text-white/75">{activePromo.kicker}</p>
-            <h3 className="mt-3 max-w-sm text-3xl font-black leading-tight tracking-tight text-white sm:text-4xl">
-              {activePromo.title}
-            </h3>
-            <p className="mt-4 max-w-sm text-sm font-medium leading-6 text-white/85 sm:text-base">
-              {activePromo.description}
-            </p>
-            <button
-              type="button"
-              onClick={() => navigate(activePromo.to)}
-              className="mt-7 inline-flex h-12 w-fit items-center justify-center gap-2 rounded-full bg-white px-7 text-sm font-black text-[#c00012] transition hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#9f0009]"
-            >
-              {activePromo.cta}
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </button>
-          </div>
-        </article>
-
-        <div className="mt-4 flex items-center justify-center gap-2">
-          {WHATS_NEW_PROMOS.map((promo, index) => (
-            <button
-              key={promo.id}
-              type="button"
-              onClick={() => setActivePromoIndex(index)}
-              className={`h-2 rounded-full transition-all ${
-                index === activePromoIndex ? 'w-12 bg-white' : 'w-2 bg-white/35 hover:bg-white/60'
-              }`}
-              aria-label={`Show ${promo.title}`}
-              aria-pressed={index === activePromoIndex}
-            />
-          ))}
-        </div>
+        <BannerCarousel
+          section="OFFER"
+          heightClass="aspect-[2.35/1] min-h-[260px] sm:min-h-[340px]"
+          roundedClass="rounded-2xl"
+          autoPlayInterval={6000}
+        />
       </section>
     </div>
   );

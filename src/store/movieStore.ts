@@ -71,7 +71,7 @@ export const useMovieStore = create<MovieState>((set, get) => ({
           movieAdminService.list(),
           showService.list(),
           authenticated ? seatService.list().catch(() => []) : Promise.resolve([]),
-          screenService.list().catch(() => []),
+          authenticated ? screenService.list().catch(() => []) : Promise.resolve([]),
           theaterService.list(),
         ]);
         const movies = apiMovies.map(toMovie);
@@ -113,7 +113,7 @@ export const useMovieStore = create<MovieState>((set, get) => ({
             occupiedSeats,
           };
         });
-        set({ movies, showtimes, catalogRequiresSignIn: false, error: null });
+        set({ movies, showtimes, catalogRequiresSignIn: !authenticated, error: null });
       } catch (error) {
         set({ error: getApiErrorMessage(error, 'movie catalogue') });
         throw error;

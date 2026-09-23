@@ -159,6 +159,8 @@ const BookingFlow: React.FC = () => {
   const backendOrderId = parsePositiveId(searchParams.get('orderId'));
   const checkoutBusy = useRef(false);
   const paymentStatusRequest = useRef(false);
+  // Reused if the browser retries the booking POST after a lost response.
+  const bookingCreationKey = useRef<string | null>(null);
   const checkoutPaymentRef = useRef<CheckoutPayment | null>(null);
   const orderDraft = useRef<CheckoutOrderDraft>({ id: backendOrderId, orderNumber: '' });
 
@@ -386,7 +388,7 @@ const BookingFlow: React.FC = () => {
       totalAmount: Number(grandTotal.toFixed(2)),
       customerId: user.id,
       showId,
-    });
+    }, bookingCreationKey.current ?? (bookingCreationKey.current = crypto.randomUUID()));
     setBackendBookingId(booking.id);
     setConfirmedBookingId(booking.bookingCode);
 
@@ -464,7 +466,13 @@ const BookingFlow: React.FC = () => {
         formData: { name: billingName, email: billingEmail },
       } });
     } catch (error) {
-      setPaymentError(getApiErrorMessage(error, 'payment'));
+      const message = getApiErrorMessage(error, 'payment');
+      if (/seat was just taken|seat is already reserved|seat.*no longer available/i.test(message)) {
+        setReloadSeats((current) => current + 1);
+        setPaymentError(`${message} The seat map has been refreshed; return to seat selection and choose another seat.`);
+      } else {
+        setPaymentError(message);
+      }
     } finally {
       checkoutBusy.current = false;
       setPaymentLoading(false);

@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
-  Bell,
   Check,
   ChevronDown,
   Crown,
@@ -25,6 +24,7 @@ import { canAccessAdmin } from '@/lib/authRole';
 import { cn } from '@/lib/utils';
 import { SearchAutocomplete } from './SearchAutocomplete';
 import { LogoutModal } from '@/components/common/LogoutModal/LogoutModal';
+import { NotificationModal } from '@/components/common/NotificationModal/NotificationModal';
 import { Avatar } from '@/components/ui/Avatar/Avatar';
 import { CinematiqueLogo } from '@/components/common/CinematiqueLogo';
 import { PageContainer } from '@/components/layout/PageContainer';
@@ -309,6 +309,10 @@ export const Navbar: React.FC = () => {
     navigate('/history');
   };
 
+  const goToAuth = (path: '/login' | '/register') => {
+    navigate(`${path}?redirect=${encodeURIComponent(location.pathname)}`);
+  };
+
   const handleSuggestionSelect = (movieId: string) => {
     closeMenus();
     navigate(`/movies/${movieId}`);
@@ -379,15 +383,12 @@ export const Navbar: React.FC = () => {
             </Link>
           )}
 
-          {/* Notifications Bell */}
-          <button
-            type="button"
-            className="relative icon-btn-circle"
-            aria-label={t.nav.notifications}
-          >
-            <Bell className="h-4 w-4" />
-            <span className="notification-dot" aria-hidden="true" />
-          </button>
+          <NotificationModal
+            isAuthenticated={isAuthenticated}
+            triggerLabel={t.nav.notifications}
+            onSignIn={() => goToAuth('/login')}
+            onCreateAccount={() => goToAuth('/register')}
+          />
 
           {/* Language Selector */}
           <div ref={languageRef} className="relative hidden sm:block">

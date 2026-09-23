@@ -1,18 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Mail, Lock, LogIn } from 'lucide-react';
+import { CircleAlert, Mail, Lock, LogIn } from 'lucide-react';
 import { Input } from '@/components/ui/Input/Input';
 import { Button } from '@/components/ui/Button/Button';
 import { useAuthStore } from '@/store/authStore';
-
-function getErrorMessage(error: unknown): string {
-  if (typeof error === 'object' && error !== null && 'response' in error) {
-    const response = (error as { response?: { data?: { message?: string } } }).response;
-    if (response?.data?.message) return response.data.message;
-  }
-  if (error instanceof Error && error.message) return error.message;
-  return 'Unable to sign in. Please try again.';
-}
+import { getApiErrorMessage } from '@/services/apiClient';
 
 function safeReturnPath(value: string | null): string | null {
   if (!value || !value.startsWith('/') || value.startsWith('//') || value.includes('\\')) return null;
@@ -25,13 +17,18 @@ export const LoginForm: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { login, isAuthLoading } = useAuthStore();
+  const alertRef = useRef<HTMLDivElement>(null);
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    if (error) alertRef.current?.focus();
+  }, [error]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!identifier || !password) {
+    if (!identifier.trim() || !password) {
       setError('Please fill in both username/email and password');
       return;
     }
@@ -43,15 +40,23 @@ export const LoginForm: React.FC = () => {
       const returnPath = safeReturnPath(searchParams.get('redirect'));
       navigate(returnPath ?? (isStaff ? '/admin/dashboard' : '/'), { replace: true });
     } catch (err) {
-      setError(getErrorMessage(err));
+      setError(getApiErrorMessage(err, 'sign in'));
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} noValidate className="space-y-4">
       {error && (
-        <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400 font-medium">
-          {error}
+        <div
+          ref={alertRef}
+          id="login-form-error"
+          role="alert"
+          aria-live="assertive"
+          tabIndex={-1}
+          className="flex items-center gap-2.5 rounded-xl border border-rose-500/60 bg-rose-950/55 px-3.5 py-3 text-sm font-semibold text-rose-200 shadow-[0_12px_30px_rgba(225,29,46,0.12)] outline-none"
+        >
+          <CircleAlert className="h-4 w-4 shrink-0 text-rose-300" aria-hidden="true" />
+          <span>{error}</span>
         </div>
       )}
 
@@ -60,9 +65,14 @@ export const LoginForm: React.FC = () => {
         type="text"
         placeholder="admin or admin@cinema.com"
         value={identifier}
-        onChange={(e) => setIdentifier(e.target.value)}
+        onChange={(e) => {
+          setIdentifier(e.target.value);
+          setError('');
+        }}
         icon={<Mail className="w-4 h-4" />}
         autoComplete="username"
+        aria-invalid={Boolean(error) || undefined}
+        aria-describedby={error ? 'login-form-error' : undefined}
         required
       />
 
@@ -71,9 +81,14 @@ export const LoginForm: React.FC = () => {
         type="password"
         placeholder="••••••••"
         value={password}
-        onChange={(e) => setPassword(e.target.value)}
+        onChange={(e) => {
+          setPassword(e.target.value);
+          setError('');
+        }}
         icon={<Lock className="w-4 h-4" />}
         autoComplete="current-password"
+        aria-invalid={Boolean(error) || undefined}
+        aria-describedby={error ? 'login-form-error' : undefined}
         required
       />
 

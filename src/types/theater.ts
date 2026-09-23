@@ -6,6 +6,7 @@ export interface Theater {
   status: string;
   locationId: number;
   managerId: number;
+  imageUrl?: string | null;
 }
 
 export interface TheaterInput {
@@ -15,4 +16,5 @@ export interface TheaterInput {
   status: string;
   locationId: number;
   managerId: number;
+  imageUrl?: string | null;
 }
